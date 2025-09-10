@@ -99,7 +99,7 @@ export default function PlansPage() {
                 onSelect={setSelectedDate}
                 modifiers={{ planned: plannedDays }}
                 modifiersClassNames={{
-                    planned: 'bg-primary/20 rounded-full',
+                    planned: 'bg-primary/20 text-primary-foreground rounded-full',
                 }}
                 className="w-full"
             />
@@ -138,14 +138,17 @@ export default function PlansPage() {
                     </Link>
                 </div>
             ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-16 text-center">
-                    <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h4 className="mt-4 text-lg font-semibold">No Plan for This Day</h4>
-                    <p className="text-muted-foreground">Generate a new plan to fill your calendar.</p>
-                </div>
+                <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center h-full">
+                    <CardContent className="flex flex-col items-center justify-center">
+                        <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
+                        <h4 className="mt-4 text-lg font-semibold">No Plan for This Day</h4>
+                        <p className="mt-2 text-sm text-muted-foreground">Generate a new plan to fill your calendar.</p>
+                    </CardContent>
+                </Card>
             )}
         </div>
       </div>
     </div>
   );
 }
+
