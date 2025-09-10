@@ -1,3 +1,4 @@
+
 import AppShell from '@/components/app-shell';
 
 export const metadata = {
