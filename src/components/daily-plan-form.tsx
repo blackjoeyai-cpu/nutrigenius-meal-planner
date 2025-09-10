@@ -5,22 +5,24 @@ import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from 'next/link';
-import { Sparkles, Loader2, Flame, AlertTriangle, PlusCircle } from "lucide-react";
+import { Sparkles, Loader2, Flame, AlertTriangle, PlusCircle, Save, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { createMealPlan } from "@/app/(app)/generate/actions";
+import { createMealPlan, saveDailyPlan } from "@/app/(app)/generate/actions";
 import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Recipe } from "@/lib/types";
+import type { Recipe, DailyMealPlan } from "@/lib/types";
 import { useRecipes } from "@/hooks/use-recipes";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
 
 
 const initialState = {
@@ -49,10 +51,12 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
 }
 
 export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
-  const [state, formAction] = useActionState(createMealPlan, initialState);
+  const [state, formAction, isPending] = useActionState(createMealPlan, initialState);
   const { ingredients } = useIngredients();
   const { addRecipe } = useRecipes();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
 
   // Default values
   const [dietaryPreferences, setDietaryPreferences] = useState(DIETARY_PREFERENCES[0]);
@@ -61,12 +65,42 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [cuisine, setCuisine] = useState(CUISINES[0]);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generationSource, setGenerationSource] = useState("catalog");
+  const [isSaving, setIsSaving] = useState(false);
+
 
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
-  const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
+  const mealPlan: DailyMealPlan | null = state.mealPlan ? JSON.parse(state.mealPlan) : null;
   const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
+
+  const handleSave = async () => {
+    if (!mealPlan) return;
+    setIsSaving(true);
+    const result = await saveDailyPlan(mealPlan);
+    setIsSaving(false);
+    if (result.success) {
+      toast({
+        title: "Success!",
+        description: "Your daily meal plan has been saved.",
+      });
+      router.push("/plans");
+    } else {
+      toast({
+        title: "Error",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDiscard = () => {
+     // Resetting the state by submitting the form with no data to get initial state
+     const formData = new FormData();
+     // This is a bit of a hack to reset the action state. A better solution might involve a dedicated reset function if React provides one in the future.
+     // For now, we can re-trigger the action with empty/invalid data to clear the previous successful result.
+     formAction(formData);
+  }
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 pt-6">
@@ -210,7 +244,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             )}
         </div>
 
-        {mealPlan ? (
+        {mealPlan && !isPending ? (
           <div className="space-y-4">
              <Link href={`/recipes/${mealPlan.breakfast.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
@@ -245,6 +279,23 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                 </CardContent>
               </Card>
             </Link>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Happy with this plan?</CardTitle>
+                    <CardDescription>Save it to your calendar or discard it and generate a new one.</CardDescription>
+                </CardHeader>
+                <CardFooter className="flex gap-4">
+                     <Button onClick={handleSave} disabled={isSaving || generationSource === 'new'}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Plan
+                    </Button>
+                    <Button variant="outline" onClick={handleDiscard}>
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Discard
+                    </Button>
+                </CardFooter>
+                 {generationSource === 'new' && <CardContent><Alert variant="destructive" className="mt-4"><AlertTriangle className="h-4 w-4" /><AlertDescription>Saving is disabled when "Generate all new recipes" is selected because these recipes do not exist in your collection yet.</AlertDescription></Alert></CardContent>}
+            </Card>
           </div>
         ) : (
           <Card className="flex h-full min-h-[400px] flex-col items-center justify-center text-center">

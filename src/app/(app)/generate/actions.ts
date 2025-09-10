@@ -2,9 +2,11 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
-import { addMealPlan } from "@/services/meal-plan-service";
+import { addMealPlan as saveMealToDB } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
 import { z } from "zod";
+import { revalidatePath } from "next/cache";
+import { DailyMealPlan } from "@/lib/types";
 
 const MealPlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -49,21 +51,6 @@ export async function createMealPlan(prevState: any, formData: FormData) {
       generationSource,
     });
 
-    // Assume a userId, in a real app this would come from auth
-    const userId = "anonymous"; 
-
-    // Only save the meal plan if it was generated from the catalog or combined
-    // If all new recipes were generated, they don't exist in the DB, so we don't save the plan.
-    if (generationSource !== 'new') {
-        await addMealPlan({
-          breakfast: { id: result.breakfast.id, title: result.breakfast.title },
-          lunch: { id: result.lunch.id, title: result.lunch.title },
-          dinner: { id: result.dinner.id, title: result.dinner.title },
-          date: new Date(),
-          userId,
-        });
-    }
-
     return {
       message: "Successfully generated meal plan.",
       errors: null,
@@ -79,4 +66,44 @@ export async function createMealPlan(prevState: any, formData: FormData) {
   }
 }
 
+const DailyMealPlanSaveSchema = z.object({
+  breakfast: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+  lunch: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+  dinner: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+});
+
+export async function saveDailyPlan(plan: DailyMealPlan) {
+    const validatedFields = DailyMealPlanSaveSchema.safeParse(plan);
+
+    if (!validatedFields.success) {
+        return {
+            success: false,
+            message: "Invalid plan data provided for saving.",
+        };
+    }
+    
+    try {
+        const userId = "anonymous";
+        await saveMealToDB({
+          breakfast: { id: plan.breakfast.id, title: plan.breakfast.title },
+          lunch: { id: plan.lunch.id, title: plan.lunch.title },
+          dinner: { id: plan.dinner.id, title: plan.dinner.title },
+          date: new Date(),
+          userId,
+        });
+
+        revalidatePath("/plans");
+
+        return {
+            success: true,
+            message: "Plan saved successfully!",
+        };
+    } catch (error) {
+        console.error("Error saving daily plan:", error);
+        return {
+            success: false,
+            message: "An unexpected error occurred while saving the plan.",
+        };
+    }
+}
     

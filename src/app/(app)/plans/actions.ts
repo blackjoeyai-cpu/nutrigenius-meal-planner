@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
 import { addLongTermMealPlan } from "@/services/meal-plan-service";
-import type { Recipe } from "@/lib/types";
+import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const GeneratePlanSchema = z.object({
@@ -35,6 +35,7 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       message: "Invalid form data.",
       errors: validatedFields.error.flatten().fieldErrors,
       isSuccess: false,
+      longTermPlan: null,
     };
   }
 
@@ -53,29 +54,11 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       generationSource,
     });
 
-    // Only save the meal plan if it was generated purely from the recipe catalog.
-    // This ensures data integrity, as we can guarantee all recipe IDs are valid.
-    if (generationSource === 'catalog') {
-        const userId = "anonymous";
-        const planToSave = {
-          userId,
-          createdAt: new Date(),
-          days: result.days,
-          dietaryPreferences,
-          calorieTarget,
-          allergies,
-          cuisine,
-        };
-
-        await addLongTermMealPlan(planToSave);
-        revalidatePath("/plans");
-    }
-
-
     return {
-      message: "Successfully generated meal plan.",
+      message: "Successfully generated long-term meal plan.",
       errors: null,
       isSuccess: true,
+      longTermPlan: JSON.stringify({ ...result, dietaryPreferences, calorieTarget, allergies, cuisine, generationSource }),
     };
 
   } catch (error) {
@@ -84,6 +67,32 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       message: "An unexpected error occurred while generating the meal plan.",
       errors: null,
       isSuccess: false,
+      longTermPlan: null,
     };
   }
+}
+
+
+export async function saveLongTermPlan(plan: GenerateLongTermMealPlanOutput & { dietaryPreferences: string, calorieTarget: number, allergies: string, cuisine: string, generationSource: string }) {
+    // Only save the meal plan if it was generated purely from the recipe catalog.
+    // This ensures data integrity, as we can guarantee all recipe IDs are valid.
+    if (plan.generationSource === 'catalog') {
+        const userId = "anonymous";
+        const planToSave = {
+          userId,
+          createdAt: new Date(),
+          days: plan.days,
+          dietaryPreferences: plan.dietaryPreferences,
+          calorieTarget: plan.calorieTarget,
+          allergies: plan.allergies,
+          cuisine: plan.cuisine,
+        };
+
+        await addLongTermMealPlan(planToSave);
+        revalidatePath("/plans");
+
+        return { success: true, message: "Plan saved successfully." };
+    }
+    
+    return { success: false, message: "Only plans generated from the catalog can be saved at this time." };
 }

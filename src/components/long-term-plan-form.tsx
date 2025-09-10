@@ -3,7 +3,6 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -18,9 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
-import type { Recipe } from "@/lib/types";
-import { AlertTriangle, Loader2, PlusCircle, Sparkles } from "lucide-react";
-import { generatePlanAction } from "@/app/(app)/plans/actions";
+import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
+import { AlertTriangle, Loader2, PlusCircle, Sparkles, Save, XCircle } from "lucide-react";
+import { generatePlanAction, saveLongTermPlan } from "@/app/(app)/plans/actions";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -31,6 +30,9 @@ import { useIngredients } from "@/hooks/use-ingredients";
 import { useRecipes } from "@/hooks/use-recipes";
 import { AddRecipeDialog } from "./add-recipe-dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 
 const planFormSchema = z.object({
@@ -53,6 +55,7 @@ const initialState = {
   message: "",
   errors: null,
   isSuccess: false,
+  longTermPlan: null,
 };
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {
@@ -74,12 +77,23 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
+type ParsedPlan = GenerateLongTermMealPlanOutput & {
+  dietaryPreferences: string,
+  calorieTarget: number,
+  allergies: string,
+  cuisine: string,
+  generationSource: string,
+}
+
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
-  const [state, formAction] = useActionState(generatePlanAction, initialState);
+  const [state, formAction, isPending] = useActionState(generatePlanAction, initialState);
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients();
   const { addRecipe } = useRecipes();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const router = useRouter();
+
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
@@ -97,17 +111,37 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const generationSource = form.watch("generationSource");
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
+  
+  const longTermPlan: ParsedPlan | null = state.longTermPlan ? JSON.parse(state.longTermPlan) : null;
 
+  const handleSave = async () => {
+    if (!longTermPlan) return;
+    setIsSaving(true);
+    const result = await saveLongTermPlan(longTermPlan);
+    setIsSaving(false);
+
+    if (result.success) {
+        toast({
+            title: "Success!",
+            description: "Your long-term meal plan has been generated and saved.",
+        });
+        router.push('/plans');
+    } else {
+        toast({
+            title: "Error",
+            description: result.message,
+            variant: "destructive",
+        });
+    }
+  }
+
+  const handleDiscard = () => {
+    const formData = new FormData();
+    formAction(formData);
+  }
 
   useEffect(() => {
-    if (state.isSuccess) {
-      toast({
-        title: "Success!",
-        description: "Your long-term meal plan has been generated and saved.",
-      });
-      // Use window.location.href for a full page reload to clear client-side cache
-      window.location.href = '/plans';
-    } else if (state.message && state.errors) {
+    if (state.message && state.errors) {
         const errorValues = Object.values(state.errors).flat();
         if (errorValues.length > 0) {
             toast({
@@ -126,6 +160,77 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   }, [state, toast]);
 
 
+  if (longTermPlan && !isPending) {
+    return (
+        <Card className="mt-6">
+            <CardHeader>
+                <CardTitle>Review Your Long-Term Plan</CardTitle>
+                <CardDescription>
+                    Here is the {longTermPlan.days.length}-day meal plan generated for you. Review the details below.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <Accordion type="single" collapsible className="w-full">
+                    {longTermPlan.days.map((day, index) => (
+                        <AccordionItem value={`day-${index}`} key={`day-${index}`}>
+                             <AccordionTrigger>Day {index + 1}</AccordionTrigger>
+                             <AccordionContent>
+                                <div className="space-y-4 pl-2">
+                                     <Link href={`/recipes/${day.breakfast.id}`} className="group block">
+                                        <Card className="transition-shadow group-hover:shadow-md">
+                                        <CardHeader>
+                                            <CardTitle className="text-lg">Breakfast: {day.breakfast.title}</CardTitle>
+                                            <CardDescription>{day.breakfast.calories} calories</CardDescription>
+                                        </CardHeader>
+                                        </Card>
+                                    </Link>
+                                    <Link href={`/recipes/${day.lunch.id}`} className="group block">
+                                        <Card className="transition-shadow group-hover:shadow-md">
+                                        <CardHeader>
+                                            <CardTitle className="text-lg">Lunch: {day.lunch.title}</CardTitle>
+                                            <CardDescription>{day.lunch.calories} calories</CardDescription>
+                                        </CardHeader>
+                                        </Card>
+                                    </Link>
+                                    <Link href={`/recipes/${day.dinner.id}`} className="group block">
+                                        <Card className="transition-shadow group-hover:shadow-md">
+                                        <CardHeader>
+                                            <CardTitle className="text-lg">Dinner: {day.dinner.title}</CardTitle>
+                                            <CardDescription>{day.dinner.calories} calories</CardDescription>
+                                        </CardHeader>
+                                        </Card>
+                                    </Link>
+                                </div>
+                             </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+                 {longTermPlan.generationSource !== 'catalog' && (
+                    <Alert variant="destructive" className="mt-4">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertTitle>Saving Disabled</AlertTitle>
+                        <AlertDescription>
+                            Saving is only enabled when "Use my existing recipes" is selected. This ensures that all recipes in your saved plan have valid links.
+                        </AlertDescription>
+                    </Alert>
+                )}
+            </CardContent>
+            <CardFooter className="flex-col items-start gap-4">
+                <div className="flex gap-2">
+                    <Button onClick={handleSave} disabled={isSaving || longTermPlan.generationSource !== 'catalog'}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Plan
+                    </Button>
+                    <Button variant="outline" onClick={handleDiscard}>
+                        <XCircle className="mr-2 h-4 w-4" />
+                        Discard
+                    </Button>
+                </div>
+            </CardFooter>
+        </Card>
+    )
+  }
+
   return (
     <Card className="mt-6">
         <Form {...form}>
@@ -141,7 +246,14 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                {isCatalogGenerationBlocked && (
+                {isPending && (
+                     <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        <h3 className="mt-4 text-xl font-semibold">Generating Your Plan...</h3>
+                        <p className="text-muted-foreground">Please wait while the AI creates your custom meal plan.</p>
+                    </div>
+                )}
+                {!isPending && isCatalogGenerationBlocked && (
                      <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertTitle>Not Enough Recipes</AlertTitle>
@@ -166,6 +278,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                          </div>
                     </Alert>
                 )}
+                {!isPending && (
+                    <>
                  <FormField
                     control={form.control}
                     name="generationSource"
@@ -326,10 +440,14 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     </FormItem>
                   )}
                 />
+                </>
+                )}
             </CardContent>
-            <CardFooter>
-              <SubmitButton disabled={isCatalogGenerationBlocked} />
-            </CardFooter>
+            {!isPending && (
+                <CardFooter>
+                  <SubmitButton disabled={isCatalogGenerationBlocked} />
+                </CardFooter>
+            )}
           </form>
         </Form>
     </Card>
