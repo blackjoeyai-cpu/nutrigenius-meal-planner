@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { use } from 'react';
 
 const getImage = (id: string) => {
   return PlaceHolderImages.find((img) => img.id === id);
@@ -18,7 +19,7 @@ const getImage = (id: string) => {
 
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
   const { recipes, isLoaded } = useRecipes();
-  const { id } = params;
+  const { id } = use(params);
   
   const recipe = isLoaded ? recipes.find((recipe) => recipe.id === id) : undefined;
 
