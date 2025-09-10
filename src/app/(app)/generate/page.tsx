@@ -138,7 +138,7 @@ export default function GeneratePage() {
               <Select name="cuisine" value={cuisine} onValueChange={setCuisine}>
                 <SelectTrigger id="cuisine">
                   <SelectValue placeholder="Select a cuisine" />
-                </Trigger>
+                </SelectTrigger>
                 <SelectContent>
                   {CUISINES.map((c) => (
                     <SelectItem key={c} value={c}>
