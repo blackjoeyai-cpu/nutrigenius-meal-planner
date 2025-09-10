@@ -4,7 +4,7 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
@@ -21,18 +21,19 @@ const getImage = (id: string) => {
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const resolvedParams = use(params);
   
   useEffect(() => {
     const fetchRecipe = async () => {
       setIsLoaded(false);
-      const fetchedRecipe = await getRecipeById(params.id);
+      const fetchedRecipe = await getRecipeById(resolvedParams.id);
       setRecipe(fetchedRecipe);
       setIsLoaded(true);
     };
-    if (params.id) {
+    if (resolvedParams.id) {
         fetchRecipe();
     }
-  }, [params.id]);
+  }, [resolvedParams.id]);
 
 
   if (!isLoaded) {
