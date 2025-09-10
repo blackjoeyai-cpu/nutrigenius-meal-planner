@@ -3,10 +3,10 @@
 
 import { db } from "@/lib/firebase";
 import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
-import type { DailyPlan, LongTermMealPlan } from "@/lib/types";
+import type { DailyPlan, MealPlan } from "@/lib/types";
 
 
-type LongTermMealPlanForDb = {
+type MealPlanForDb = {
     userId: string;
     createdAt: Date;
     days: DailyPlan[];
@@ -17,30 +17,30 @@ type LongTermMealPlanForDb = {
 }
 
 /**
- * Adds a new long-term meal plan to the Firestore database.
+ * Adds a new meal plan to the Firestore database.
  */
-export async function addLongTermMealPlan(plan: LongTermMealPlanForDb): Promise<string> {
+export async function addMealPlan(plan: MealPlanForDb): Promise<string> {
     try {
-        const docRef = await addDoc(collection(db, "longTermMealPlans"), plan);
+        const docRef = await addDoc(collection(db, "mealplans"), plan);
         return docRef.id;
     } catch (e) {
-        console.error("Error adding long-term meal plan: ", e);
-        throw new Error("Could not add long-term meal plan to the database.");
+        console.error("Error adding meal plan: ", e);
+        throw new Error("Could not add meal plan to the database.");
     }
 }
 
 
 /**
- * Retrieves all long-term meal plans for a user from the Firestore database.
+ * Retrieves all meal plans for a user from the Firestore database.
  */
-export async function getLongTermMealPlans(userId: string): Promise<LongTermMealPlan[]> {
+export async function getMealPlans(userId: string): Promise<MealPlan[]> {
     try {
         const q = query(
-            collection(db, "longTermMealPlans"), 
+            collection(db, "mealplans"), 
             where("userId", "==", userId)
         );
         const querySnapshot = await getDocs(q);
-        const plans: LongTermMealPlan[] = [];
+        const plans: MealPlan[] = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             const createdAtTimestamp = data.createdAt as Timestamp;
@@ -49,7 +49,7 @@ export async function getLongTermMealPlans(userId: string): Promise<LongTermMeal
                 ...data,
                 // Convert timestamp to a serializable format (ISO string)
                 createdAt: createdAtTimestamp.toDate().toISOString(),
-             } as LongTermMealPlan);
+             } as MealPlan);
         });
 
         // Sort the plans by creation date in descending order (newest first)
@@ -61,7 +61,7 @@ export async function getLongTermMealPlans(userId: string): Promise<LongTermMeal
 
         return plans;
     } catch(e) {
-        console.error("Error fetching long-term meal plans: ", e);
-        throw new Error("Could not fetch long-term meal plans.");
+        console.error("Error fetching meal plans: ", e);
+        throw new Error("Could not fetch meal plans.");
     }
 }

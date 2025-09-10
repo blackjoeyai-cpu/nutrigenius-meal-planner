@@ -2,7 +2,7 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
-import { addLongTermMealPlan } from "@/services/meal-plan-service";
+import { addMealPlan } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
@@ -77,9 +77,9 @@ export async function createMealPlan(prevState: any, formData: FormData) {
 
 const DailyMealPlanSaveSchema = z.object({
     days: z.array(z.object({
-        breakfast: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
-        lunch: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
-        dinner: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+        breakfast: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }),
+        lunch: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }),
+        dinner: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }),
     })),
     dietaryPreferences: z.string(),
     calorieTarget: z.number(),
@@ -100,7 +100,7 @@ export async function saveDailyPlan(plan: z.infer<typeof DailyMealPlanSaveSchema
     
     try {
         const userId = "anonymous";
-        await addLongTermMealPlan({
+        await addMealPlan({
             userId,
             createdAt: new Date(),
             days: plan.days,
@@ -124,4 +124,3 @@ export async function saveDailyPlan(plan: z.infer<typeof DailyMealPlanSaveSchema
         };
     }
 }
-    

@@ -8,8 +8,8 @@ import { PlusCircle, ChefHat, ChevronLeft, ChevronRight } from 'lucide-react';
 import { addDays, format, startOfDay, getDaysInMonth, startOfMonth, getDay, subMonths, addMonths } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
-import { getLongTermMealPlans } from '@/services/meal-plan-service';
-import type { LongTermMealPlan, DailyPlan } from '@/lib/types';
+import { getMealPlans } from '@/services/meal-plan-service';
+import type { MealPlan, DailyPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 type PlansByDate = Map<string, DailyPlan>;
 
 export default function PlansPage() {
-  const [plans, setPlans] = useState<LongTermMealPlan[]>([]);
+  const [plans, setPlans] = useState<MealPlan[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -25,7 +25,7 @@ export default function PlansPage() {
 
   useEffect(() => {
     async function fetchPlans() {
-      const fetchedPlans = await getLongTermMealPlans('anonymous');
+      const fetchedPlans = await getMealPlans('anonymous');
       setPlans(fetchedPlans);
       setIsLoaded(true);
     }

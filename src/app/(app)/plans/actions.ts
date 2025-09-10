@@ -3,7 +3,7 @@
 
 import { z } from "zod";
 import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
-import { addLongTermMealPlan } from "@/services/meal-plan-service";
+import { addMealPlan } from "@/services/meal-plan-service";
 import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
@@ -88,7 +88,7 @@ export async function saveLongTermPlan(plan: GenerateLongTermMealPlanOutput & { 
           cuisine: plan.cuisine,
         };
 
-        await addLongTermMealPlan(planToSave);
+        await addMealPlan(planToSave);
         revalidatePath("/plans");
 
         return { success: true, message: "Plan saved successfully." };

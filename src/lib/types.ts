@@ -39,7 +39,7 @@ export type GenerateLongTermMealPlanOutput = {
   days: DailyPlan[];
 }
 
-export type LongTermMealPlan = {
+export type MealPlan = {
     id: string;
     userId: string;
     createdAt: string; // Changed from Timestamp to string for serialization
