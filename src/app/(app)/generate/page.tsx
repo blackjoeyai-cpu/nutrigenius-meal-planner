@@ -62,7 +62,7 @@ export default function GeneratePage() {
   const [generationSource, setGenerationSource] = useState("catalog");
 
   const isLoaded = ingredientsLoaded && recipesLoaded;
-  const canGenerate = recipes.length > 3 || generationSource !== 'catalog';
+  const canGenerateFromCatalog = recipes.length > 3;
 
   const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
   const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
@@ -95,7 +95,6 @@ export default function GeneratePage() {
         <form action={formAction}>
            <input type="hidden" name="ingredients" value={selectedIngredients.join(',')} />
            <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
-           <input type="hidden" name="generationSource" value={generationSource} />
           <CardHeader>
             <CardTitle>Create Your Meal Plan</CardTitle>
             <CardDescription>
@@ -103,7 +102,7 @@ export default function GeneratePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!canGenerate && generationSource === 'catalog' && (
+            {!canGenerateFromCatalog && generationSource === 'catalog' && (
                  <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Not Enough Recipes</AlertTitle>
@@ -128,7 +127,7 @@ export default function GeneratePage() {
                      </div>
                 </Alert>
             )}
-            <fieldset disabled={!canGenerate && generationSource === 'catalog'} className="space-y-4">
+            <fieldset disabled={!canGenerateFromCatalog && generationSource === 'catalog'} className="space-y-4">
                 <div className="space-y-2">
                     <Label>Generation Source</Label>
                     <RadioGroup name="generationSource" value={generationSource} onValueChange={setGenerationSource} className="gap-2">
@@ -282,5 +281,3 @@ export default function GeneratePage() {
     </div>
   );
 }
-
-    
