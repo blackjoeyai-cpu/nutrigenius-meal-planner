@@ -4,24 +4,22 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { PlusCircle, CalendarDays, Flame } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { useRecipes } from '@/hooks/use-recipes';
 import { getLongTermMealPlans } from '@/services/meal-plan-service';
 import type { LongTermMealPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { GeneratePlanDialog } from '@/components/generate-plan-dialog';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
 
 export default function PlansPage() {
-  const { recipes, isLoaded: recipesLoaded } = useRecipes();
   const [plans, setPlans] = useState<LongTermMealPlan[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     async function fetchPlans() {
@@ -32,16 +30,8 @@ export default function PlansPage() {
     }
     fetchPlans();
   }, []);
-
-  const handlePlanGenerated = async () => {
-    setIsAddDialogOpen(false);
-    setIsLoaded(false);
-    const fetchedPlans = await getLongTermMealPlans('anonymous');
-    setPlans(fetchedPlans);
-    setIsLoaded(true);
-  };
   
-  if (!isLoaded || !recipesLoaded) {
+  if (!isLoaded) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
@@ -64,20 +54,13 @@ export default function PlansPage() {
             My Meal Plans
           </h2>
           <p className="text-muted-foreground">
-            View your generated meal plans or create a new one.
+            View your generated long-term meal plans.
           </p>
         </div>
-        <GeneratePlanDialog
-          open={isAddDialogOpen}
-          onOpenChange={setIsAddDialogOpen}
-          onPlanGenerated={handlePlanGenerated}
-          recipes={recipes}
-        >
-          <Button onClick={() => setIsAddDialogOpen(true)}>
+        <Button onClick={() => router.push('/generate')}>
             <PlusCircle className="mr-2 h-4 w-4" />
             Generate New Plan
-          </Button>
-        </GeneratePlanDialog>
+        </Button>
       </div>
 
       <div className="space-y-8">

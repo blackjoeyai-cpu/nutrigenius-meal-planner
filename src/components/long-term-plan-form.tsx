@@ -4,16 +4,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
 import type { Recipe } from "@/lib/types";
-import { ScrollArea } from "./ui/scroll-area";
-import { useState, useEffect } from "react";
 import { Loader2, Sparkles } from "lucide-react";
 import { generatePlanAction } from "@/app/(app)/plans/actions";
 import { useToast } from "@/hooks/use-toast";
@@ -37,24 +36,20 @@ const planFormSchema = z.object({
 
 type PlanFormValues = z.infer<typeof planFormSchema>;
 
-type GeneratePlanDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onPlanGenerated: () => void;
+type LongTermPlanFormProps = {
   recipes: Recipe[];
-  children: React.ReactNode;
 };
 
 const initialState = {
   message: "",
   errors: null,
-  plan: null,
+  isSuccess: false,
 };
 
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="w-full">
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -70,10 +65,10 @@ function SubmitButton() {
   );
 }
 
-
-export function GeneratePlanDialog({ open, onOpenChange, onPlanGenerated, recipes, children }: GeneratePlanDialogProps) {
+export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [state, formAction] = useActionState(generatePlanAction, initialState);
   const { toast } = useToast();
+  const router = useRouter();
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
@@ -87,51 +82,50 @@ export function GeneratePlanDialog({ open, onOpenChange, onPlanGenerated, recipe
   });
 
   useEffect(() => {
-    if (state.message && !state.errors) {
+    if (state.isSuccess) {
       toast({
         title: "Success!",
         description: state.message,
       });
-      onPlanGenerated();
-      form.reset();
+      router.push('/plans');
     } else if (state.message && state.errors) {
-        // Find the specific error for numberOfDays if it exists
         const dayError = state.errors.numberOfDays?.[0] ?? state.message;
         toast({
             title: "Error",
             description: dayError,
             variant: "destructive",
         })
+    } else if (state.message && !state.isSuccess && !state.errors) {
+         toast({
+            title: "Error",
+            description: state.message,
+            variant: "destructive",
+        })
     }
-  }, [state, toast, onPlanGenerated, form]);
+  }, [state, toast, router]);
 
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {children}
-      <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Generate a New Meal Plan</DialogTitle>
-          <DialogDescription>
-            Specify the duration and your preferences for the new plan.
-          </DialogDescription>
-        </DialogHeader>
-
+    <Card className="mt-6">
         <Form {...form}>
           <form
             onSubmit={(evt) => {
               evt.preventDefault();
               const formData = new FormData(evt.currentTarget);
-              form.handleSubmit(() => {
+               form.handleSubmit(() => {
                   formAction(formData)
               })(evt);
             }}
-            className="space-y-4"
           >
-             <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
-            <ScrollArea className="h-[55vh] p-1">
-              <div className="space-y-6 p-4">
-                <FormField
+          <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
+            <CardHeader>
+                <CardTitle>Generate a New Long-term Plan</CardTitle>
+                <CardDescription>
+                    Specify the duration and your preferences for the new plan.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                 <FormField
                   control={form.control}
                   name="numberOfDays"
                   render={({ field }) => (
@@ -225,15 +219,12 @@ export function GeneratePlanDialog({ open, onOpenChange, onPlanGenerated, recipe
                     </FormItem>
                   )}
                 />
-              </div>
-            </ScrollArea>
-            <DialogFooter className="pt-4 pr-4">
-              <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
+            </CardContent>
+            <CardFooter>
               <SubmitButton />
-            </DialogFooter>
+            </CardFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </Card>
   );
 }

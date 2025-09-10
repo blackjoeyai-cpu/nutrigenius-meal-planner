@@ -5,6 +5,7 @@ import { z } from "zod";
 import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
 import { addLongTermMealPlan } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
+import { revalidatePath } from "next/cache";
 
 const GeneratePlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -29,7 +30,7 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
     return {
       message: "Invalid form data.",
       errors: validatedFields.error.flatten().fieldErrors,
-      plan: null,
+      isSuccess: false,
     };
   }
 
@@ -59,10 +60,12 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
 
     await addLongTermMealPlan(planToSave);
 
+    revalidatePath("/plans");
+
     return {
       message: "Successfully generated meal plan.",
       errors: null,
-      plan: null, // Clear plan from state after saving, page will refetch
+      isSuccess: true,
     };
 
   } catch (error) {
@@ -70,7 +73,7 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
     return {
       message: "An unexpected error occurred while generating the meal plan.",
       errors: null,
-      plan: null,
+      isSuccess: false,
     };
   }
 }
