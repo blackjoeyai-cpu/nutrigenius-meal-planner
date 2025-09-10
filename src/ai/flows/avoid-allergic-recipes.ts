@@ -10,7 +10,6 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import type { Recipe } from '@/lib/types';
 
 const GenerateSafeMealPlanInputSchema = z.object({
   dietaryPreferences: z
@@ -62,7 +61,7 @@ const prompt = ai.definePrompt({
   {{/if}}
   {{#if availableRecipes}}
   You must choose from the following list of available recipes:
-  {{jsonStringify availableRecipes}}
+  {{{jsonStringify availableRecipes}}}
   {{/if}}
 
   Create a detailed meal plan with breakfast, lunch, and dinner that is safe and appropriate for the user.
