@@ -77,7 +77,6 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [state, formAction] = useActionState(generatePlanAction, initialState);
   const { toast } = useToast();
-  const router = useRouter();
   const { ingredients: allIngredients } = useIngredients();
   const { addRecipe } = useRecipes();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -106,7 +105,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
         title: "Success!",
         description: "Your long-term meal plan has been generated and saved.",
       });
-      router.push('/plans');
+      // Use window.location.href for a full page reload to clear client-side cache
+      window.location.href = '/plans';
     } else if (state.message && state.errors) {
         const errorValues = Object.values(state.errors).flat();
         if (errorValues.length > 0) {
@@ -123,7 +123,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             variant: "destructive",
         })
     }
-  }, [state, toast, router]);
+  }, [state, toast]);
 
 
   return (
