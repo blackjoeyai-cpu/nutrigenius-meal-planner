@@ -66,6 +66,9 @@ export default function GeneratePage() {
   
   const isLoaded = profileLoaded && ingredientsLoaded && recipesLoaded;
 
+  const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
+  const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
+
   if (!isLoaded) {
     return (
       <Card>
@@ -101,9 +104,6 @@ export default function GeneratePage() {
       </Card>
     );
   }
-
-  const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
-  const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
