@@ -109,13 +109,14 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
         <Form {...form}>
           <form
-            onSubmit={(evt) => {
-              evt.preventDefault();
-              const formData = new FormData(evt.currentTarget);
-               form.handleSubmit(() => {
-                  formAction(formData)
-              })(evt);
-            }}
+            action={formAction}
+            onSubmit={form.handleSubmit(() => {
+                const formElement = document.querySelector('form');
+                if (formElement) {
+                    const formData = new FormData(formElement);
+                    formAction(formData);
+                }
+            })}
           >
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
             <CardHeader>
