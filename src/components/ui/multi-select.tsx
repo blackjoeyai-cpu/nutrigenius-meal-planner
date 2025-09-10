@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -24,7 +25,7 @@ export function MultiSelect({
 }: {
   options: Option[]
   selected: string[]
-  onChange: React.Dispatch<React.SetStateAction<string[]>>
+  onChange: (selected: string[]) => void
   placeholder?: string
   className?: string
 }) {
@@ -120,7 +121,7 @@ export function MultiSelect({
                       }}
                       onSelect={(_value) => {
                         setInputValue("")
-                        onChange((prev) => [...prev, option.value])
+                        onChange([...selected, option.value])
                       }}
                       className={"cursor-pointer"}
                     >
