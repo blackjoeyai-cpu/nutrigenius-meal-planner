@@ -93,14 +93,18 @@ export function GeneratePlanDialog({ open, onOpenChange, onPlanGenerated, recipe
         description: state.message,
       });
       onPlanGenerated();
+      form.reset();
     } else if (state.message && state.errors) {
+        // Find the specific error for numberOfDays if it exists
+        const dayError = state.errors.numberOfDays?.[0] ?? state.message;
         toast({
             title: "Error",
-            description: state.message,
+            description: dayError,
             variant: "destructive",
         })
     }
-  }, [state, toast, onPlanGenerated]);
+  }, [state, toast, onPlanGenerated, form]);
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -114,14 +118,17 @@ export function GeneratePlanDialog({ open, onOpenChange, onPlanGenerated, recipe
         </DialogHeader>
 
         <Form {...form}>
-          <form action={formAction} className="space-y-4">
+          <form
+            onSubmit={(evt) => {
+              evt.preventDefault();
+              const formData = new FormData(evt.currentTarget);
+              form.handleSubmit(() => {
+                  formAction(formData)
+              })(evt);
+            }}
+            className="space-y-4"
+          >
              <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
-             <input type="hidden" name="dietaryPreferences" value={form.watch('dietaryPreferences')} />
-             <input type="hidden" name="cuisine" value={form.watch('cuisine')} />
-             <input type="hidden" name="calorieTarget" value={form.watch('calorieTarget')} />
-             <input type="hidden" name="allergies" value={form.watch('allergies')} />
-             <input type="hidden" name="numberOfDays" value={form.watch('numberOfDays')} />
-
             <ScrollArea className="h-[55vh] p-1">
               <div className="space-y-6 p-4">
                 <FormField
