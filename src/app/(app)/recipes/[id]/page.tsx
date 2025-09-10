@@ -1,23 +1,60 @@
+
+"use client";
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets } from 'lucide-react';
+import { useRecipes } from '@/hooks/use-recipes';
 
-import { recipes } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-
-const getRecipe = (id: string) => {
-  return recipes.find((recipe) => recipe.id === id);
-};
+import { Skeleton } from '@/components/ui/skeleton';
 
 const getImage = (id: string) => {
   return PlaceHolderImages.find((img) => img.id === id);
 };
 
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
-  const recipe = getRecipe(params.id);
+  const { recipes, isLoaded } = useRecipes();
+  
+  const recipe = isLoaded ? recipes.find((recipe) => recipe.id === params.id) : undefined;
+
+  if (!isLoaded) {
+    return (
+        <div className="mx-auto max-w-4xl space-y-8">
+            <div className="space-y-4">
+                <Skeleton className="h-64 w-full rounded-lg md:h-96" />
+                <Skeleton className="h-10 w-3/4" />
+                <div className="flex flex-wrap items-center gap-4">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-6 w-24" />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-6 w-20" />
+                </div>
+            </div>
+            <Separator />
+             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                <div className="md:col-span-1 space-y-4">
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
+                </div>
+                <div className="md:col-span-2 space-y-4">
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
+                    <Skeleton className="h-5 w-full" />
+                </div>
+            </div>
+        </div>
+    );
+  }
 
   if (!recipe) {
     notFound();
