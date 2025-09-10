@@ -178,7 +178,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                             defaultValue={field.value}
                             className="flex flex-col space-y-1"
                             name={field.name}
-                            ref={field.ref}
                             >
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl>
@@ -218,7 +217,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     <FormItem>
                       <FormLabel>Number of Days</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 7" {...field} />
+                        <Input type="number" placeholder="e.g., 7" {...field} name={field.name} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -282,7 +281,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     <FormItem>
                       <FormLabel>Daily Calorie Target</FormLabel>
                       <FormControl>
-                        <Input type="number" placeholder="e.g., 2000" {...field} />
+                        <Input type="number" placeholder="e.g., 2000" {...field} name={field.name} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -320,6 +319,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         <Textarea
                           placeholder="e.g., peanuts, shellfish, dairy. Separate with commas."
                           {...field}
+                          name={field.name}
                         />
                       </FormControl>
                       <FormMessage />
