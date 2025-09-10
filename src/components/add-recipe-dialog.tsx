@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
+import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
 import type { Recipe } from "@/lib/types";
 import { MultiSelect } from "./ui/multi-select";
 import { ScrollArea } from "./ui/scroll-area";
@@ -30,6 +30,7 @@ import { Loader2, Sparkles } from "lucide-react";
 const recipeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   cuisine: z.string({ required_error: "Please select a cuisine." }),
+  mealTypes: z.array(z.string()).min(1, "Select at least one meal type."),
   dietaryTags: z.array(z.string()).min(1, "Select at least one dietary tag."),
   ingredients: z.string().min(1, "Please list ingredients."),
   instructions: z.string().min(1, "Please provide instructions."),
@@ -62,6 +63,7 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
     defaultValues: {
       name: "",
       cuisine: "Any",
+      mealTypes: [],
       dietaryTags: [],
       ingredients: "",
       instructions: "",
@@ -81,6 +83,7 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
             form.reset({
                 name: result.name,
                 cuisine: result.cuisine,
+                mealTypes: result.mealTypes,
                 dietaryTags: result.dietaryTags,
                 ingredients: result.ingredients.map(i => `${i.quantity} ${i.item}`).join('\n'),
                 instructions: result.instructions.join('\n'),
@@ -219,6 +222,24 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
                   )}
                 />
               </div>
+                <FormField
+                  control={form.control}
+                  name="mealTypes"
+                  render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Meal Types</FormLabel>
+                        <FormControl>
+                            <MultiSelect
+                                options={MEAL_TYPES.map(p => ({value: p, label: p}))}
+                                selected={field.value}
+                                onChange={field.onChange}
+                                placeholder="Select meal types..."
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
               <FormField
                 control={form.control}

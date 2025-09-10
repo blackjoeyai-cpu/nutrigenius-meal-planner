@@ -1,3 +1,4 @@
+
 export const DIETARY_PREFERENCES = [
   "None",
   "Vegetarian",
@@ -19,3 +20,5 @@ export const CUISINES = [
   "American",
   "Mediterranean",
 ];
+
+export const MEAL_TYPES = ["Breakfast", "Lunch", "Dinner", "Snack", "Dessert"];

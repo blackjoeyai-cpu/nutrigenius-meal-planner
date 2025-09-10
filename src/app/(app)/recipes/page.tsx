@@ -14,6 +14,7 @@ import { AddRecipeDialog } from '@/components/add-recipe-dialog';
 import { useRecipes } from '@/hooks/use-recipes';
 import { CUISINES } from '@/lib/constants';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const getImage = (id: string) => {
   return PlaceHolderImages.find((img) => img.id === id);
@@ -23,6 +24,7 @@ export default function RecipesPage() {
   const { recipes, addRecipe, isLoaded } = useRecipes();
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('Any');
+  const [activeTab, setActiveTab] = useState('All');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const filteredRecipes = useMemo(() => {
@@ -31,9 +33,12 @@ export default function RecipesPage() {
       const matchesSearch = recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (recipe.ingredients && recipe.ingredients.some(ing => ing.item.toLowerCase().includes(searchTerm.toLowerCase())));
       const matchesCuisine = cuisineFilter === 'Any' || recipe.cuisine === cuisineFilter;
-      return matchesSearch && matchesCuisine;
+      const matchesMealType = activeTab === 'All' || (recipe.mealTypes && recipe.mealTypes.includes(activeTab));
+      return matchesSearch && matchesCuisine && matchesMealType;
     });
-  }, [searchTerm, cuisineFilter, recipes, isLoaded]);
+  }, [searchTerm, cuisineFilter, recipes, isLoaded, activeTab]);
+
+  const mealTypes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
   return (
     <div className="space-y-6">
@@ -60,6 +65,7 @@ export default function RecipesPage() {
           </Button>
         </AddRecipeDialog>
       </div>
+
       <div className="flex flex-col gap-4 md:flex-row">
         <Input
           placeholder="Search recipes or ingredients..."
@@ -81,45 +87,54 @@ export default function RecipesPage() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filteredRecipes.map((recipe) => {
-          const image = getImage(recipe.imageId);
-          return (
-            <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group">
-              <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg">
-                <CardHeader className="p-0">
-                  <div className="relative h-48 w-full">
-                    {image && (
-                      <Image
-                        src={image.imageUrl}
-                        alt={recipe.name}
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                        data-ai-hint={image.imageHint}
-                      />
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="p-4">
-                  <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">{recipe.cuisine}</Badge>
-                    {recipe.dietaryTags.map((tag) => (
-                      <Badge key={tag} variant="outline">{tag}</Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
-       {filteredRecipes.length === 0 && (
-          <div className="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-            <h3 className="text-xl font-semibold">No Recipes Found</h3>
-            <p className="text-muted-foreground">Try adjusting your search or filters.</p>
-          </div>
-        )}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList>
+          {mealTypes.map(type => (
+            <TabsTrigger key={type} value={type}>{type}</TabsTrigger>
+          ))}
+        </TabsList>
+        <TabsContent value={activeTab}>
+            <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredRecipes.map((recipe) => {
+                const image = getImage(recipe.imageId);
+                return (
+                  <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group">
+                    <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg">
+                      <CardHeader className="p-0">
+                        <div className="relative h-48 w-full">
+                          {image && (
+                            <Image
+                              src={image.imageUrl}
+                              alt={recipe.name}
+                              fill
+                              className="object-cover transition-transform group-hover:scale-105"
+                              data-ai-hint={image.imageHint}
+                            />
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="secondary">{recipe.cuisine}</Badge>
+                          {recipe.dietaryTags.map((tag) => (
+                            <Badge key={tag} variant="outline">{tag}</Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+            {filteredRecipes.length === 0 && isLoaded && (
+                <div className="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center mt-4">
+                  <h3 className="text-xl font-semibold">No Recipes Found</h3>
+                  <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+                </div>
+              )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

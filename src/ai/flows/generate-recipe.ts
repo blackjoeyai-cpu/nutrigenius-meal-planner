@@ -10,7 +10,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { CUISINES, DIETARY_PREFERENCES } from '@/lib/constants';
+import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from '@/lib/constants';
 
 const GenerateRecipeInputSchema = z.object({
   prompt: z.string().describe('The user’s idea or prompt for the recipe to be generated.'),
@@ -20,6 +20,7 @@ export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 const GenerateRecipeOutputSchema = z.object({
     name: z.string().describe("The name of the recipe."),
     cuisine: z.enum(CUISINES as [string, ...string[]]).describe("The cuisine of the recipe."),
+    mealTypes: z.array(z.enum(MEAL_TYPES as [string, ...string[]])).describe("A list of meal types for the recipe (e.g., Breakfast, Lunch, Dinner)."),
     dietaryTags: z.array(z.enum(DIETARY_PREFERENCES as [string, ...string[]])).describe("A list of dietary tags for the recipe."),
     ingredients: z.array(z.object({
         quantity: z.string().describe("The quantity of the ingredient (e.g., '1 cup', '2 tbsp')."),
@@ -57,6 +58,7 @@ const prompt = ai.definePrompt({
   Please generate the following for the recipe:
   - A creative and appealing name.
   - The most appropriate cuisine from the available options.
+  - Suitable meal types (e.g., Breakfast, Lunch, Dinner) from the available options.
   - Suitable dietary tags from the available options.
   - A list of ingredients with quantities.
   - Clear, step-by-step instructions.
@@ -65,6 +67,7 @@ const prompt = ai.definePrompt({
 
   Return the complete recipe as a JSON object that matches the specified output schema.
   The cuisine must be one of: ${CUISINES.join(', ')}.
+  The meal types must be from this list: ${MEAL_TYPES.join(', ')}.
   The dietary tags must be from this list: ${DIETARY_PREFERENCES.join(', ')}.
   `,
 });
