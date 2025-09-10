@@ -108,12 +108,14 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       });
       router.push('/plans');
     } else if (state.message && state.errors) {
-        const errorMessage = Object.values(state.errors).flat().join(' ') || state.message;
-        toast({
-            title: "Error",
-            description: errorMessage,
-            variant: "destructive",
-        })
+        const errorValues = Object.values(state.errors).flat();
+        if (errorValues.length > 0) {
+            toast({
+                title: "Error",
+                description: errorValues.join(' '),
+                variant: "destructive",
+            });
+        }
     } else if (state.message && !state.isSuccess && !state.errors) {
          toast({
             title: "Error",
@@ -131,7 +133,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             action={formAction}
           >
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
-          <input type="hidden" name="ingredients" value={form.getValues("ingredients").join(",")} />
+          <input type="hidden" name="ingredients" value={form.watch("ingredients").join(",")} />
             <CardHeader>
                 <CardTitle>Generate a New Long-term Plan</CardTitle>
                 <CardDescription>
@@ -175,6 +177,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                             className="flex flex-col space-y-1"
+                            name={field.name}
+                            ref={field.ref}
                             >
                             <FormItem className="flex items-center space-x-3 space-y-0">
                                 <FormControl>
@@ -227,9 +231,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Dietary Preferences</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} name={field.name}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger ref={field.ref}>
                             <SelectValue placeholder="Select a preference" />
                           </SelectTrigger>
                         </FormControl>
@@ -252,9 +256,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cuisine</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value} name={field.name}>
                         <FormControl>
-                          <SelectTrigger>
+                          <SelectTrigger ref={field.ref}>
                             <SelectValue placeholder="Select a cuisine" />
                           </SelectTrigger>
                         </FormControl>
@@ -331,5 +335,3 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     </Card>
   );
 }
-
-    
