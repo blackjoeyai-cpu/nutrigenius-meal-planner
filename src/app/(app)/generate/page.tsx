@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useFormState, useFormStatus } from "react-dom";
+import { useState, useEffect, useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +40,7 @@ function SubmitButton() {
 }
 
 export default function GeneratePage() {
-  const [state, formAction] = useFormState(createMealPlan, initialState);
+  const [state, formAction] = useActionState(createMealPlan, initialState);
   const { profile, isLoaded } = useUserProfile();
 
   const [dietaryPreferences, setDietaryPreferences] = useState(profile.dietaryPreferences);
