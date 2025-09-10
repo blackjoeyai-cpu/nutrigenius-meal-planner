@@ -4,24 +4,33 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets } from 'lucide-react';
-import { useRecipes } from '@/hooks/use-recipes';
+import { useEffect, useState } from 'react';
 
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { use } from 'react';
+import { getRecipeById } from '@/services/recipe-service';
+import type { Recipe } from '@/lib/types';
 
 const getImage = (id: string) => {
   return PlaceHolderImages.find((img) => img.id === id);
 };
 
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
-  const { recipes, isLoaded } = useRecipes();
-  const { id } = use(params);
+  const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   
-  const recipe = isLoaded ? recipes.find((recipe) => recipe.id === id) : undefined;
+  useEffect(() => {
+    const fetchRecipe = async () => {
+      const fetchedRecipe = await getRecipeById(params.id);
+      setRecipe(fetchedRecipe);
+      setIsLoaded(true);
+    };
+    fetchRecipe();
+  }, [params.id]);
+
 
   if (!isLoaded) {
     return (
