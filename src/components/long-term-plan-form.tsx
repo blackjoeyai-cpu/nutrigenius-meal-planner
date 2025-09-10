@@ -108,10 +108,10 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       });
       router.push('/plans');
     } else if (state.message && state.errors) {
-        const dayError = state.errors.numberOfDays?.[0] ?? state.message;
+        const errorMessage = Object.values(state.errors).flat().join(' ') || state.message;
         toast({
             title: "Error",
-            description: dayError,
+            description: errorMessage,
             variant: "destructive",
         })
     } else if (state.message && !state.isSuccess && !state.errors) {
@@ -331,3 +331,5 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     </Card>
   );
 }
+
+    
