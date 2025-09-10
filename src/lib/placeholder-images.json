@@ -1,3 +1,59 @@
+
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "recipe-1",
+      "description": "A vibrant quinoa salad with fresh vegetables.",
+      "imageUrl": "https://picsum.photos/seed/recipe1/600/400",
+      "imageHint": "quinoa salad"
+    },
+    {
+      "id": "recipe-2",
+      "description": "Crispy avocado toast with a sprinkle of seasoning.",
+      "imageUrl": "https://picsum.photos/seed/recipe2/600/400",
+      "imageHint": "avocado toast"
+    },
+    {
+      "id": "recipe-3",
+      "description": "Juicy grilled chicken breast with a side of greens.",
+      "imageUrl": "https://picsum.photos/seed/recipe3/600/400",
+      "imageHint": "grilled chicken"
+    },
+    {
+      "id": "recipe-4",
+      "description": "A warm and comforting bowl of lentil soup.",
+      "imageUrl": "https://picsum.photos/seed/recipe4/600/400",
+      "imageHint": "lentil soup"
+    },
+    {
+      "id": "recipe-5",
+      "description": "A fresh and fruity berry smoothie.",
+      "imageUrl": "https://picsum.photos/seed/recipe5/600/400",
+      "imageHint": "berry smoothie"
+    },
+    {
+      "id": "recipe-6",
+      "description": "Spaghetti aglio e olio, a classic Italian dish.",
+      "imageUrl": "https://picsum.photos/seed/recipe6/600/400",
+      "imageHint": "pasta dish"
+    },
+    {
+      "id": "recipe-7",
+      "description": "Hearty oatmeal with nuts and berries.",
+      "imageUrl": "https://picsum.photos/seed/recipe7/600/400",
+      "imageHint": "oatmeal breakfast"
+    },
+    {
+      "id": "recipe-8",
+      "description": "A colorful vegetable stir-fry with tofu.",
+      "imageUrl": "https://picsum.photos/seed/recipe8/600/400",
+      "imageHint": "vegetable stir-fry"
+    },
+    {
+      "id": "recipe-9",
+      "description": "Fluffy salmon fillet baked with lemon and herbs.",
+      "imageUrl": "https://picsum.photos/seed/recipe9/600/400",
+      "imageHint": "baked salmon"
+    }
+  ]
 }
