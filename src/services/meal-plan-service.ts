@@ -2,7 +2,7 @@
 "use server";
 
 import { db } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, where, orderBy } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
 import type { DailyMealPlan, LongTermMealPlan } from "@/lib/types";
 
 export type MealPlan = {
@@ -59,14 +59,21 @@ export async function getLongTermMealPlans(userId: string): Promise<LongTermMeal
     try {
         const q = query(
             collection(db, "longTermMealPlans"), 
-            where("userId", "==", userId),
-            orderBy("createdAt", "desc")
+            where("userId", "==", userId)
         );
         const querySnapshot = await getDocs(q);
         const plans: LongTermMealPlan[] = [];
         querySnapshot.forEach((doc) => {
             plans.push({ id: doc.id, ...doc.data() } as LongTermMealPlan);
         });
+
+        // Sort the plans by creation date in descending order (newest first)
+        plans.sort((a, b) => {
+            const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
+            const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
+            return dateB - dateA;
+        });
+
         return plans;
     } catch(e) {
         console.error("Error fetching long-term meal plans: ", e);
