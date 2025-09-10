@@ -9,6 +9,8 @@ export const DIETARY_PREFERENCES = [
 
 export const CUISINES = [
   "Any",
+  "Asian",
+  "Western",
   "Italian",
   "Mexican",
   "Indian",

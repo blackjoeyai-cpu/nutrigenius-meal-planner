@@ -21,6 +21,7 @@ const GenerateSafeMealPlanInputSchema = z.object({
     .describe(
       'A comma-separated list of ingredients the user is allergic to. Example: peanuts, shellfish, dairy.'
     ),
+  cuisine: z.string().describe('The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).'),
 });
 export type GenerateSafeMealPlanInput = z.infer<typeof GenerateSafeMealPlanInputSchema>;
 
@@ -50,6 +51,7 @@ const prompt = ai.definePrompt({
   prompt: `You are a nutritionist creating a meal plan for a user.
 
   The meal plan should adhere to the following dietary preferences: {{{dietaryPreferences}}}.
+  The meal plan should be of the following cuisine style: {{{cuisine}}}.
   The meal plan should have approximately {{{calorieTarget}}} calories per day.
   The meal plan MUST NOT include any of the following ingredients, as the user is allergic to them: {{{allergies}}}.
 

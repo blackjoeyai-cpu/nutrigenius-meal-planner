@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { createMealPlan } from "./actions";
 import { useUserProfile } from "@/hooks/use-user-profile";
-import { DIETARY_PREFERENCES } from "@/lib/constants";
+import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const initialState = {
@@ -46,6 +46,7 @@ export default function GeneratePage() {
   const [dietaryPreferences, setDietaryPreferences] = useState(profile.dietaryPreferences);
   const [calorieTarget, setCalorieTarget] = useState(profile.calorieTarget.toString());
   const [allergies, setAllergies] = useState(profile.allergies);
+  const [cuisine, setCuisine] = useState(CUISINES[0]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -63,6 +64,10 @@ export default function GeneratePage() {
           <Skeleton className="h-4 w-3/4" />
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+          </div>
           <div className="space-y-2">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-10 w-full" />
@@ -107,6 +112,21 @@ export default function GeneratePage() {
                   {DIETARY_PREFERENCES.map((pref) => (
                     <SelectItem key={pref} value={pref}>
                       {pref}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="cuisine">Cuisine</Label>
+              <Select name="cuisine" value={cuisine} onValueChange={setCuisine}>
+                <SelectTrigger id="cuisine">
+                  <SelectValue placeholder="Select a cuisine" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CUISINES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>
