@@ -1,36 +1,56 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { PlusCircle, CalendarDays, Flame } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { PlusCircle, CalendarDays, ChefHat } from 'lucide-react';
+import { addDays, format, isSameDay, startOfDay } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { getLongTermMealPlans } from '@/services/meal-plan-service';
-import type { LongTermMealPlan } from '@/lib/types';
+import type { LongTermMealPlan, DailyPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { format } from 'date-fns';
-import { Badge } from '@/components/ui/badge';
 
+type PlansByDate = Map<string, DailyPlan>;
 
 export default function PlansPage() {
   const [plans, setPlans] = useState<LongTermMealPlan[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const router = useRouter();
 
   useEffect(() => {
     async function fetchPlans() {
-      // Assuming a static userId for now
       const fetchedPlans = await getLongTermMealPlans('anonymous');
       setPlans(fetchedPlans);
       setIsLoaded(true);
     }
     fetchPlans();
   }, []);
-  
+
+  const plansByDate = useMemo((): PlansByDate => {
+    const map: PlansByDate = new Map();
+    if (!isLoaded) return map;
+
+    plans.forEach((plan) => {
+      const startDate = startOfDay(new Date(plan.createdAt));
+      plan.days.forEach((day, index) => {
+        const date = addDays(startDate, index);
+        map.set(date.toISOString().split('T')[0], day);
+      });
+    });
+    return map;
+  }, [plans, isLoaded]);
+
+  const plannedDays = useMemo(() => {
+    return Array.from(plansByDate.keys()).map((dateStr) => new Date(dateStr));
+  }, [plansByDate]);
+
+  const selectedDayPlan = selectedDate ? plansByDate.get(selectedDate.toISOString().split('T')[0]) : null;
+
   if (!isLoaded) {
     return (
       <div className="space-y-6">
@@ -38,9 +58,16 @@ export default function PlansPage() {
           <Skeleton className="h-10 w-48" />
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="space-y-4">
-          <Skeleton className="h-48 w-full" />
-          <Skeleton className="h-48 w-full" />
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          <div className="md:col-span-2">
+            <Skeleton className="h-96 w-full" />
+          </div>
+          <div className="md:col-span-1 space-y-4">
+             <Skeleton className="h-10 w-full" />
+             <Skeleton className="h-32 w-full" />
+             <Skeleton className="h-32 w-full" />
+             <Skeleton className="h-32 w-full" />
+          </div>
         </div>
       </div>
     );
@@ -51,10 +78,10 @@ export default function PlansPage() {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-2">
           <h2 className="text-3xl font-bold tracking-tight font-headline">
-            My Meal Plans
+            My Meal Calendar
           </h2>
           <p className="text-muted-foreground">
-            View your generated long-term meal plans.
+            Select a date to view your meal plan.
           </p>
         </div>
         <Button onClick={() => router.push('/generate')}>
@@ -63,71 +90,61 @@ export default function PlansPage() {
         </Button>
       </div>
 
-      <div className="space-y-8">
-        {plans.length > 0 ? (
-          plans.map((plan) => (
-            <Card key={plan.id} className="overflow-hidden">
-                <CardHeader>
-                    <CardTitle className="text-2xl font-headline">
-                       {plan.days.length}-Day Plan
-                    </CardTitle>
-                    <CardDescription>
-                       Generated on {format(new Date(plan.createdAt), 'PPP')}
-                    </CardDescription>
-                    <div className="flex flex-wrap gap-2 pt-2">
-                        <Badge variant="secondary">{plan.cuisine}</Badge>
-                        <Badge variant="outline">{plan.dietaryPreferences}</Badge>
-                         <Badge variant="outline">{plan.calorieTarget} kcal/day</Badge>
-                    </div>
-                </CardHeader>
-              <CardContent>
-                <Accordion type="single" collapsible className="w-full">
-                  {plan.days.map((day, index) => (
-                    <AccordionItem value={`day-${index}`} key={index}>
-                      <AccordionTrigger className="text-lg font-semibold">
-                        Day {index + 1}
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4 pt-2">
-                           <Link href={`/recipes/${day.breakfast.id}`} className="group block">
-                             <Card className="transition-shadow group-hover:shadow-md">
-                               <CardHeader>
-                                 <CardTitle>Breakfast: {day.breakfast.title}</CardTitle>
-                                 <CardDescription>{day.breakfast.calories} calories</CardDescription>
-                               </CardHeader>
-                             </Card>
-                           </Link>
-                           <Link href={`/recipes/${day.lunch.id}`} className="group block">
-                            <Card className="transition-shadow group-hover:shadow-md">
-                               <CardHeader>
-                                 <CardTitle>Lunch: {day.lunch.title}</CardTitle>
-                                 <CardDescription>{day.lunch.calories} calories</CardDescription>
-                               </CardHeader>
-                             </Card>
-                           </Link>
-                           <Link href={`/recipes/${day.dinner.id}`} className="group block">
-                            <Card className="transition-shadow group-hover:shadow-md">
-                               <CardHeader>
-                                 <CardTitle>Dinner: {day.dinner.title}</CardTitle>
-                                 <CardDescription>{day.dinner.calories} calories</CardDescription>
-                               </CardHeader>
-                             </Card>
-                           </Link>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </CardContent>
-            </Card>
-          ))
-        ) : (
-          <div className="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-            <CalendarDays className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-4 text-xl font-semibold">No Plans Yet</h3>
-            <p className="text-muted-foreground">Click "Generate New Plan" to get started.</p>
-          </div>
-        )}
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+        <Card className="md:col-span-2">
+          <CardContent className="p-2 md:p-6">
+             <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                modifiers={{ planned: plannedDays }}
+                modifiersClassNames={{
+                    planned: 'bg-primary/20 rounded-full',
+                }}
+                className="w-full"
+            />
+          </CardContent>
+        </Card>
+        
+        <div className="space-y-4 md:col-span-1">
+             <h3 className="text-2xl font-semibold font-headline">
+                {selectedDate ? format(selectedDate, 'PPP') : 'Select a date'}
+            </h3>
+            {selectedDayPlan ? (
+                <div className="space-y-4">
+                     <Link href={`/recipes/${selectedDayPlan.breakfast.id}`} className="group block">
+                        <Card className="transition-shadow group-hover:shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Breakfast: {selectedDayPlan.breakfast.title}</CardTitle>
+                            <CardDescription>{selectedDayPlan.breakfast.calories} calories</CardDescription>
+                        </CardHeader>
+                        </Card>
+                    </Link>
+                    <Link href={`/recipes/${selectedDayPlan.lunch.id}`} className="group block">
+                        <Card className="transition-shadow group-hover:shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Lunch: {selectedDayPlan.lunch.title}</CardTitle>
+                            <CardDescription>{selectedDayPlan.lunch.calories} calories</CardDescription>
+                        </CardHeader>
+                        </Card>
+                    </Link>
+                     <Link href={`/recipes/${selectedDayPlan.dinner.id}`} className="group block">
+                        <Card className="transition-shadow group-hover:shadow-md">
+                        <CardHeader>
+                            <CardTitle className="text-lg">Dinner: {selectedDayPlan.dinner.title}</CardTitle>
+                            <CardDescription>{selectedDayPlan.dinner.calories} calories</CardDescription>
+                        </CardHeader>
+                        </Card>
+                    </Link>
+                </div>
+            ) : (
+                <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-16 text-center">
+                    <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h4 className="mt-4 text-lg font-semibold">No Plan for This Day</h4>
+                    <p className="text-muted-foreground">Generate a new plan to fill your calendar.</p>
+                </div>
+            )}
+        </div>
       </div>
     </div>
   );

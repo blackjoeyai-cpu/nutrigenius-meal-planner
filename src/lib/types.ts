@@ -32,11 +32,18 @@ export type DailyMealPlan = {
     dinner: { id: string; title: string, calories: number };
 };
 
+// Represents a single day's plan as stored within a long-term plan
+export type DailyPlan = {
+  breakfast: { id: string; title: string; calories: number; };
+  lunch: { id: string; title: string; calories: number; };
+  dinner: { id: string; title: string; calories: number; };
+}
+
 export type LongTermMealPlan = {
     id: string;
     userId: string;
     createdAt: string; // Changed from Timestamp to string for serialization
-    days: DailyMealPlan[];
+    days: DailyPlan[];
     dietaryPreferences: string;
     calorieTarget: number;
     allergies: string;
