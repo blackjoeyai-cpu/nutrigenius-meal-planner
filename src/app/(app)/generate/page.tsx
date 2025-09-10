@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from 'next/link';
-import { Sparkles, Loader2, Flame } from "lucide-react";
+import { Sparkles, Loader2, Flame, AlertTriangle, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,12 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { createMealPlan } from "./actions";
-import { useUserProfile } from "@/hooks/use-user-profile";
 import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
 import { useRecipes } from "@/hooks/use-recipes";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 
 const initialState = {
   message: "",
@@ -47,62 +48,42 @@ function SubmitButton() {
 
 export default function GeneratePage() {
   const [state, formAction] = useActionState(createMealPlan, initialState);
-  const { profile, isLoaded: profileLoaded } = useUserProfile();
   const { ingredients, isLoaded: ingredientsLoaded } = useIngredients();
-  const { recipes, isLoaded: recipesLoaded } = useRecipes();
+  const { recipes, isLoaded: recipesLoaded, addRecipe } = useRecipes();
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const [dietaryPreferences, setDietaryPreferences] = useState(profile.dietaryPreferences);
-  const [calorieTarget, setCalorieTarget] = useState(profile.calorieTarget.toString());
-  const [allergies, setAllergies] = useState(profile.allergies);
+  // Default values - can be customized further
+  const [dietaryPreferences, setDietaryPreferences] = useState(DIETARY_PREFERENCES[0]);
+  const [calorieTarget, setCalorieTarget] = useState("2000");
+  const [allergies, setAllergies] = useState("");
   const [cuisine, setCuisine] = useState(CUISINES[0]);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (profileLoaded) {
-      setDietaryPreferences(profile.dietaryPreferences);
-      setCalorieTarget(profile.calorieTarget.toString());
-      setAllergies(profile.allergies);
-    }
-  }, [profileLoaded, profile]);
-  
-  const isLoaded = profileLoaded && ingredientsLoaded && recipesLoaded;
+  const isLoaded = ingredientsLoaded && recipesLoaded;
+  const canGenerate = recipes.length > 3;
 
   const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
   const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
 
   if (!isLoaded) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-8 w-1/2" />
-          <Skeleton className="h-4 w-3/4" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <Card>
+            <CardHeader>
+            <Skeleton className="h-8 w-1/2" />
+            <Skeleton className="h-4 w-3/4" />
+            </CardHeader>
+            <CardContent className="space-y-4">
             <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-24 w-full" />
             <Skeleton className="h-10 w-full" />
-          </div>
-           <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-10 w-full" />
-          </div>
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-1/4" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Skeleton className="h-10 w-40" />
-        </CardFooter>
-      </Card>
+            </CardContent>
+            <CardFooter>
+            <Skeleton className="h-10 w-40" />
+            </CardFooter>
+        </Card>
+        <Skeleton className="h-96 w-full" />
+      </div>
     );
   }
 
@@ -119,73 +100,100 @@ export default function GeneratePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="dietaryPreferences">Dietary Preferences</Label>
-              <Select name="dietaryPreferences" value={dietaryPreferences} onValueChange={setDietaryPreferences}>
-                <SelectTrigger id="dietaryPreferences">
-                  <SelectValue placeholder="Select a preference" />
-                </SelectTrigger>
-                <SelectContent>
-                  {DIETARY_PREFERENCES.map((pref) => (
-                    <SelectItem key={pref} value={pref}>
-                      {pref}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="cuisine">Cuisine</Label>
-              <Select name="cuisine" value={cuisine} onValueChange={setCuisine}>
-                <SelectTrigger id="cuisine">
-                  <SelectValue placeholder="Select a cuisine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CUISINES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="calorieTarget">Daily Calorie Target</Label>
-              <Input
-                id="calorieTarget"
-                name="calorieTarget"
-                type="number"
-                placeholder="e.g., 2000"
-                value={calorieTarget}
-                onChange={(e) => setCalorieTarget(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="ingredients">Ingredients on Hand</Label>
-                <MultiSelect
-                    options={ingredients.map(i => ({ value: i, label: i }))}
-                    selected={selectedIngredients}
-                    onChange={setSelectedIngredients}
-                    className="w-full"
-                    placeholder="Select ingredients you have..."
+            {!canGenerate && (
+                 <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertTitle>Not Enough Recipes</AlertTitle>
+                    <AlertDescription>
+                        You need more than 3 recipes in your collection to generate a meal plan. 
+                        Please add more recipes.
+                    </AlertDescription>
+                     <div className="mt-4">
+                        <AddRecipeDialog
+                            open={isAddDialogOpen}
+                            onOpenChange={setIsAddDialogOpen}
+                            onRecipeAdd={(newRecipe) => {
+                                addRecipe(newRecipe);
+                                setIsAddDialogOpen(false);
+                            }}
+                        >
+                        <Button variant="secondary" onClick={() => setIsAddDialogOpen(true)}>
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Recipe
+                        </Button>
+                        </AddRecipeDialog>
+                     </div>
+                </Alert>
+            )}
+            <fieldset disabled={!canGenerate} className="space-y-4">
+                <div className="space-y-2">
+                <Label htmlFor="dietaryPreferences">Dietary Preferences</Label>
+                <Select name="dietaryPreferences" value={dietaryPreferences} onValueChange={setDietaryPreferences}>
+                    <SelectTrigger id="dietaryPreferences">
+                    <SelectValue placeholder="Select a preference" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {DIETARY_PREFERENCES.map((pref) => (
+                        <SelectItem key={pref} value={pref}>
+                        {pref}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="cuisine">Cuisine</Label>
+                <Select name="cuisine" value={cuisine} onValueChange={setCuisine}>
+                    <SelectTrigger id="cuisine">
+                    <SelectValue placeholder="Select a cuisine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                    {CUISINES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                        {c}
+                        </SelectItem>
+                    ))}
+                    </SelectContent>
+                </Select>
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="calorieTarget">Daily Calorie Target</Label>
+                <Input
+                    id="calorieTarget"
+                    name="calorieTarget"
+                    type="number"
+                    placeholder="e.g., 2000"
+                    value={calorieTarget}
+                    onChange={(e) => setCalorieTarget(e.target.value)}
+                />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="ingredients">Ingredients on Hand</Label>
+                    <MultiSelect
+                        options={ingredients.map(i => ({ value: i, label: i }))}
+                        selected={selectedIngredients}
+                        onChange={setSelectedIngredients}
+                        className="w-full"
+                        placeholder="Select ingredients you have..."
+                    />
+                    <p className="text-sm text-muted-foreground">
+                        Select ingredients you have to be included in the meal plan.
+                    </p>
+                </div>
+                <div className="space-y-2">
+                <Label htmlFor="allergies">Allergies or Restrictions</Label>
+                <Textarea
+                    id="allergies"
+                    name="allergies"
+                    placeholder="e.g., peanuts, shellfish, dairy"
+                    value={allergies}
+                    onChange={(e) => setAllergies(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                    Select ingredients you have to be included in the meal plan.
+                    Separate items with a comma.
                 </p>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="allergies">Allergies or Restrictions</Label>
-              <Textarea
-                id="allergies"
-                name="allergies"
-                placeholder="e.g., peanuts, shellfish, dairy"
-                value={allergies}
-                onChange={(e) => setAllergies(e.target.value)}
-              />
-              <p className="text-sm text-muted-foreground">
-                Separate items with a comma.
-              </p>
-            </div>
+                </div>
+            </fieldset>
           </CardContent>
           <CardFooter>
             <SubmitButton />

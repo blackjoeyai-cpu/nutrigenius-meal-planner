@@ -3,10 +3,8 @@
 import { usePathname } from 'next/navigation';
 import {
   BookOpen,
-  LayoutDashboard,
   Menu,
   Sparkles,
-  User,
 } from 'lucide-react';
 
 import {
@@ -21,15 +19,9 @@ import {
   SidebarTrigger,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
 
 const menuItems = [
-  {
-    href: '/dashboard',
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-  },
   {
     href: '/recipes',
     label: 'Recipes',
@@ -39,11 +31,6 @@ const menuItems = [
     href: '/generate',
     label: 'Generate Plan',
     icon: Sparkles,
-  },
-  {
-    href: '/profile',
-    label: 'Profile',
-    icon: User,
   },
 ];
 
