@@ -49,6 +49,9 @@ const prompt = ai.definePrompt({
   name: 'generateRecipePrompt',
   input: {schema: GenerateRecipeInputSchema},
   output: {schema: GenerateRecipeOutputSchema},
+  config: {
+    retries: 3,
+  },
   prompt: `You are a creative chef who specializes in creating new and exciting recipes.
   A user will provide you with a prompt for a recipe, and you must generate a complete, well-structured recipe based on their idea.
 
