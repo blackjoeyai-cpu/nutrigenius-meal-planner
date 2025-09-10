@@ -21,6 +21,9 @@ import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
 import type { Recipe } from "@/lib/types";
 import { MultiSelect } from "./ui/multi-select";
 import { ScrollArea } from "./ui/scroll-area";
+import { useState } from "react";
+import { generateRecipeAction } from "@/app/(app)/recipes/actions";
+import { Loader2, Sparkles } from "lucide-react";
 
 
 const recipeFormSchema = z.object({
@@ -50,6 +53,9 @@ type AddRecipeDialogProps = {
 };
 
 export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: AddRecipeDialogProps) {
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationPrompt, setGenerationPrompt] = useState("");
+  
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
@@ -65,6 +71,38 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
     },
   });
 
+  async function handleGenerateRecipe() {
+    if (!generationPrompt) return;
+    setIsGenerating(true);
+    try {
+        const result = await generateRecipeAction({ prompt: generationPrompt });
+        if (result) {
+            form.reset({
+                name: result.name,
+                cuisine: result.cuisine,
+                dietaryTags: result.dietaryTags,
+                ingredients: result.ingredients.map(i => `${i.quantity} ${i.item}`).join('\n'),
+                instructions: result.instructions.join('\n'),
+                prepTime: result.prepTime,
+                cookTime: result.cookTime,
+                servings: result.servings,
+                nutrition: {
+                    calories: result.nutrition.calories,
+                    protein: result.nutrition.protein,
+                    carbs: result.nutrition.carbs,
+                    fat: result.nutrition.fat,
+                },
+            });
+        }
+    } catch (error) {
+        console.error("Failed to generate recipe:", error);
+        // Optionally, show a toast notification for the error
+    } finally {
+        setIsGenerating(false);
+    }
+  }
+
+
   function onSubmit(data: RecipeFormValues) {
     const ingredientsArray = data.ingredients.split('\n').map(line => {
       const [quantity, ...itemParts] = line.split(' ');
@@ -78,6 +116,7 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
     };
     onRecipeAdd(newRecipe);
     form.reset();
+    setGenerationPrompt("");
   }
 
   return (
@@ -87,12 +126,39 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
         <DialogHeader>
           <DialogTitle>Add a New Recipe</DialogTitle>
           <DialogDescription>
-            Fill out the form below to add your own recipe to the collection.
+            Fill out the form below or use AI to generate a new recipe.
           </DialogDescription>
         </DialogHeader>
+
+        <div className="space-y-4 p-4 border rounded-md">
+            <div className="space-y-2">
+                <Label htmlFor="generation-prompt">Generate with AI</Label>
+                 <Textarea
+                    id="generation-prompt"
+                    placeholder="e.g., A healthy and spicy salmon dish with roasted vegetables"
+                    value={generationPrompt}
+                    onChange={(e) => setGenerationPrompt(e.target.value)}
+                />
+            </div>
+            <Button onClick={handleGenerateRecipe} disabled={isGenerating || !generationPrompt} className="w-full sm:w-auto">
+                 {isGenerating ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                    </>
+                 ) : (
+                    <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate Recipe
+                    </>
+                 )}
+            </Button>
+        </div>
+
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
-            <ScrollArea className="h-[60vh] p-4">
+            <ScrollArea className="h-[45vh] p-4">
             <div className="space-y-8">
               <FormField
                 control={form.control}
@@ -115,7 +181,7 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Cuisine</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select a cuisine" />
