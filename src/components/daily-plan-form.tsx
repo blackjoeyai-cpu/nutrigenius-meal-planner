@@ -302,7 +302,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                 </Card>
             </div>
         ) : generatedPlan ? (
-          <div className="space-y-4">
+          <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4">
              <Link href={`/recipes/${generatedPlan.days[0].breakfast.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
@@ -368,5 +368,3 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     </div>
   );
 }
-
-    

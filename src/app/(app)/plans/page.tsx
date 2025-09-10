@@ -175,7 +175,7 @@ export default function PlansPage() {
                 {selectedDate ? format(selectedDate, 'PPP') : 'Select a date'}
             </h3>
             {selectedDayPlan ? (
-                <div className="space-y-4">
+                <div className="space-y-4 animate-in fade-in-0 zoom-in-95">
                      <Link href={`/recipes/${selectedDayPlan.breakfast.id}`} className="group block">
                         <Card className="transition-shadow group-hover:shadow-md">
                         <CardHeader>
@@ -207,7 +207,7 @@ export default function PlansPage() {
                     </Button>
                 </div>
             ) : (
-                <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center h-full">
+                <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center h-full animate-in fade-in-0 zoom-in-95">
                     <CardContent className="flex flex-col items-center justify-center p-6">
                         <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
                         <h4 className="mt-4 text-lg font-semibold">No Plan for This Day</h4>

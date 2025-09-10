@@ -70,7 +70,7 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8">
+    <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in-0">
       <div className="space-y-4">
         <h1 className="text-4xl font-bold font-headline">{recipe.name}</h1>
         <div className="flex flex-wrap items-center gap-4 text-muted-foreground">

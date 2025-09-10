@@ -106,7 +106,7 @@ export default function RecipesPage() {
                 filteredRecipes.map((recipe) => {
                   return (
                     <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group">
-                      <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg">
+                      <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg animate-in fade-in-0">
                         <CardContent className="p-4">
                           <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
                           <div className="flex flex-wrap gap-2">

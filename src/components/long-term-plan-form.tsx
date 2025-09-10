@@ -190,7 +190,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
   if (generatedPlan) {
     return (
-      <Card className="mt-6">
+      <Card className="mt-6 animate-in fade-in-0 slide-in-from-bottom-4">
         <CardHeader>
           <CardTitle>Review Your Long-Term Plan</CardTitle>
           <CardDescription>
@@ -517,5 +517,3 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     </Card>
   );
 }
-
-    
