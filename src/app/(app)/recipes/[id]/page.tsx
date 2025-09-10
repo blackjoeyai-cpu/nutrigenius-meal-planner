@@ -24,11 +24,14 @@ export default function RecipeDetailPage({ params }: { params: { id: string } })
   
   useEffect(() => {
     const fetchRecipe = async () => {
+      setIsLoaded(false);
       const fetchedRecipe = await getRecipeById(params.id);
       setRecipe(fetchedRecipe);
       setIsLoaded(true);
     };
-    fetchRecipe();
+    if (params.id) {
+        fetchRecipe();
+    }
   }, [params.id]);
 
 
