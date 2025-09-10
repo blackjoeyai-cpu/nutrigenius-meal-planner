@@ -172,72 +172,103 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
   if (generatedPlan && !isPending) {
     return (
-        <Card className="mt-6">
-            <CardHeader>
-                <CardTitle>Review Your Long-Term Plan</CardTitle>
-                <CardDescription>
-                    Here is the {generatedPlan.days.length}-day meal plan generated for you. Review the details below.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                <Accordion type="single" collapsible className="w-full">
-                    {generatedPlan.days.map((day, index) => (
-                        <AccordionItem value={`day-${index}`} key={`day-${index}`}>
-                             <AccordionTrigger>Day {index + 1}</AccordionTrigger>
-                             <AccordionContent>
-                                <div className="space-y-4 pl-2">
-                                     <Link href={`/recipes/${day.breakfast.id}`} className="group block">
-                                        <Card className="transition-shadow group-hover:shadow-md">
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">Breakfast: {day.breakfast.title}</CardTitle>
-                                            <CardDescription>{day.breakfast.calories} calories</CardDescription>
-                                        </CardHeader>
-                                        </Card>
-                                    </Link>
-                                    <Link href={`/recipes/${day.lunch.id}`} className="group block">
-                                        <Card className="transition-shadow group-hover:shadow-md">
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">Lunch: {day.lunch.title}</CardTitle>
-                                            <CardDescription>{day.lunch.calories} calories</CardDescription>
-                                        </CardHeader>
-                                        </Card>
-                                    </Link>
-                                    <Link href={`/recipes/${day.dinner.id}`} className="group block">
-                                        <Card className="transition-shadow group-hover:shadow-md">
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">Dinner: {day.dinner.title}</CardTitle>
-                                            <CardDescription>{day.dinner.calories} calories</CardDescription>
-                                        </CardHeader>
-                                        </Card>
-                                    </Link>
-                                </div>
-                             </AccordionContent>
-                        </AccordionItem>
-                    ))}
-                </Accordion>
-                 {generatedPlan.generationSource !== 'catalog' && (
-                    <Alert variant="destructive" className="mt-4">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Saving Disabled</AlertTitle>
-                        <AlertDescription>
-                            Saving is only enabled when "Use my existing recipes" is selected. This ensures that all recipes in your saved plan have valid links.
-                        </AlertDescription>
-                    </Alert>
-                )}
-            </CardContent>
-            <CardFooter className="flex-col items-start gap-4">
-                <div className="flex gap-2">
-                    <Button onClick={handleSave} disabled={isSaving || generatedPlan.generationSource !== 'catalog'}>
-                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Plan
-                    </Button>
-                    <Button variant="outline" onClick={handleDiscard}>
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Discard
-                    </Button>
-                </div>
-            </CardFooter>
-        </Card>
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Review Your Long-Term Plan</CardTitle>
+          <CardDescription>
+            Here is the {generatedPlan.days.length}-day meal plan generated for
+            you. Review the details below.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Accordion type="single" collapsible className="w-full">
+            {generatedPlan.days.map((day, index) => (
+              <AccordionItem value={`day-${index}`} key={`day-${index}`}>
+                <AccordionTrigger>Day {index + 1}</AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-4 pl-2">
+                    <Link
+                      href={`/recipes/${day.breakfast.id}`}
+                      className="group block"
+                    >
+                      <Card className="transition-shadow group-hover:shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            Breakfast: {day.breakfast.title}
+                          </CardTitle>
+                          <CardDescription>
+                            {day.breakfast.calories} calories
+                          </CardDescription>
+                        </CardHeader>
+                      </Card>
+                    </Link>
+                    <Link
+                      href={`/recipes/${day.lunch.id}`}
+                      className="group block"
+                    >
+                      <Card className="transition-shadow group-hover:shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            Lunch: {day.lunch.title}
+                          </CardTitle>
+                          <CardDescription>
+                            {day.lunch.calories} calories
+                          </CardDescription>
+                        </CardHeader>
+                      </Card>
+                    </Link>
+                    <Link
+                      href={`/recipes/${day.dinner.id}`}
+                      className="group block"
+                    >
+                      <Card className="transition-shadow group-hover:shadow-md">
+                        <CardHeader>
+                          <CardTitle className="text-lg">
+                            Dinner: {day.dinner.title}
+                          </CardTitle>
+                          <CardDescription>
+                            {day.dinner.calories} calories
+                          </CardDescription>
+                        </CardHeader>
+                      </Card>
+                    </Link>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+          {generatedPlan.generationSource !== "catalog" && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle>Saving Disabled</AlertTitle>
+              <AlertDescription>
+                Saving is only enabled when "Use my existing recipes" is
+                selected. This ensures that all recipes in your saved plan have
+                valid links.
+              </AlertDescription>
+            </Alert>
+          )}
+        </CardContent>
+        <CardFooter className="flex-col items-start gap-4">
+          <div className="flex gap-2">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || generatedPlan.generationSource !== "catalog"}
+            >
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              Save Plan
+            </Button>
+            <Button variant="outline" onClick={handleDiscard}>
+              <XCircle className="mr-2 h-4 w-4" />
+              Discard
+            </Button>
+          </div>
+        </CardFooter>
+      </Card>
     );
   }
 
@@ -463,3 +494,5 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     </Card>
   );
 }
+
+    
