@@ -20,6 +20,7 @@ import { useIngredients } from "@/hooks/use-ingredients";
 import { useRecipes } from "@/hooks/use-recipes";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddRecipeDialog } from "@/components/add-recipe-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 const initialState = {
   message: "",
@@ -58,9 +59,10 @@ export default function GeneratePage() {
   const [allergies, setAllergies] = useState("");
   const [cuisine, setCuisine] = useState(CUISINES[0]);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [generationSource, setGenerationSource] = useState("catalog");
 
   const isLoaded = ingredientsLoaded && recipesLoaded;
-  const canGenerate = recipes.length > 3;
+  const canGenerate = recipes.length > 3 || generationSource !== 'catalog';
 
   const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
   const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
@@ -93,6 +95,7 @@ export default function GeneratePage() {
         <form action={formAction}>
            <input type="hidden" name="ingredients" value={selectedIngredients.join(',')} />
            <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
+           <input type="hidden" name="generationSource" value={generationSource} />
           <CardHeader>
             <CardTitle>Create Your Meal Plan</CardTitle>
             <CardDescription>
@@ -100,13 +103,13 @@ export default function GeneratePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!canGenerate && (
+            {!canGenerate && generationSource === 'catalog' && (
                  <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Not Enough Recipes</AlertTitle>
                     <AlertDescription>
-                        You need more than 3 recipes in your collection to generate a meal plan. 
-                        Please add more recipes.
+                        You need more than 3 recipes in your collection to generate a meal plan from your catalog. 
+                        Please add more recipes, or choose a different generation source.
                     </AlertDescription>
                      <div className="mt-4">
                         <AddRecipeDialog
@@ -125,7 +128,24 @@ export default function GeneratePage() {
                      </div>
                 </Alert>
             )}
-            <fieldset disabled={!canGenerate} className="space-y-4">
+            <fieldset disabled={!canGenerate && generationSource === 'catalog'} className="space-y-4">
+                <div className="space-y-2">
+                    <Label>Generation Source</Label>
+                    <RadioGroup name="generationSource" value={generationSource} onValueChange={setGenerationSource} className="gap-2">
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="catalog" id="catalog" />
+                            <Label htmlFor="catalog">Use my existing recipes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="new" id="new" />
+                            <Label htmlFor="new">Generate all new recipes</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="combined" id="combined" />
+                            <Label htmlFor="combined">Combine existing and new recipes</Label>
+                        </div>
+                    </RadioGroup>
+                </div>
                 <div className="space-y-2">
                 <Label htmlFor="dietaryPreferences">Dietary Preferences</Label>
                 <Select name="dietaryPreferences" value={dietaryPreferences} onValueChange={setDietaryPreferences}>
@@ -262,3 +282,5 @@ export default function GeneratePage() {
     </div>
   );
 }
+
+    

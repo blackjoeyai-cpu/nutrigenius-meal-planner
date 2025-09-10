@@ -25,11 +25,12 @@ const GenerateSafeMealPlanInputSchema = z.object({
   cuisine: z.string().describe('The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).'),
   ingredients: z.string().optional().describe('A comma-separated list of ingredients the user has on hand and would like to use.'),
   availableRecipes: z.string().optional().describe('A JSON string of available recipes for the AI to choose from.'),
+  generationSource: z.enum(["catalog", "new", "combined"]).describe("The source for recipe generation. 'catalog' uses only available recipes. 'new' generates all new recipes. 'combined' uses available recipes first, then generates new ones if necessary."),
 });
 export type GenerateSafeMealPlanInput = z.infer<typeof GenerateSafeMealPlanInputSchema>;
 
 const MealSchema = z.object({
-  id: z.string().describe('The ID of the recipe from the available list.'),
+  id: z.string().describe('The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-1".'),
   title: z.string().describe('The name of the meal.'),
   description: z.string().describe('A short description of the meal.'),
   calories: z.number().describe('The estimated calorie count for the meal.'),
@@ -61,14 +62,22 @@ const prompt = ai.definePrompt({
   {{#if ingredients}}
   The meal plan should try to incorporate the following ingredients that the user has on hand: {{{ingredients}}}.
   {{/if}}
+
+  Recipe Generation Source: {{{generationSource}}}
+  - If 'catalog', you MUST choose from the list of available recipes.
+  - If 'new', you MUST generate three brand new recipes that fit the user's criteria. DO NOT use the available recipes.
+  - If 'combined', you MUST prioritize using the available recipes. Only generate a new recipe if you cannot find a suitable one in the catalog.
+
   {{#if availableRecipes}}
-  You must choose from the following list of available recipes, provided as a JSON string. Each recipe has a unique "id".
+  This is the list of available recipes, provided as a JSON string. Each recipe has a unique "id".
   {{{availableRecipes}}}
   {{/if}}
 
   Create a detailed meal plan with breakfast, lunch, and dinner that is safe and appropriate for the user.
   Return the plan as a JSON object with keys "breakfast", "lunch", and "dinner".
-  Each meal should have an "id", "title", "description", and "calories". The "id" MUST be the original id from the recipe you selected.`,
+  Each meal should have an "id", "title", "description", and "calories".
+  - If you select a recipe from the catalog, the "id" MUST be the original id from that recipe.
+  - If you generate a new recipe, the "id" should be a placeholder like "new-recipe-breakfast", "new-recipe-lunch", etc.`,
 });
 
 const generateSafeMealPlanFlow = ai.defineFlow(
@@ -82,3 +91,5 @@ const generateSafeMealPlanFlow = ai.defineFlow(
     return output!;
   }
 );
+
+    

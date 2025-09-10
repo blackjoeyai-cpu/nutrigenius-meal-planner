@@ -13,6 +13,7 @@ const MealPlanSchema = z.object({
   cuisine: z.string(),
   ingredients: z.string().optional(),
   recipes: z.string().optional(),
+  generationSource: z.enum(["catalog", "new", "combined"]),
 });
 
 export async function createMealPlan(prevState: any, formData: FormData) {
@@ -23,6 +24,7 @@ export async function createMealPlan(prevState: any, formData: FormData) {
     cuisine: formData.get("cuisine"),
     ingredients: formData.get("ingredients"),
     recipes: formData.get("recipes"),
+    generationSource: formData.get("generationSource"),
   });
 
   if (!validatedFields.success) {
@@ -34,7 +36,7 @@ export async function createMealPlan(prevState: any, formData: FormData) {
   }
 
   try {
-    const { dietaryPreferences, calorieTarget, allergies, cuisine, ingredients, recipes } = validatedFields.data;
+    const { dietaryPreferences, calorieTarget, allergies, cuisine, ingredients, recipes, generationSource } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
     
     const result = await generateSafeMealPlan({
@@ -44,17 +46,23 @@ export async function createMealPlan(prevState: any, formData: FormData) {
       cuisine,
       ingredients: ingredients || "none",
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
+      generationSource,
     });
 
     // Assume a userId, in a real app this would come from auth
     const userId = "anonymous"; 
-    await addMealPlan({
-      breakfast: { id: result.breakfast.id, title: result.breakfast.title },
-      lunch: { id: result.lunch.id, title: result.lunch.title },
-      dinner: { id: result.dinner.id, title: result.dinner.title },
-      date: new Date(),
-      userId,
-    });
+
+    // Only save the meal plan if it was generated from the catalog or combined
+    // If all new recipes were generated, they don't exist in the DB, so we don't save the plan.
+    if (generationSource !== 'new') {
+        await addMealPlan({
+          breakfast: { id: result.breakfast.id, title: result.breakfast.title },
+          lunch: { id: result.lunch.id, title: result.lunch.title },
+          dinner: { id: result.dinner.id, title: result.dinner.title },
+          date: new Date(),
+          userId,
+        });
+    }
 
     return {
       message: "Successfully generated meal plan.",
@@ -70,3 +78,5 @@ export async function createMealPlan(prevState: any, formData: FormData) {
     };
   }
 }
+
+    
