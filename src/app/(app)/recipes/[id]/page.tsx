@@ -1,7 +1,7 @@
 
 "use client";
 
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
@@ -12,7 +12,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getRecipeById } from '@/services/recipe-service';
 import type { Recipe } from '@/lib/types';
 
-export default function RecipeDetailPage({ params: { id } }: { params: { id: string } }) {
+export default function RecipeDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   
