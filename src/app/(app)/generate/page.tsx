@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -83,6 +83,9 @@ export default function GeneratePage() {
     );
   }
 
+  const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
+  const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
+
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <Card>
@@ -141,23 +144,56 @@ export default function GeneratePage() {
       </Card>
 
       <div className="space-y-4">
-        <h3 className="text-2xl font-bold font-headline">Your Generated Plan</h3>
-        <Card className="min-h-[400px]">
+        <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold font-headline">Your Generated Plan</h3>
+            {mealPlan && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Flame className="h-4 w-4" />
+                    <span>Total Calories: {totalCalories}</span>
+                </div>
+            )}
+        </div>
+
+        {mealPlan ? (
+          <div className="space-y-4">
+             <Card>
+              <CardHeader>
+                <CardTitle>Breakfast: {mealPlan.breakfast.title}</CardTitle>
+                <CardDescription>{mealPlan.breakfast.calories} calories</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>{mealPlan.breakfast.description}</p>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader>
+                <CardTitle>Lunch: {mealPlan.lunch.title}</CardTitle>
+                <CardDescription>{mealPlan.lunch.calories} calories</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>{mealPlan.lunch.description}</p>
+              </CardContent>
+            </Card>
+             <Card>
+              <CardHeader>
+                <CardTitle>Dinner: {mealPlan.dinner.title}</CardTitle>
+                <CardDescription>{mealPlan.dinner.calories} calories</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p>{mealPlan.dinner.description}</p>
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <Card className="flex h-full min-h-[400px] flex-col items-center justify-center text-center">
             <CardContent className="p-6">
-            {state.mealPlan ? (
-              <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-                {state.mealPlan}
-              </div>
-            ) : (
-              <div className="flex h-full min-h-[300px] flex-col items-center justify-center text-center">
-                <Sparkles className="h-12 w-12 text-muted-foreground" />
+                <Sparkles className="h-12 w-12 text-muted-foreground mx-auto" />
                 <h4 className="mt-4 text-lg font-semibold">Your meal plan will appear here</h4>
                 <p className="mt-1 text-muted-foreground">Fill out the form to get started.</p>
                 {state.message && !state.mealPlan && <p className="mt-4 text-sm text-destructive">{state.message}</p>}
-              </div>
-            )}
             </CardContent>
-        </Card>
+          </Card>
+        )}
       </div>
     </div>
   );

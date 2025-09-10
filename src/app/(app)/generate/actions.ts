@@ -36,7 +36,7 @@ export async function createMealPlan(prevState: any, formData: FormData) {
     return {
       message: "Successfully generated meal plan.",
       errors: null,
-      mealPlan: result.mealPlan,
+      mealPlan: JSON.stringify(result),
     };
   } catch (error) {
     console.error("Error generating meal plan:", error);

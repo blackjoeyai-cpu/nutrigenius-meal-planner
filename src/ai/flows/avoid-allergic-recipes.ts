@@ -24,12 +24,16 @@ const GenerateSafeMealPlanInputSchema = z.object({
 });
 export type GenerateSafeMealPlanInput = z.infer<typeof GenerateSafeMealPlanInputSchema>;
 
+const MealSchema = z.object({
+  title: z.string().describe('The name of the meal.'),
+  description: z.string().describe('A short description of the meal.'),
+  calories: z.number().describe('The estimated calorie count for the meal.'),
+});
+
 const GenerateSafeMealPlanOutputSchema = z.object({
-  mealPlan: z
-    .string()
-    .describe(
-      'A detailed meal plan that adheres to the user’s dietary preferences and calorie target, while excluding all ingredients the user is allergic to.'
-    ),
+  breakfast: MealSchema,
+  lunch: MealSchema,
+  dinner: MealSchema,
 });
 export type GenerateSafeMealPlanOutput = z.infer<typeof GenerateSafeMealPlanOutputSchema>;
 
@@ -49,7 +53,9 @@ const prompt = ai.definePrompt({
   The meal plan should have approximately {{{calorieTarget}}} calories per day.
   The meal plan MUST NOT include any of the following ingredients, as the user is allergic to them: {{{allergies}}}.
 
-  Create a detailed meal plan that is safe and appropriate for the user.`,
+  Create a detailed meal plan with breakfast, lunch, and dinner that is safe and appropriate for the user.
+  Return the plan as a JSON object with keys "breakfast", "lunch", and "dinner".
+  Each meal should have a "title", "description", and "calories".`,
 });
 
 const generateSafeMealPlanFlow = ai.defineFlow(
@@ -63,4 +69,3 @@ const generateSafeMealPlanFlow = ai.defineFlow(
     return output!;
   }
 );
-
