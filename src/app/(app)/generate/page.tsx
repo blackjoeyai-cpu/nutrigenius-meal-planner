@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import Link from 'next/link';
 import { Sparkles, Loader2, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -205,33 +206,39 @@ export default function GeneratePage() {
 
         {mealPlan ? (
           <div className="space-y-4">
-             <Card>
-              <CardHeader>
-                <CardTitle>Breakfast: {mealPlan.breakfast.title}</CardTitle>
-                <CardDescription>{mealPlan.breakfast.calories} calories</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>{mealPlan.breakfast.description}</p>
-              </CardContent>
-            </Card>
-             <Card>
-              <CardHeader>
-                <CardTitle>Lunch: {mealPlan.lunch.title}</CardTitle>
-                <CardDescription>{mealPlan.lunch.calories} calories</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>{mealPlan.lunch.description}</p>
-              </CardContent>
-            </Card>
-             <Card>
-              <CardHeader>
-                <CardTitle>Dinner: {mealPlan.dinner.title}</CardTitle>
-                <CardDescription>{mealPlan.dinner.calories} calories</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p>{mealPlan.dinner.description}</p>
-              </CardContent>
-            </Card>
+             <Link href={`/recipes/${mealPlan.breakfast.id}`} className="group block">
+              <Card className="transition-shadow group-hover:shadow-md">
+                <CardHeader>
+                  <CardTitle>Breakfast: {mealPlan.breakfast.title}</CardTitle>
+                  <CardDescription>{mealPlan.breakfast.calories} calories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>{mealPlan.breakfast.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href={`/recipes/${mealPlan.lunch.id}`} className="group block">
+              <Card className="transition-shadow group-hover:shadow-md">
+                <CardHeader>
+                  <CardTitle>Lunch: {mealPlan.lunch.title}</CardTitle>
+                  <CardDescription>{mealPlan.lunch.calories} calories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>{mealPlan.lunch.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href={`/recipes/${mealPlan.dinner.id}`} className="group block">
+              <Card className="transition-shadow group-hover:shadow-md">
+                <CardHeader>
+                  <CardTitle>Dinner: {mealPlan.dinner.title}</CardTitle>
+                  <CardDescription>{mealPlan.dinner.calories} calories</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p>{mealPlan.dinner.description}</p>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         ) : (
           <Card className="flex h-full min-h-[400px] flex-col items-center justify-center text-center">

@@ -29,6 +29,7 @@ const GenerateSafeMealPlanInputSchema = z.object({
 export type GenerateSafeMealPlanInput = z.infer<typeof GenerateSafeMealPlanInputSchema>;
 
 const MealSchema = z.object({
+  id: z.string().describe('The ID of the recipe from the available list.'),
   title: z.string().describe('The name of the meal.'),
   description: z.string().describe('A short description of the meal.'),
   calories: z.number().describe('The estimated calorie count for the meal.'),
@@ -61,13 +62,13 @@ const prompt = ai.definePrompt({
   The meal plan should try to incorporate the following ingredients that the user has on hand: {{{ingredients}}}.
   {{/if}}
   {{#if availableRecipes}}
-  You must choose from the following list of available recipes, provided as a JSON string:
+  You must choose from the following list of available recipes, provided as a JSON string. Each recipe has a unique "id".
   {{{availableRecipes}}}
   {{/if}}
 
   Create a detailed meal plan with breakfast, lunch, and dinner that is safe and appropriate for the user.
   Return the plan as a JSON object with keys "breakfast", "lunch", and "dinner".
-  Each meal should have a "title", "description", and "calories".`,
+  Each meal should have an "id", "title", "description", and "calories". The "id" MUST be the original id from the recipe you selected.`,
 });
 
 const generateSafeMealPlanFlow = ai.defineFlow(
