@@ -2,7 +2,7 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
-import { addMealPlan } from "@/services/meal-plan-service";
+import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
@@ -82,10 +82,12 @@ const DailyMealPlanSaveSchema = z.object({
         dinner: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }),
     })),
     dietaryPreferences: z.string(),
-    calorieTarget: z.number(),
+    calorieTarget: z.coerce.number(),
     allergies: z.string(),
     cuisine: z.string(),
     generationSource: z.string(),
+    planId: z.string().optional(),
+    date: z.string().optional(),
 });
 
 export async function saveDailyPlan(plan: z.infer<typeof DailyMealPlanSaveSchema>) {
@@ -99,16 +101,23 @@ export async function saveDailyPlan(plan: z.infer<typeof DailyMealPlanSaveSchema
     }
     
     try {
+        const { planId, date, ...planData } = validatedFields.data;
         const userId = "anonymous";
-        await addMealPlan({
+        const planToSave = {
             userId,
-            createdAt: new Date(),
-            days: plan.days,
-            dietaryPreferences: plan.dietaryPreferences,
-            calorieTarget: plan.calorieTarget,
-            allergies: plan.allergies,
-            cuisine: plan.cuisine,
-        });
+            createdAt: date ? new Date(date) : new Date(),
+            days: planData.days,
+            dietaryPreferences: planData.dietaryPreferences,
+            calorieTarget: planData.calorieTarget,
+            allergies: planData.allergies,
+            cuisine: planData.cuisine,
+        };
+
+        if (planId) {
+            await updateMealPlan(planId, planToSave);
+        } else {
+            await addMealPlan(planToSave);
+        }
 
         revalidatePath("/plans");
 

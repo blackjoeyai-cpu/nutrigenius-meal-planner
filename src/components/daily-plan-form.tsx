@@ -19,10 +19,10 @@ import { useIngredients } from "@/hooks/use-ingredients";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
+import type { Recipe, MealPlan } from "@/lib/types";
 import { useRecipes } from "@/hooks/use-recipes";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 
 const initialState = {
@@ -50,12 +50,8 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-type ParsedPlan = GenerateLongTermMealPlanOutput & {
-  dietaryPreferences: string,
-  calorieTarget: number,
-  allergies: string,
-  cuisine: string,
-  generationSource: string,
+type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
+  generationSource: string;
 }
 
 export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
@@ -65,18 +61,23 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // Local state to hold the generated plan
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
   // Default values
-  const [dietaryPreferences, setDietaryPreferences] = useState(DIETARY_PREFERENCES[0]);
-  const [calorieTarget, setCalorieTarget] = useState("2000");
-  const [allergies, setAllergies] = useState("");
-  const [cuisine, setCuisine] = useState(CUISINES[0]);
+  const [dietaryPreferences, setDietaryPreferences] = useState(searchParams.get("dietaryPreferences") || DIETARY_PREFERENCES[0]);
+  const [calorieTarget, setCalorieTarget] = useState(searchParams.get("calorieTarget") || "2000");
+  const [allergies, setAllergies] = useState(searchParams.get("allergies") || "");
+  const [cuisine, setCuisine] = useState(searchParams.get("cuisine") || CUISINES[0]);
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generationSource, setGenerationSource] = useState("catalog");
   const [isSaving, setIsSaving] = useState(false);
+
+  const planId = searchParams.get("planId");
+  const date = searchParams.get("date");
+
 
   useEffect(() => {
     if (state.mealPlan) {
@@ -93,12 +94,19 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const handleSave = async () => {
     if (!generatedPlan) return;
     setIsSaving(true);
-    const result = await saveDailyPlan(generatedPlan);
+    
+    const planToSave = {
+        ...generatedPlan,
+        planId: planId || undefined,
+        date: date || undefined,
+    }
+
+    const result = await saveDailyPlan(planToSave);
     setIsSaving(false);
     if (result.success) {
       toast({
         title: "Success!",
-        description: "Your daily meal plan has been saved.",
+        description: `Your meal plan has been ${planId ? 'updated' : 'saved'}.`,
       });
       router.push("/plans");
     } else {
@@ -112,7 +120,6 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
 
   const handleDiscard = () => {
      setGeneratedPlan(null);
-     // Clear previous form action state
      state.mealPlan = null;
      state.message = "";
      state.errors = null;
@@ -125,9 +132,9 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
            <input type="hidden" name="ingredients" value={selectedIngredients.join(',')} />
            <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <CardHeader>
-            <CardTitle>Create Your Daily Meal Plan</CardTitle>
+            <CardTitle>{planId ? 'Regenerate' : 'Create'} Your Daily Meal Plan</CardTitle>
             <CardDescription>
-              Provide your details and let our AI create a personalized meal plan for you.
+              {planId ? 'Adjust preferences and generate an updated plan for this day.' : 'Provide your details and let our AI create a personalized meal plan for you.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">

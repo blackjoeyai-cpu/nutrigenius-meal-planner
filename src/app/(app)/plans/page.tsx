@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, ChefHat, ChevronLeft, ChevronRight } from 'lucide-react';
-import { addDays, format, startOfDay, getDaysInMonth, startOfMonth, getDay, subMonths, addMonths } from 'date-fns';
+import { PlusCircle, ChefHat, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
+import { addDays, format, startOfDay, getDaysInMonth, startOfMonth, getDay, subMonths, addMonths, isToday as checkIsToday } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { getMealPlans } from '@/services/meal-plan-service';
@@ -13,8 +13,9 @@ import type { MealPlan, DailyPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
-type PlansByDate = Map<string, DailyPlan>;
+type PlansByDate = Map<string, { plan: DailyPlan; planId: string, details: MealPlan }>;
 
 export default function PlansPage() {
   const [plans, setPlans] = useState<MealPlan[]>([]);
@@ -41,14 +42,15 @@ export default function PlansPage() {
       plan.days.forEach((day, index) => {
         const date = addDays(startDate, index);
         const dateKey = format(date, 'yyyy-MM-dd');
-        map.set(dateKey, day);
+        map.set(dateKey, { plan: day, planId: plan.id, details: plan });
       });
     });
     return map;
   }, [plans, isLoaded]);
   
   const selectedDateKey = format(selectedDate, 'yyyy-MM-dd');
-  const selectedDayPlan = plansByDate.get(selectedDateKey);
+  const selectedDayData = plansByDate.get(selectedDateKey);
+  const selectedDayPlan = selectedDayData?.plan;
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDayOfMonth = startOfMonth(currentDate);
@@ -56,6 +58,20 @@ export default function PlansPage() {
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const handleRegenerate = () => {
+    if (!selectedDayData) return;
+    const { details } = selectedDayData;
+    const query = new URLSearchParams({
+      planId: details.id,
+      dietaryPreferences: details.dietaryPreferences,
+      calorieTarget: details.calorieTarget.toString(),
+      allergies: details.allergies,
+      cuisine: details.cuisine,
+      date: format(selectedDate, 'yyyy-MM-dd')
+    }).toString();
+    router.push(`/generate?${query}`);
+  };
 
   if (!isLoaded) {
     return (
@@ -123,7 +139,7 @@ export default function PlansPage() {
                         const dateKey = format(date, 'yyyy-MM-dd');
                         const hasPlan = plansByDate.has(dateKey);
                         const isSelected = selectedDateKey === dateKey;
-                        const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
+                        const isToday = checkIsToday(date);
 
                         return (
                             <button 
@@ -184,6 +200,11 @@ export default function PlansPage() {
                         </CardHeader>
                         </Card>
                     </Link>
+                     <Separator />
+                     <Button onClick={handleRegenerate} className="w-full">
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        Regenerate Plan
+                    </Button>
                 </div>
             ) : (
                 <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center h-full">

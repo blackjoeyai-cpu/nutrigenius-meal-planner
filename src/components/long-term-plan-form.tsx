@@ -17,9 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
-import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
+import type { Recipe, MealPlan } from "@/lib/types";
 import { AlertTriangle, Loader2, PlusCircle, Sparkles, Save, XCircle } from "lucide-react";
-import { generatePlanAction, saveLongTermPlan } from "@/app/(app)/plans/actions";
+import { generatePlanAction, saveMealPlan } from "@/app/(app)/plans/actions";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,7 +55,7 @@ const initialState = {
   message: "",
   errors: null,
   isSuccess: false,
-  longTermPlan: null,
+  mealPlan: null,
 };
 
 function SubmitButton({ disabled }: { disabled?: boolean }) {
@@ -77,12 +77,8 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-type ParsedPlan = GenerateLongTermMealPlanOutput & {
-  dietaryPreferences: string,
-  calorieTarget: number,
-  allergies: string,
-  cuisine: string,
-  generationSource: string,
+type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
+  generationSource: string;
 }
 
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
@@ -111,10 +107,10 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   });
   
   useEffect(() => {
-    if (state.isSuccess && state.longTermPlan) {
-      setGeneratedPlan(JSON.parse(state.longTermPlan));
+    if (state.isSuccess && state.mealPlan) {
+      setGeneratedPlan(JSON.parse(state.mealPlan));
     }
-  }, [state.isSuccess, state.longTermPlan]);
+  }, [state.isSuccess, state.mealPlan]);
 
   const generationSource = form.watch("generationSource");
   const hasEnoughRecipesForCatalog = recipes.length > 3;
@@ -123,7 +119,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const handleSave = async () => {
     if (!generatedPlan) return;
     setIsSaving(true);
-    const result = await saveLongTermPlan(generatedPlan);
+    const result = await saveMealPlan(generatedPlan);
     setIsSaving(false);
 
     if (result.success) {
@@ -143,7 +139,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
   const handleDiscard = () => {
     setGeneratedPlan(null);
-    state.longTermPlan = null;
+    state.mealPlan = null;
     state.message = "";
     state.errors = null;
     state.isSuccess = false;
@@ -276,13 +272,25 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
         <Form {...form}>
           <form
             action={(formData) => {
-              form.handleSubmit(() => {
-                formAction(formData)
-              })()
+                const combinedData = new FormData();
+                const formValues = form.getValues();
+                
+                // Append all fields from the form to the FormData object
+                (Object.keys(formValues) as Array<keyof PlanFormValues>).forEach((key) => {
+                    const value = formValues[key];
+                    if (key === 'ingredients' && Array.isArray(value)) {
+                        combinedData.append(key, value.join(","));
+                    } else if (value !== undefined) {
+                        combinedData.append(key, String(value));
+                    }
+                });
+
+                // Add recipes to form data
+                combinedData.append("recipes", JSON.stringify(recipes));
+                
+                form.handleSubmit(() => formAction(combinedData))();
             }}
           >
-          <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
-          <input type="hidden" name="ingredients" value={form.watch("ingredients").join(",")} />
             <CardHeader>
                 <CardTitle>Generate a New Long-term Plan</CardTitle>
                 <CardDescription>
@@ -297,33 +305,33 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         <p className="text-muted-foreground">Please wait while the AI creates your custom meal plan.</p>
                     </div>
                 )}
-                {!isPending && isCatalogGenerationBlocked && (
-                     <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertTitle>Not Enough Recipes</AlertTitle>
-                        <AlertDescription>
-                            You need more than 3 recipes in your collection to generate a plan from your catalog. 
-                            Please add more recipes, or choose a different generation source.
-                        </AlertDescription>
-                         <div className="mt-4">
-                            <AddRecipeDialog
-                                open={isAddDialogOpen}
-                                onOpenChange={setIsAddDialogOpen}
-                                onRecipeAdd={(newRecipe) => {
-                                    addRecipe(newRecipe);
-                                    setIsAddDialogOpen(false);
-                                }}
-                            >
-                            <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(true)}>
-                                <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Recipe
-                            </Button>
-                            </AddRecipeDialog>
-                         </div>
-                    </Alert>
-                )}
-                {!isPending && !isCatalogGenerationBlocked && (
+                {!isPending && (
                     <>
+                    {isCatalogGenerationBlocked ? (
+                         <Alert variant="destructive">
+                            <AlertTriangle className="h-4 w-4" />
+                            <AlertTitle>Not Enough Recipes</AlertTitle>
+                            <AlertDescription>
+                                You need more than 3 recipes in your collection to generate a plan from your catalog. 
+                                Please add more recipes, or choose a different generation source.
+                            </AlertDescription>
+                             <div className="mt-4">
+                                <AddRecipeDialog
+                                    open={isAddDialogOpen}
+                                    onOpenChange={setIsAddDialogOpen}
+                                    onRecipeAdd={(newRecipe) => {
+                                        addRecipe(newRecipe);
+                                        setIsAddDialogOpen(false);
+                                    }}
+                                >
+                                <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(true)}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Add Recipe
+                                </Button>
+                                </AddRecipeDialog>
+                             </div>
+                        </Alert>
+                    ): null}
                  <FormField
                     control={form.control}
                     name="generationSource"
@@ -487,9 +495,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </>
                 )}
             </CardContent>
-            {!isPending && !isCatalogGenerationBlocked && (
+            {!isPending && (
                 <CardFooter>
-                  <SubmitButton />
+                  <SubmitButton disabled={isCatalogGenerationBlocked} />
                 </CardFooter>
             )}
           </form>

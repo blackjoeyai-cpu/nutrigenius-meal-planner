@@ -2,7 +2,7 @@
 "use server";
 
 import { db } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, where, orderBy, Timestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
 import type { DailyPlan, MealPlan } from "@/lib/types";
 
 
@@ -29,6 +29,16 @@ export async function addMealPlan(plan: MealPlanForDb): Promise<string> {
     }
 }
 
+export async function updateMealPlan(planId: string, updatedPlanData: Partial<MealPlanForDb>): Promise<void> {
+  try {
+    const planRef = doc(db, 'mealplans', planId);
+    await updateDoc(planRef, updatedPlanData);
+  } catch (e) {
+    console.error('Error updating meal plan: ', e);
+    throw new Error('Could not update meal plan in the database.');
+  }
+}
+
 
 /**
  * Retrieves all meal plans for a user from the Firestore database.
@@ -43,7 +53,7 @@ export async function getMealPlans(userId: string): Promise<MealPlan[]> {
         const plans: MealPlan[] = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            const createdAtTimestamp = data.createdAt as Timestamp;
+            const createdAtTimestamp = data.createdAt as import("firebase/firestore").Timestamp;
             plans.push({ 
                 id: doc.id, 
                 ...data,

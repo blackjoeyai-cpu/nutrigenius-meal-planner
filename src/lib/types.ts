@@ -35,10 +35,6 @@ export type DailyPlan = {
   dinner: { id: string; title: string; description: string; calories: number; };
 }
 
-export type GenerateLongTermMealPlanOutput = {
-  days: DailyPlan[];
-}
-
 export type MealPlan = {
     id: string;
     userId: string;
@@ -49,3 +45,4 @@ export type MealPlan = {
     allergies: string;
     cuisine: string;
 }
+

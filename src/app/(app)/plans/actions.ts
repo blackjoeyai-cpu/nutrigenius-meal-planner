@@ -4,7 +4,7 @@
 import { z } from "zod";
 import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
 import { addMealPlan } from "@/services/meal-plan-service";
-import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
+import type { Recipe, MealPlan } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const GeneratePlanSchema = z.object({
@@ -35,7 +35,7 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       message: "Invalid form data.",
       errors: validatedFields.error.flatten().fieldErrors,
       isSuccess: false,
-      longTermPlan: null,
+      mealPlan: null,
     };
   }
 
@@ -58,7 +58,7 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       message: "Successfully generated long-term meal plan.",
       errors: null,
       isSuccess: true,
-      longTermPlan: JSON.stringify({ ...result, dietaryPreferences, calorieTarget, allergies, cuisine, generationSource }),
+      mealPlan: JSON.stringify({ ...result, dietaryPreferences, calorieTarget, allergies, cuisine, generationSource }),
     };
 
   } catch (error) {
@@ -67,13 +67,13 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       message: "An unexpected error occurred while generating the meal plan.",
       errors: null,
       isSuccess: false,
-      longTermPlan: null,
+      mealPlan: null,
     };
   }
 }
 
 
-export async function saveLongTermPlan(plan: GenerateLongTermMealPlanOutput & { dietaryPreferences: string, calorieTarget: number, allergies: string, cuisine: string, generationSource: string }) {
+export async function saveMealPlan(plan: Omit<MealPlan, "id" | "userId" | "createdAt"> & { generationSource: string }) {
     // Only save the meal plan if it was generated purely from the recipe catalog.
     // This ensures data integrity, as we can guarantee all recipe IDs are valid.
     if (plan.generationSource === 'catalog') {
