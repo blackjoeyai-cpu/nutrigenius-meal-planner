@@ -23,6 +23,7 @@ import type { Recipe, MealPlan } from "@/lib/types";
 import { useRecipes } from "@/hooks/use-recipes";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Skeleton } from "./ui/skeleton";
 
 
 const initialState = {
@@ -259,7 +260,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
             <h3 className="text-2xl font-bold font-headline">Your Generated Plan</h3>
-            {generatedPlan && (
+            {generatedPlan && !isPending && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Flame className="h-4 w-4" />
                     <span>Total Calories: {totalCalories}</span>
@@ -267,7 +268,40 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             )}
         </div>
 
-        {generatedPlan && !isPending ? (
+        {isPending ? (
+            <div className="space-y-4">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/5" />
+                        <Skeleton className="h-4 w-1/4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-4/5 mt-2" />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/5" />
+                        <Skeleton className="h-4 w-1/4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-4/5 mt-2" />
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-6 w-3/5" />
+                        <Skeleton className="h-4 w-1/4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-4/5 mt-2" />
+                    </CardContent>
+                </Card>
+            </div>
+        ) : generatedPlan ? (
           <div className="space-y-4">
              <Link href={`/recipes/${generatedPlan.days[0].breakfast.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
@@ -334,3 +368,5 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     </div>
   );
 }
+
+    

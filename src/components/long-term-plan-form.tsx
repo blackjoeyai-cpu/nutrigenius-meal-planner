@@ -33,6 +33,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "./ui/accordion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Skeleton } from "./ui/skeleton";
 
 
 const planFormSchema = z.object({
@@ -113,6 +114,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   }, [state.isSuccess, state.mealPlan]);
 
   const generationSource = form.watch("generationSource");
+  const numberOfDays = form.watch("numberOfDays");
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
@@ -165,7 +167,28 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   }, [state, toast]);
 
 
-  if (generatedPlan && !isPending) {
+  if (isPending) {
+    return (
+        <Card className="mt-6">
+            <CardHeader>
+                <CardTitle>Generating Your Plan...</CardTitle>
+                <CardDescription>Please wait while the AI creates your custom meal plan for {numberOfDays} days.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2">
+                    {Array.from({ length: Math.min(numberOfDays, 3) }).map((_, index) => (
+                        <Skeleton key={index} className="h-12 w-full" />
+                    ))}
+                    {numberOfDays > 3 && (
+                        <div className="text-center text-muted-foreground py-4">. . .</div>
+                    )}
+                </div>
+            </CardContent>
+        </Card>
+    )
+  }
+
+  if (generatedPlan) {
     return (
       <Card className="mt-6">
         <CardHeader>
@@ -298,14 +321,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-                {isPending && (
-                     <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        <h3 className="mt-4 text-xl font-semibold">Generating Your Plan...</h3>
-                        <p className="text-muted-foreground">Please wait while the AI creates your custom meal plan.</p>
-                    </div>
-                )}
-                {!isPending && (
                     <>
                     {isCatalogGenerationBlocked ? (
                          <Alert variant="destructive">
@@ -493,15 +508,14 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   )}
                 />
                 </>
-                )}
             </CardContent>
-            {!isPending && (
-                <CardFooter>
-                  <SubmitButton disabled={isCatalogGenerationBlocked} />
-                </CardFooter>
-            )}
+            <CardFooter>
+              <SubmitButton disabled={isCatalogGenerationBlocked} />
+            </CardFooter>
           </form>
         </Form>
     </Card>
   );
 }
+
+    
