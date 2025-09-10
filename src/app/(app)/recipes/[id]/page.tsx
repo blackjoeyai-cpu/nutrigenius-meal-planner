@@ -12,21 +12,21 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getRecipeById } from '@/services/recipe-service';
 import type { Recipe } from '@/lib/types';
 
-export default function RecipeDetailPage({ params }: { params: { id: string } }) {
+export default function RecipeDetailPage({ params: { id } }: { params: { id: string } }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   
   useEffect(() => {
     const fetchRecipe = async () => {
       setIsLoaded(false);
-      const fetchedRecipe = await getRecipeById(params.id);
+      const fetchedRecipe = await getRecipeById(id);
       setRecipe(fetchedRecipe);
       setIsLoaded(true);
     };
-    if (params.id) {
+    if (id) {
         fetchRecipe();
     }
-  }, [params.id]);
+  }, [id]);
 
 
   if (!isLoaded) {
