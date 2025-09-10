@@ -28,10 +28,10 @@ const initialState = {
   mealPlan: null,
 };
 
-function SubmitButton() {
+function SubmitButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className="w-full sm:w-auto">
+    <Button type="submit" disabled={pending || disabled} className="w-full sm:w-auto">
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -62,7 +62,8 @@ export default function GeneratePage() {
   const [generationSource, setGenerationSource] = useState("catalog");
 
   const isLoaded = ingredientsLoaded && recipesLoaded;
-  const canGenerateFromCatalog = recipes.length > 3;
+  const hasEnoughRecipesForCatalog = recipes.length > 3;
+  const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
   const mealPlan = state.mealPlan ? JSON.parse(state.mealPlan) : null;
   const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
@@ -102,7 +103,7 @@ export default function GeneratePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {!canGenerateFromCatalog && generationSource === 'catalog' && (
+            {isCatalogGenerationBlocked && (
                  <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertTitle>Not Enough Recipes</AlertTitle>
@@ -119,7 +120,7 @@ export default function GeneratePage() {
                                 setIsAddDialogOpen(false);
                             }}
                         >
-                        <Button variant="secondary" onClick={() => setIsAddDialogOpen(true)}>
+                        <Button type="button" variant="secondary" onClick={() => setIsAddDialogOpen(true)}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Recipe
                         </Button>
@@ -127,7 +128,7 @@ export default function GeneratePage() {
                      </div>
                 </Alert>
             )}
-            <fieldset disabled={!canGenerateFromCatalog && generationSource === 'catalog'} className="space-y-4">
+            <div className="space-y-4">
                 <div className="space-y-2">
                     <Label>Generation Source</Label>
                     <RadioGroup name="generationSource" value={generationSource} onValueChange={setGenerationSource} className="gap-2">
@@ -212,10 +213,10 @@ export default function GeneratePage() {
                     Separate items with a comma.
                 </p>
                 </div>
-            </fieldset>
+            </div>
           </CardContent>
           <CardFooter>
-            <SubmitButton />
+            <SubmitButton disabled={isCatalogGenerationBlocked} />
           </CardFooter>
         </form>
       </Card>
@@ -281,3 +282,5 @@ export default function GeneratePage() {
     </div>
   );
 }
+
+    
