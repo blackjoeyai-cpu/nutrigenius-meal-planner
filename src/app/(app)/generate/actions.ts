@@ -2,6 +2,7 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
+import { addMealPlan } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 
@@ -42,8 +43,17 @@ export async function createMealPlan(prevState: any, formData: FormData) {
       allergies: allergies || "none",
       cuisine,
       ingredients: ingredients || "none",
-      // Manually stringify the recipes to pass them as a simple string.
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
+    });
+
+    // Assume a userId, in a real app this would come from auth
+    const userId = "anonymous"; 
+    await addMealPlan({
+      breakfast: { id: result.breakfast.id, title: result.breakfast.title },
+      lunch: { id: result.lunch.id, title: result.lunch.title },
+      dinner: { id: result.dinner.id, title: result.dinner.title },
+      date: new Date(),
+      userId,
     });
 
     return {

@@ -1,8 +1,11 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import type { UserProfile } from "@/lib/types";
 import { DIETARY_PREFERENCES } from "@/lib/constants";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 const defaultProfile: UserProfile = {
   name: "Guest",
@@ -11,37 +14,41 @@ const defaultProfile: UserProfile = {
   calorieTarget: 2000,
 };
 
-const USER_PROFILE_STORAGE_KEY = "nutriGeniusUserProfile";
+// Assuming a fixed user ID for now. In a real app, this would be dynamic.
+const USER_ID = "anonymousUser";
 
 export const useUserProfile = () => {
   const [profile, setProfile] = useState<UserProfile>(defaultProfile);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const item = window.localStorage.getItem(USER_PROFILE_STORAGE_KEY);
-      if (item) {
-        setProfile(JSON.parse(item));
+    const fetchProfile = async () => {
+      const docRef = doc(db, "userProfiles", USER_ID);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        setProfile(docSnap.data() as UserProfile);
+      } else {
+        // If no profile exists, create a default one in Firestore
+        await setDoc(docRef, defaultProfile);
+        setProfile(defaultProfile);
       }
-    } catch (error) {
-      console.warn(`Error reading user profile from localStorage:`, error);
-      // Fallback to default if stored data is corrupted
-      setProfile(defaultProfile);
-    }
-    setIsLoaded(true);
+      setIsLoaded(true);
+    };
+
+    fetchProfile().catch(console.error);
   }, []);
 
-  const updateUserProfile = useCallback((newProfileData: Partial<UserProfile>) => {
-    setProfile((currentProfile) => {
-      const updatedProfile = { ...currentProfile, ...newProfileData };
-      try {
-        window.localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(updatedProfile));
-      } catch (error) {
-        console.error(`Error saving user profile to localStorage:`, error);
-      }
-      return updatedProfile;
-    });
-  }, []);
+  const updateUserProfile = useCallback(async (newProfileData: Partial<UserProfile>) => {
+    const updatedProfile = { ...profile, ...newProfileData };
+    try {
+      const docRef = doc(db, "userProfiles", USER_ID);
+      await setDoc(docRef, updatedProfile, { merge: true });
+      setProfile(updatedProfile);
+    } catch (error) {
+      console.error(`Error saving user profile to Firestore:`, error);
+    }
+  }, [profile]);
 
   return { profile, updateUserProfile, isLoaded };
 };

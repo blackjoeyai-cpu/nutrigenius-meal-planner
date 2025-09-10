@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
@@ -28,7 +29,7 @@ export default function RecipesPage() {
     if (!isLoaded) return [];
     return recipes.filter((recipe) => {
       const matchesSearch = recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        recipe.ingredients.some(ing => ing.item.toLowerCase().includes(searchTerm.toLowerCase()));
+        (recipe.ingredients && recipe.ingredients.some(ing => ing.item.toLowerCase().includes(searchTerm.toLowerCase())));
       const matchesCuisine = cuisineFilter === 'Any' || recipe.cuisine === cuisineFilter;
       return matchesSearch && matchesCuisine;
     });
