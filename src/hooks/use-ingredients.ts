@@ -1,18 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { recipes } from "@/lib/data";
+import { useRecipes } from "./use-recipes";
 
 export const useIngredients = () => {
+    const { recipes, isLoaded: recipesLoaded } = useRecipes();
     const [ingredients, setIngredients] = useState<string[]>([]);
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        const allIngredients = recipes.flatMap(recipe => recipe.ingredients.map(ing => ing.item));
-        const uniqueIngredients = [...new Set(allIngredients)].sort();
-        setIngredients(uniqueIngredients);
-        setIsLoaded(true);
-    }, []);
+        if (recipesLoaded) {
+            const allIngredients = recipes.flatMap(recipe => recipe.ingredients.map(ing => ing.item));
+            const uniqueIngredients = [...new Set(allIngredients)].sort();
+            setIngredients(uniqueIngredients);
+            setIsLoaded(true);
+        }
+    }, [recipes, recipesLoaded]);
 
     return { ingredients, isLoaded };
 };

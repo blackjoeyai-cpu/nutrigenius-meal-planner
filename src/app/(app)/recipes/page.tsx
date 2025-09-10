@@ -2,12 +2,15 @@
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { PlusCircle } from 'lucide-react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { recipes } from '@/lib/data';
+import { Button } from '@/components/ui/button';
+import { AddRecipeDialog } from '@/components/add-recipe-dialog';
+import { useRecipes } from '@/hooks/use-recipes';
 import { CUISINES } from '@/lib/constants';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
@@ -16,27 +19,45 @@ const getImage = (id: string) => {
 };
 
 export default function RecipesPage() {
+  const { recipes, addRecipe, isLoaded } = useRecipes();
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('Any');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const filteredRecipes = useMemo(() => {
+    if (!isLoaded) return [];
     return recipes.filter((recipe) => {
       const matchesSearch = recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         recipe.ingredients.some(ing => ing.item.toLowerCase().includes(searchTerm.toLowerCase()));
       const matchesCuisine = cuisineFilter === 'Any' || recipe.cuisine === cuisineFilter;
       return matchesSearch && matchesCuisine;
     });
-  }, [searchTerm, cuisineFilter]);
+  }, [searchTerm, cuisineFilter, recipes, isLoaded]);
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight font-headline">
-          Browse Recipes
-        </h2>
-        <p className="text-muted-foreground">
-          Find your next favorite meal from our collection.
-        </p>
+      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div className="space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight font-headline">
+            Browse Recipes
+          </h2>
+          <p className="text-muted-foreground">
+            Find or create your next favorite meal from our collection.
+          </p>
+        </div>
+        <AddRecipeDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          onRecipeAdd={(newRecipe) => {
+            addRecipe(newRecipe);
+            setIsAddDialogOpen(false);
+          }}
+        >
+          <Button onClick={() => setIsAddDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Recipe
+          </Button>
+        </AddRecipeDialog>
       </div>
       <div className="flex flex-col gap-4 md:flex-row">
         <Input

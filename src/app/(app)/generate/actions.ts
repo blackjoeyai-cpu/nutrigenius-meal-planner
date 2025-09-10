@@ -1,6 +1,7 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
+import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 
 const MealPlanSchema = z.object({
@@ -9,6 +10,7 @@ const MealPlanSchema = z.object({
   allergies: z.string(),
   cuisine: z.string(),
   ingredients: z.string().optional(),
+  recipes: z.string().optional(),
 });
 
 export async function createMealPlan(prevState: any, formData: FormData) {
@@ -18,6 +20,7 @@ export async function createMealPlan(prevState: any, formData: FormData) {
     allergies: formData.get("allergies"),
     cuisine: formData.get("cuisine"),
     ingredients: formData.get("ingredients"),
+    recipes: formData.get("recipes"),
   });
 
   if (!validatedFields.success) {
@@ -29,7 +32,8 @@ export async function createMealPlan(prevState: any, formData: FormData) {
   }
 
   try {
-    const { dietaryPreferences, calorieTarget, allergies, cuisine, ingredients } = validatedFields.data;
+    const { dietaryPreferences, calorieTarget, allergies, cuisine, ingredients, recipes } = validatedFields.data;
+    const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
     
     const result = await generateSafeMealPlan({
       dietaryPreferences,
@@ -37,6 +41,7 @@ export async function createMealPlan(prevState: any, formData: FormData) {
       allergies: allergies || "none",
       cuisine,
       ingredients: ingredients || "none",
+      availableRecipes,
     });
 
     return {

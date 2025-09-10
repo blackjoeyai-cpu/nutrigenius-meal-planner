@@ -1,6 +1,8 @@
+
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { Sparkles, Loader2, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,7 @@ import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
+import { useRecipes } from "@/hooks/use-recipes";
 
 const initialState = {
   message: "",
@@ -43,8 +46,9 @@ function SubmitButton() {
 
 export default function GeneratePage() {
   const [state, formAction] = useActionState(createMealPlan, initialState);
-  const { profile, isLoaded } = useUserProfile();
+  const { profile, isLoaded: profileLoaded } = useUserProfile();
   const { ingredients, isLoaded: ingredientsLoaded } = useIngredients();
+  const { recipes, isLoaded: recipesLoaded } = useRecipes();
 
   const [dietaryPreferences, setDietaryPreferences] = useState(profile.dietaryPreferences);
   const [calorieTarget, setCalorieTarget] = useState(profile.calorieTarget.toString());
@@ -53,14 +57,16 @@ export default function GeneratePage() {
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
 
   useEffect(() => {
-    if (isLoaded) {
+    if (profileLoaded) {
       setDietaryPreferences(profile.dietaryPreferences);
       setCalorieTarget(profile.calorieTarget.toString());
       setAllergies(profile.allergies);
     }
-  }, [isLoaded, profile]);
+  }, [profileLoaded, profile]);
+  
+  const isLoaded = profileLoaded && ingredientsLoaded && recipesLoaded;
 
-  if (!isLoaded || !ingredientsLoaded) {
+  if (!isLoaded) {
     return (
       <Card>
         <CardHeader>
@@ -104,6 +110,7 @@ export default function GeneratePage() {
       <Card>
         <form action={formAction}>
            <input type="hidden" name="ingredients" value={selectedIngredients.join(',')} />
+           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <CardHeader>
             <CardTitle>Create Your Meal Plan</CardTitle>
             <CardDescription>
@@ -131,7 +138,7 @@ export default function GeneratePage() {
               <Select name="cuisine" value={cuisine} onValueChange={setCuisine}>
                 <SelectTrigger id="cuisine">
                   <SelectValue placeholder="Select a cuisine" />
-                </SelectTrigger>
+                </Trigger>
                 <SelectContent>
                   {CUISINES.map((c) => (
                     <SelectItem key={c} value={c}>
