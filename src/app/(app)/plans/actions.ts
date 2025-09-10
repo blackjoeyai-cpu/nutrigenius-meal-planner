@@ -53,7 +53,9 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       generationSource,
     });
 
-    if (generationSource !== 'new') {
+    // Only save the meal plan if it was generated purely from the recipe catalog.
+    // This ensures data integrity, as we can guarantee all recipe IDs are valid.
+    if (generationSource === 'catalog') {
         const userId = "anonymous";
         const planToSave = {
           userId,
