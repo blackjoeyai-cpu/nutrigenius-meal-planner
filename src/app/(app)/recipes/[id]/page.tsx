@@ -15,19 +15,18 @@ import type { Recipe } from '@/lib/types';
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
-  const { id } = params;
   
   useEffect(() => {
     const fetchRecipe = async () => {
       setIsLoaded(false);
-      const fetchedRecipe = await getRecipeById(id);
+      const fetchedRecipe = await getRecipeById(params.id);
       setRecipe(fetchedRecipe);
       setIsLoaded(true);
     };
-    if (id) {
+    if (params.id) {
         fetchRecipe();
     }
-  }, [id]);
+  }, [params.id]);
 
 
   if (!isLoaded) {
