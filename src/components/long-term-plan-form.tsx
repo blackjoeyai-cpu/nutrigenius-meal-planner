@@ -94,6 +94,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 
+  const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
+
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
@@ -107,17 +109,21 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       ingredients: [],
     },
   });
+  
+  useEffect(() => {
+    if (state.longTermPlan) {
+      setGeneratedPlan(JSON.parse(state.longTermPlan));
+    }
+  }, [state.longTermPlan]);
 
   const generationSource = form.watch("generationSource");
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
-  
-  const longTermPlan: ParsedPlan | null = state.longTermPlan ? JSON.parse(state.longTermPlan) : null;
 
   const handleSave = async () => {
-    if (!longTermPlan) return;
+    if (!generatedPlan) return;
     setIsSaving(true);
-    const result = await saveLongTermPlan(longTermPlan);
+    const result = await saveLongTermPlan(generatedPlan);
     setIsSaving(false);
 
     if (result.success) {
@@ -136,8 +142,12 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   }
 
   const handleDiscard = () => {
-    const formData = new FormData();
-    formAction(formData);
+    setGeneratedPlan(null);
+    // Clear previous form action state
+    state.longTermPlan = null;
+    state.message = "";
+    state.errors = null;
+    state.isSuccess = false;
   }
 
   useEffect(() => {
@@ -160,18 +170,18 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   }, [state, toast]);
 
 
-  if (longTermPlan && !isPending) {
+  if (generatedPlan && !isPending) {
     return (
         <Card className="mt-6">
             <CardHeader>
                 <CardTitle>Review Your Long-Term Plan</CardTitle>
                 <CardDescription>
-                    Here is the {longTermPlan.days.length}-day meal plan generated for you. Review the details below.
+                    Here is the {generatedPlan.days.length}-day meal plan generated for you. Review the details below.
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 <Accordion type="single" collapsible className="w-full">
-                    {longTermPlan.days.map((day, index) => (
+                    {generatedPlan.days.map((day, index) => (
                         <AccordionItem value={`day-${index}`} key={`day-${index}`}>
                              <AccordionTrigger>Day {index + 1}</AccordionTrigger>
                              <AccordionContent>
@@ -205,7 +215,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         </AccordionItem>
                     ))}
                 </Accordion>
-                 {longTermPlan.generationSource !== 'catalog' && (
+                 {generatedPlan.generationSource !== 'catalog' && (
                     <Alert variant="destructive" className="mt-4">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertTitle>Saving Disabled</AlertTitle>
@@ -217,7 +227,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             </CardContent>
             <CardFooter className="flex-col items-start gap-4">
                 <div className="flex gap-2">
-                    <Button onClick={handleSave} disabled={isSaving || longTermPlan.generationSource !== 'catalog'}>
+                    <Button onClick={handleSave} disabled={isSaving || generatedPlan.generationSource !== 'catalog'}>
                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Save Plan
                     </Button>
@@ -228,7 +238,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </div>
             </CardFooter>
         </Card>
-    )
+    );
   }
 
   return (
@@ -373,7 +383,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         <FormControl>
                           <SelectTrigger ref={field.ref}>
                             <SelectValue placeholder="Select a cuisine" />
-                          </SelectTrigger>
+                          </Trigger>
                         </FormControl>
                         <SelectContent>
                           {CUISINES.map((c) => (

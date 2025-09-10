@@ -58,6 +58,9 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const { toast } = useToast();
   const router = useRouter();
 
+  // Local state to hold the generated plan
+  const [generatedPlan, setGeneratedPlan] = useState<DailyMealPlan | null>(null);
+
   // Default values
   const [dietaryPreferences, setDietaryPreferences] = useState(DIETARY_PREFERENCES[0]);
   const [calorieTarget, setCalorieTarget] = useState("2000");
@@ -67,17 +70,22 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [generationSource, setGenerationSource] = useState("catalog");
   const [isSaving, setIsSaving] = useState(false);
 
+  useEffect(() => {
+    if (state.mealPlan) {
+        setGeneratedPlan(JSON.parse(state.mealPlan));
+    }
+  }, [state.mealPlan]);
+
 
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
-  const mealPlan: DailyMealPlan | null = state.mealPlan ? JSON.parse(state.mealPlan) : null;
-  const totalCalories = mealPlan ? mealPlan.breakfast.calories + mealPlan.lunch.calories + mealPlan.dinner.calories : 0;
+  const totalCalories = generatedPlan ? generatedPlan.breakfast.calories + generatedPlan.lunch.calories + generatedPlan.dinner.calories : 0;
 
   const handleSave = async () => {
-    if (!mealPlan) return;
+    if (!generatedPlan) return;
     setIsSaving(true);
-    const result = await saveDailyPlan(mealPlan);
+    const result = await saveDailyPlan(generatedPlan);
     setIsSaving(false);
     if (result.success) {
       toast({
@@ -95,11 +103,11 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   };
 
   const handleDiscard = () => {
-     // Resetting the state by submitting the form with no data to get initial state
-     const formData = new FormData();
-     // This is a bit of a hack to reset the action state. A better solution might involve a dedicated reset function if React provides one in the future.
-     // For now, we can re-trigger the action with empty/invalid data to clear the previous successful result.
-     formAction(formData);
+     setGeneratedPlan(null);
+     // Clear previous form action state
+     state.mealPlan = null;
+     state.message = "";
+     state.errors = null;
   }
 
   return (
@@ -236,7 +244,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
             <h3 className="text-2xl font-bold font-headline">Your Generated Plan</h3>
-            {mealPlan && (
+            {generatedPlan && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Flame className="h-4 w-4" />
                     <span>Total Calories: {totalCalories}</span>
@@ -244,38 +252,38 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             )}
         </div>
 
-        {mealPlan && !isPending ? (
+        {generatedPlan && !isPending ? (
           <div className="space-y-4">
-             <Link href={`/recipes/${mealPlan.breakfast.id}`} className="group block">
+             <Link href={`/recipes/${generatedPlan.breakfast.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
-                  <CardTitle>Breakfast: {mealPlan.breakfast.title}</CardTitle>
-                  <CardDescription>{mealPlan.breakfast.calories} calories</CardDescription>
+                  <CardTitle>Breakfast: {generatedPlan.breakfast.title}</CardTitle>
+                  <CardDescription>{generatedPlan.breakfast.calories} calories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{mealPlan.breakfast.description}</p>
+                  <p>{generatedPlan.breakfast.description}</p>
                 </CardContent>
               </Card>
             </Link>
-            <Link href={`/recipes/${mealPlan.lunch.id}`} className="group block">
+            <Link href={`/recipes/${generatedPlan.lunch.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
-                  <CardTitle>Lunch: {mealPlan.lunch.title}</CardTitle>
-                  <CardDescription>{mealPlan.lunch.calories} calories</CardDescription>
+                  <CardTitle>Lunch: {generatedPlan.lunch.title}</CardTitle>
+                  <CardDescription>{generatedPlan.lunch.calories} calories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{mealPlan.lunch.description}</p>
+                  <p>{generatedPlan.lunch.description}</p>
                 </CardContent>
               </Card>
             </Link>
-            <Link href={`/recipes/${mealPlan.dinner.id}`} className="group block">
+            <Link href={`/recipes/${generatedPlan.dinner.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
-                  <CardTitle>Dinner: {mealPlan.dinner.title}</CardTitle>
-                  <CardDescription>{mealPlan.dinner.calories} calories</CardDescription>
+                  <CardTitle>Dinner: {generatedPlan.dinner.title}</CardTitle>
+                  <CardDescription>{generatedPlan.dinner.calories} calories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{mealPlan.dinner.description}</p>
+                  <p>{generatedPlan.dinner.description}</p>
                 </CardContent>
               </Card>
             </Link>
