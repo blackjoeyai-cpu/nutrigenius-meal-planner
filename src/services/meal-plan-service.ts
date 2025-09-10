@@ -69,8 +69,9 @@ export async function getLongTermMealPlans(userId: string): Promise<LongTermMeal
 
         // Sort the plans by creation date in descending order (newest first)
         plans.sort((a, b) => {
-            const dateA = a.createdAt instanceof Timestamp ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
-            const dateB = b.createdAt instanceof Timestamp ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
+            // Firestore Timestamps have a toDate() method.
+            const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt as any).getTime();
+            const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt as any).getTime();
             return dateB - dateA;
         });
 
