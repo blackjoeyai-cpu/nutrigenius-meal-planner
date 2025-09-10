@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -23,7 +24,7 @@ const GenerateSafeMealPlanInputSchema = z.object({
     ),
   cuisine: z.string().describe('The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).'),
   ingredients: z.string().optional().describe('A comma-separated list of ingredients the user has on hand and would like to use.'),
-  availableRecipes: z.array(z.any()).optional().describe('A list of available recipes for the AI to choose from.'),
+  availableRecipes: z.string().optional().describe('A JSON string of available recipes for the AI to choose from.'),
 });
 export type GenerateSafeMealPlanInput = z.infer<typeof GenerateSafeMealPlanInputSchema>;
 
@@ -60,8 +61,8 @@ const prompt = ai.definePrompt({
   The meal plan should try to incorporate the following ingredients that the user has on hand: {{{ingredients}}}.
   {{/if}}
   {{#if availableRecipes}}
-  You must choose from the following list of available recipes:
-  {{{jsonStringify availableRecipes}}}
+  You must choose from the following list of available recipes, provided as a JSON string:
+  {{{availableRecipes}}}
   {{/if}}
 
   Create a detailed meal plan with breakfast, lunch, and dinner that is safe and appropriate for the user.

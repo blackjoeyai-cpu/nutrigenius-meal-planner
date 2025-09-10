@@ -1,3 +1,4 @@
+
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
@@ -41,7 +42,8 @@ export async function createMealPlan(prevState: any, formData: FormData) {
       allergies: allergies || "none",
       cuisine,
       ingredients: ingredients || "none",
-      availableRecipes,
+      // Manually stringify the recipes to pass them as a simple string.
+      availableRecipes: JSON.stringify(availableRecipes, null, 2),
     });
 
     return {
