@@ -80,11 +80,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       </Sidebar>
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-          <SidebarTrigger asChild className="md:hidden">
-            <Button variant="outline" size="icon">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
+          <SidebarTrigger variant="outline" size="icon" className="md:hidden">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle navigation menu</span>
           </SidebarTrigger>
           <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
             {menuItems.find((item) => item.href === pathname)?.label || 'NutriGenius'}
