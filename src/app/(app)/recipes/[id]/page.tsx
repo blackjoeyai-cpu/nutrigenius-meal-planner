@@ -16,10 +16,10 @@ const getImage = (id: string) => {
   return PlaceHolderImages.find((img) => img.id === id);
 };
 
-export default function RecipeDetailPage({ params }: { params: { id: string } }) {
+export default function RecipeDetailPage({ params: { id } }: { params: { id: string } }) {
   const { recipes, isLoaded } = useRecipes();
   
-  const recipe = isLoaded ? recipes.find((recipe) => recipe.id === params.id) : undefined;
+  const recipe = isLoaded ? recipes.find((recipe) => recipe.id === id) : undefined;
 
   if (!isLoaded) {
     return (
