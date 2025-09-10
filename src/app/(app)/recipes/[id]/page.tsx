@@ -18,9 +18,8 @@ const getImage = (id: string) => {
 
 export default function RecipeDetailPage({ params }: { params: { id: string } }) {
   const { recipes, isLoaded } = useRecipes();
-  const { id } = params;
   
-  const recipe = isLoaded ? recipes.find((recipe) => recipe.id === id) : undefined;
+  const recipe = isLoaded ? recipes.find((recipe) => recipe.id === params.id) : undefined;
 
   if (!isLoaded) {
     return (
