@@ -13,6 +13,8 @@ import { createMealPlan } from "./actions";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { useIngredients } from "@/hooks/use-ingredients";
 
 const initialState = {
   message: "",
@@ -23,7 +25,7 @@ const initialState = {
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending}>
+    <Button type="submit" disabled={pending} className="w-full sm:w-auto">
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -42,11 +44,13 @@ function SubmitButton() {
 export default function GeneratePage() {
   const [state, formAction] = useActionState(createMealPlan, initialState);
   const { profile, isLoaded } = useUserProfile();
+  const { ingredients, isLoaded: ingredientsLoaded } = useIngredients();
 
   const [dietaryPreferences, setDietaryPreferences] = useState(profile.dietaryPreferences);
   const [calorieTarget, setCalorieTarget] = useState(profile.calorieTarget.toString());
   const [allergies, setAllergies] = useState(profile.allergies);
   const [cuisine, setCuisine] = useState(CUISINES[0]);
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -56,7 +60,7 @@ export default function GeneratePage() {
     }
   }, [isLoaded, profile]);
 
-  if (!isLoaded) {
+  if (!isLoaded || !ingredientsLoaded) {
     return (
       <Card>
         <CardHeader>
@@ -69,6 +73,10 @@ export default function GeneratePage() {
             <Skeleton className="h-10 w-full" />
           </div>
           <div className="space-y-2">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+           <div className="space-y-2">
             <Skeleton className="h-4 w-1/4" />
             <Skeleton className="h-10 w-full" />
           </div>
@@ -95,6 +103,7 @@ export default function GeneratePage() {
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
       <Card>
         <form action={formAction}>
+           <input type="hidden" name="ingredients" value={selectedIngredients.join(',')} />
           <CardHeader>
             <CardTitle>Create Your Meal Plan</CardTitle>
             <CardDescription>
@@ -142,6 +151,19 @@ export default function GeneratePage() {
                 value={calorieTarget}
                 onChange={(e) => setCalorieTarget(e.target.value)}
               />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="ingredients">Ingredients on Hand</Label>
+                <MultiSelect
+                    options={ingredients.map(i => ({ value: i, label: i }))}
+                    selected={selectedIngredients}
+                    onChange={setSelectedIngredients}
+                    className="w-full"
+                    placeholder="Select ingredients you have..."
+                />
+                <p className="text-sm text-muted-foreground">
+                    Select ingredients you have to be included in the meal plan.
+                </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="allergies">Allergies or Restrictions</Label>

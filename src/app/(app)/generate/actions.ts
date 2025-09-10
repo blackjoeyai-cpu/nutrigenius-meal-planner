@@ -8,6 +8,7 @@ const MealPlanSchema = z.object({
   calorieTarget: z.coerce.number().min(100, "Calorie target must be at least 100."),
   allergies: z.string(),
   cuisine: z.string(),
+  ingredients: z.string().optional(),
 });
 
 export async function createMealPlan(prevState: any, formData: FormData) {
@@ -16,6 +17,7 @@ export async function createMealPlan(prevState: any, formData: FormData) {
     calorieTarget: formData.get("calorieTarget"),
     allergies: formData.get("allergies"),
     cuisine: formData.get("cuisine"),
+    ingredients: formData.get("ingredients"),
   });
 
   if (!validatedFields.success) {
@@ -27,13 +29,14 @@ export async function createMealPlan(prevState: any, formData: FormData) {
   }
 
   try {
-    const { dietaryPreferences, calorieTarget, allergies, cuisine } = validatedFields.data;
+    const { dietaryPreferences, calorieTarget, allergies, cuisine, ingredients } = validatedFields.data;
     
     const result = await generateSafeMealPlan({
       dietaryPreferences,
       calorieTarget,
       allergies: allergies || "none",
       cuisine,
+      ingredients: ingredients || "none",
     });
 
     return {
