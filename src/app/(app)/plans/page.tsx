@@ -4,8 +4,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, CalendarDays, ChefHat } from 'lucide-react';
-import { addDays, format, isSameDay, startOfDay } from 'date-fns';
+import { PlusCircle, ChefHat } from 'lucide-react';
+import { addDays, format, startOfDay } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -90,23 +90,25 @@ export default function PlansPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-        <Card className="md:col-span-2">
-          <CardContent className="p-2 md:p-6">
-             <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                modifiers={{ planned: plannedDays }}
-                modifiersClassNames={{
-                    planned: 'bg-primary/20 text-primary-foreground rounded-full',
-                }}
-                className="w-full"
-            />
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardContent className="p-2 md:p-6">
+               <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  modifiers={{ planned: plannedDays }}
+                  modifiersClassNames={{
+                      planned: 'bg-primary/20 text-primary-foreground rounded-full',
+                  }}
+                  className="w-full"
+              />
+            </CardContent>
+          </Card>
+        </div>
         
-        <div className="space-y-4 md:col-span-1">
+        <div className="space-y-4 lg:col-span-1">
              <h3 className="text-2xl font-semibold font-headline">
                 {selectedDate ? format(selectedDate, 'PPP') : 'Select a date'}
             </h3>
@@ -139,7 +141,7 @@ export default function PlansPage() {
                 </div>
             ) : (
                 <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center h-full">
-                    <CardContent className="flex flex-col items-center justify-center">
+                    <CardContent className="flex flex-col items-center justify-center p-6">
                         <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
                         <h4 className="mt-4 text-lg font-semibold">No Plan for This Day</h4>
                         <p className="mt-2 text-sm text-muted-foreground">Generate a new plan to fill your calendar.</p>
@@ -151,4 +153,3 @@ export default function PlansPage() {
     </div>
   );
 }
-
