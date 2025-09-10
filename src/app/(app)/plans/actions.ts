@@ -12,8 +12,10 @@ const GeneratePlanSchema = z.object({
   calorieTarget: z.coerce.number().min(100, "Calorie target must be at least 100."),
   allergies: z.string(),
   cuisine: z.string(),
+  ingredients: z.string().optional(),
   recipes: z.string().optional(),
   numberOfDays: z.coerce.number().min(1, "Number of days must be at least 1.").max(30, "Cannot generate more than 30 days."),
+  generationSource: z.enum(["catalog", "new", "combined"]),
 });
 
 export async function generatePlanAction(prevState: any, formData: FormData) {
@@ -22,8 +24,10 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
     calorieTarget: formData.get("calorieTarget"),
     allergies: formData.get("allergies"),
     cuisine: formData.get("cuisine"),
+    ingredients: formData.get("ingredients"),
     recipes: formData.get("recipes"),
     numberOfDays: formData.get("numberOfDays"),
+    generationSource: formData.get("generationSource"),
   });
 
   if (!validatedFields.success) {
@@ -35,7 +39,7 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
   }
 
   try {
-    const { dietaryPreferences, calorieTarget, allergies, cuisine, recipes, numberOfDays } = validatedFields.data;
+    const { dietaryPreferences, calorieTarget, allergies, cuisine, ingredients, recipes, numberOfDays, generationSource } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
     
     const result = await generateLongTermMealPlan({
@@ -43,24 +47,28 @@ export async function generatePlanAction(prevState: any, formData: FormData) {
       calorieTarget,
       allergies: allergies || "none",
       cuisine,
+      ingredients: ingredients || "none",
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
       numberOfDays,
+      generationSource,
     });
 
-    const userId = "anonymous";
-    const planToSave = {
-      userId,
-      createdAt: new Date(),
-      days: result.days,
-      dietaryPreferences,
-      calorieTarget,
-      allergies,
-      cuisine,
-    };
+    if (generationSource !== 'new') {
+        const userId = "anonymous";
+        const planToSave = {
+          userId,
+          createdAt: new Date(),
+          days: result.days,
+          dietaryPreferences,
+          calorieTarget,
+          allergies,
+          cuisine,
+        };
 
-    await addLongTermMealPlan(planToSave);
+        await addLongTermMealPlan(planToSave);
+        revalidatePath("/plans");
+    }
 
-    revalidatePath("/plans");
 
     return {
       message: "Successfully generated meal plan.",
