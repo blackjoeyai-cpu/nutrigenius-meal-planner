@@ -28,17 +28,11 @@ export type UserProfile = {
   calorieTarget: number;
 };
 
-export type DailyMealPlan = {
-    breakfast: { id: string; title: string, calories: number };
-    lunch: { id: string; title: string, calories: number };
-    dinner: { id: string; title: string, calories: number };
-};
-
 // Represents a single day's plan as stored within a long-term plan
 export type DailyPlan = {
-  breakfast: { id: string; title: string; calories: number; };
-  lunch: { id: string; title: string; calories: number; };
-  dinner: { id: string; title: string; calories: number; };
+  breakfast: { id: string; title: string; description: string; calories: number; };
+  lunch: { id: string; title: string; description: string; calories: number; };
+  dinner: { id: string; title: string; description: string; calories: number; };
 }
 
 export type GenerateLongTermMealPlanOutput = {

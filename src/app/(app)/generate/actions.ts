@@ -2,11 +2,11 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
-import { addMealPlan as saveMealToDB } from "@/services/meal-plan-service";
+import { addLongTermMealPlan } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { DailyMealPlan } from "@/lib/types";
+import { DailyPlan } from "@/lib/types";
 
 const MealPlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -51,10 +51,19 @@ export async function createMealPlan(prevState: any, formData: FormData) {
       generationSource,
     });
 
+    const fullPlan = {
+      days: [{ ...result }],
+      dietaryPreferences,
+      calorieTarget,
+      allergies,
+      cuisine,
+      generationSource,
+    }
+
     return {
       message: "Successfully generated meal plan.",
       errors: null,
-      mealPlan: JSON.stringify(result),
+      mealPlan: JSON.stringify(fullPlan),
     };
   } catch (error) {
     console.error("Error generating meal plan:", error);
@@ -67,12 +76,19 @@ export async function createMealPlan(prevState: any, formData: FormData) {
 }
 
 const DailyMealPlanSaveSchema = z.object({
-  breakfast: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
-  lunch: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
-  dinner: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+    days: z.array(z.object({
+        breakfast: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+        lunch: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+        dinner: z.object({ id: z.string(), title: z.string(), calories: z.number() }),
+    })),
+    dietaryPreferences: z.string(),
+    calorieTarget: z.number(),
+    allergies: z.string(),
+    cuisine: z.string(),
+    generationSource: z.string(),
 });
 
-export async function saveDailyPlan(plan: DailyMealPlan) {
+export async function saveDailyPlan(plan: z.infer<typeof DailyMealPlanSaveSchema>) {
     const validatedFields = DailyMealPlanSaveSchema.safeParse(plan);
 
     if (!validatedFields.success) {
@@ -84,12 +100,14 @@ export async function saveDailyPlan(plan: DailyMealPlan) {
     
     try {
         const userId = "anonymous";
-        await saveMealToDB({
-          breakfast: { id: plan.breakfast.id, title: plan.breakfast.title },
-          lunch: { id: plan.lunch.id, title: plan.lunch.title },
-          dinner: { id: plan.dinner.id, title: plan.dinner.title },
-          date: new Date(),
-          userId,
+        await addLongTermMealPlan({
+            userId,
+            createdAt: new Date(),
+            days: plan.days,
+            dietaryPreferences: plan.dietaryPreferences,
+            calorieTarget: plan.calorieTarget,
+            allergies: plan.allergies,
+            cuisine: plan.cuisine,
         });
 
         revalidatePath("/plans");

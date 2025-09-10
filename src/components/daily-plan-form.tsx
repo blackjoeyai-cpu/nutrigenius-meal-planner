@@ -19,7 +19,7 @@ import { useIngredients } from "@/hooks/use-ingredients";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Recipe, DailyMealPlan } from "@/lib/types";
+import type { Recipe, GenerateLongTermMealPlanOutput } from "@/lib/types";
 import { useRecipes } from "@/hooks/use-recipes";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -50,6 +50,14 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
+type ParsedPlan = GenerateLongTermMealPlanOutput & {
+  dietaryPreferences: string,
+  calorieTarget: number,
+  allergies: string,
+  cuisine: string,
+  generationSource: string,
+}
+
 export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [state, formAction, isPending] = useActionState(createMealPlan, initialState);
   const { ingredients } = useIngredients();
@@ -59,7 +67,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const router = useRouter();
 
   // Local state to hold the generated plan
-  const [generatedPlan, setGeneratedPlan] = useState<DailyMealPlan | null>(null);
+  const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
   // Default values
   const [dietaryPreferences, setDietaryPreferences] = useState(DIETARY_PREFERENCES[0]);
@@ -80,7 +88,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked = generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
-  const totalCalories = generatedPlan ? generatedPlan.breakfast.calories + generatedPlan.lunch.calories + generatedPlan.dinner.calories : 0;
+  const totalCalories = generatedPlan ? generatedPlan.days[0].breakfast.calories + generatedPlan.days[0].lunch.calories + generatedPlan.days[0].dinner.calories : 0;
 
   const handleSave = async () => {
     if (!generatedPlan) return;
@@ -254,36 +262,36 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
 
         {generatedPlan && !isPending ? (
           <div className="space-y-4">
-             <Link href={`/recipes/${generatedPlan.breakfast.id}`} className="group block">
+             <Link href={`/recipes/${generatedPlan.days[0].breakfast.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
-                  <CardTitle>Breakfast: {generatedPlan.breakfast.title}</CardTitle>
-                  <CardDescription>{generatedPlan.breakfast.calories} calories</CardDescription>
+                  <CardTitle>Breakfast: {generatedPlan.days[0].breakfast.title}</CardTitle>
+                  <CardDescription>{generatedPlan.days[0].breakfast.calories} calories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{generatedPlan.breakfast.description}</p>
+                  <p>{generatedPlan.days[0].breakfast.description}</p>
                 </CardContent>
               </Card>
             </Link>
-            <Link href={`/recipes/${generatedPlan.lunch.id}`} className="group block">
+            <Link href={`/recipes/${generatedPlan.days[0].lunch.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
-                  <CardTitle>Lunch: {generatedPlan.lunch.title}</CardTitle>
-                  <CardDescription>{generatedPlan.lunch.calories} calories</CardDescription>
+                  <CardTitle>Lunch: {generatedPlan.days[0].lunch.title}</CardTitle>
+                  <CardDescription>{generatedPlan.days[0].lunch.calories} calories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{generatedPlan.lunch.description}</p>
+                  <p>{generatedPlan.days[0].lunch.description}</p>
                 </CardContent>
               </Card>
             </Link>
-            <Link href={`/recipes/${generatedPlan.dinner.id}`} className="group block">
+            <Link href={`/recipes/${generatedPlan.days[0].dinner.id}`} className="group block">
               <Card className="transition-shadow group-hover:shadow-md">
                 <CardHeader>
-                  <CardTitle>Dinner: {generatedPlan.dinner.title}</CardTitle>
-                  <CardDescription>{generatedPlan.dinner.calories} calories</CardDescription>
+                  <CardTitle>Dinner: {generatedPlan.days[0].dinner.title}</CardTitle>
+                  <CardDescription>{generatedPlan.days[0].dinner.calories} calories</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>{generatedPlan.dinner.description}</p>
+                  <p>{generatedPlan.days[0].dinner.description}</p>
                 </CardContent>
               </Card>
             </Link>
@@ -293,7 +301,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                     <CardDescription>Save it to your calendar or discard it and generate a new one.</CardDescription>
                 </CardHeader>
                 <CardFooter className="flex gap-4">
-                     <Button onClick={handleSave} disabled={isSaving || generationSource === 'new'}>
+                     <Button onClick={handleSave} disabled={isSaving || generatedPlan.generationSource !== 'catalog'}>
                         {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Save Plan
                     </Button>
@@ -302,7 +310,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                         Discard
                     </Button>
                 </CardFooter>
-                 {generationSource === 'new' && <CardContent><Alert variant="destructive" className="mt-4"><AlertTriangle className="h-4 w-4" /><AlertDescription>Saving is disabled when "Generate all new recipes" is selected because these recipes do not exist in your collection yet.</AlertDescription></Alert></CardContent>}
+                 {generatedPlan.generationSource !== 'catalog' && <CardContent><Alert variant="destructive" className="mt-4"><AlertTriangle className="h-4 w-4" /><AlertDescription>Saving is disabled unless "Use my existing recipes" is selected. This ensures all saved recipes have valid links.</AlertDescription></Alert></CardContent>}
             </Card>
           </div>
         ) : (
