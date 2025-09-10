@@ -64,14 +64,20 @@ export async function getLongTermMealPlans(userId: string): Promise<LongTermMeal
         const querySnapshot = await getDocs(q);
         const plans: LongTermMealPlan[] = [];
         querySnapshot.forEach((doc) => {
-            plans.push({ id: doc.id, ...doc.data() } as LongTermMealPlan);
+            const data = doc.data();
+            const createdAtTimestamp = data.createdAt as Timestamp;
+            plans.push({ 
+                id: doc.id, 
+                ...data,
+                // Convert timestamp to a serializable format (ISO string)
+                createdAt: createdAtTimestamp.toDate().toISOString(),
+             } as LongTermMealPlan);
         });
 
         // Sort the plans by creation date in descending order (newest first)
         plans.sort((a, b) => {
-            // Firestore Timestamps have a toDate() method.
-            const dateA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt as any).getTime();
-            const dateB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt as any).getTime();
+            const dateA = new Date(a.createdAt).getTime();
+            const dateB = new Date(b.createdAt).getTime();
             return dateB - dateA;
         });
 

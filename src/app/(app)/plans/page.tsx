@@ -72,7 +72,7 @@ export default function PlansPage() {
                        {plan.days.length}-Day Plan
                     </CardTitle>
                     <CardDescription>
-                       Generated on {format(plan.createdAt.toDate(), 'PPP')}
+                       Generated on {format(new Date(plan.createdAt), 'PPP')}
                     </CardDescription>
                     <div className="flex flex-wrap gap-2 pt-2">
                         <Badge variant="secondary">{plan.cuisine}</Badge>

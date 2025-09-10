@@ -35,7 +35,7 @@ export type DailyMealPlan = {
 export type LongTermMealPlan = {
     id: string;
     userId: string;
-    createdAt: Timestamp;
+    createdAt: string; // Changed from Timestamp to string for serialization
     days: DailyMealPlan[];
     dietaryPreferences: string;
     calorieTarget: number;
