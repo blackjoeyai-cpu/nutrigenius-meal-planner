@@ -111,10 +111,10 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   });
   
   useEffect(() => {
-    if (state.longTermPlan) {
+    if (state.isSuccess && state.longTermPlan) {
       setGeneratedPlan(JSON.parse(state.longTermPlan));
     }
-  }, [state.longTermPlan]);
+  }, [state.isSuccess, state.longTermPlan]);
 
   const generationSource = form.watch("generationSource");
   const hasEnoughRecipesForCatalog = recipes.length > 3;
@@ -143,7 +143,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
   const handleDiscard = () => {
     setGeneratedPlan(null);
-    // Clear previous form action state
     state.longTermPlan = null;
     state.message = "";
     state.errors = null;
@@ -276,7 +275,11 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
         <Form {...form}>
           <form
-            action={formAction}
+            action={(formData) => {
+              form.handleSubmit(() => {
+                formAction(formData)
+              })()
+            }}
           >
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <input type="hidden" name="ingredients" value={form.watch("ingredients").join(",")} />
@@ -319,7 +322,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                          </div>
                     </Alert>
                 )}
-                {!isPending && (
+                {!isPending && !isCatalogGenerationBlocked && (
                     <>
                  <FormField
                     control={form.control}
@@ -414,7 +417,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         <FormControl>
                           <SelectTrigger ref={field.ref}>
                             <SelectValue placeholder="Select a cuisine" />
-                          </Trigger>
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           {CUISINES.map((c) => (
@@ -484,9 +487,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </>
                 )}
             </CardContent>
-            {!isPending && (
+            {!isPending && !isCatalogGenerationBlocked && (
                 <CardFooter>
-                  <SubmitButton disabled={isCatalogGenerationBlocked} />
+                  <SubmitButton />
                 </CardFooter>
             )}
           </form>
@@ -494,5 +497,3 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     </Card>
   );
 }
-
-    
