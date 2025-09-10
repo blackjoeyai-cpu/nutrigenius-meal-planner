@@ -1,3 +1,5 @@
+import type { Timestamp } from "firebase/firestore";
+
 export type Recipe = {
   id: string;
   name: string;
@@ -23,3 +25,20 @@ export type UserProfile = {
   allergies: string;
   calorieTarget: number;
 };
+
+export type DailyMealPlan = {
+    breakfast: { id: string; title: string, calories: number };
+    lunch: { id: string; title: string, calories: number };
+    dinner: { id: string; title: string, calories: number };
+};
+
+export type LongTermMealPlan = {
+    id: string;
+    userId: string;
+    createdAt: Timestamp;
+    days: DailyMealPlan[];
+    dietaryPreferences: string;
+    calorieTarget: number;
+    allergies: string;
+    cuisine: string;
+}

@@ -6,6 +6,7 @@ import {
   BookOpen,
   Menu,
   Sparkles,
+  CalendarDays,
 } from 'lucide-react';
 
 import {
@@ -36,13 +37,18 @@ const menuItems = [
     label: 'Generate Plan',
     icon: Sparkles,
   },
+  {
+    href: '/plans',
+    label: 'My Plans',
+    icon: CalendarDays,
+  }
 ];
 
 function BottomNavigation() {
     const pathname = usePathname();
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-t-lg md:hidden">
-            <div className="grid h-16 grid-cols-2">
+            <div className="grid h-16 grid-cols-3">
                 {menuItems.map((item) => (
                     <Link
                         key={item.href}
