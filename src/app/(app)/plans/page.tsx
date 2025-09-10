@@ -40,13 +40,15 @@ export default function PlansPage() {
       const startDate = startOfDay(new Date(plan.createdAt));
       plan.days.forEach((day, index) => {
         const date = addDays(startDate, index);
-        map.set(date.toISOString().split('T')[0], day);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        map.set(dateKey, day);
       });
     });
     return map;
   }, [plans, isLoaded]);
   
-  const selectedDayPlan = selectedDate ? plansByDate.get(selectedDate.toISOString().split('T')[0]) : null;
+  const selectedDateKey = format(selectedDate, 'yyyy-MM-dd');
+  const selectedDayPlan = plansByDate.get(selectedDateKey);
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDayOfMonth = startOfMonth(currentDate);
@@ -118,9 +120,9 @@ export default function PlansPage() {
                     {emptyDays.map(d => <div key={`empty-${d}`} className="h-16"></div>)}
                     {days.map(day => {
                         const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-                        const dateKey = date.toISOString().split('T')[0];
+                        const dateKey = format(date, 'yyyy-MM-dd');
                         const hasPlan = plansByDate.has(dateKey);
-                        const isSelected = format(selectedDate, 'yyyy-MM-dd') === dateKey;
+                        const isSelected = selectedDateKey === dateKey;
                         const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
 
                         return (
