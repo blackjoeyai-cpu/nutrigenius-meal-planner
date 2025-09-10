@@ -1,7 +1,6 @@
 
 'use client';
 import { useState, useMemo } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
 
@@ -13,12 +12,7 @@ import { Button } from '@/components/ui/button';
 import { AddRecipeDialog } from '@/components/add-recipe-dialog';
 import { useRecipes } from '@/hooks/use-recipes';
 import { CUISINES } from '@/lib/constants';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const getImage = (id: string) => {
-  return PlaceHolderImages.find((img) => img.id === id);
-};
 
 export default function RecipesPage() {
   const { recipes, addRecipe, isLoaded } = useRecipes();
@@ -96,23 +90,9 @@ export default function RecipesPage() {
         <TabsContent value={activeTab}>
             <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredRecipes.map((recipe) => {
-                const image = getImage(recipe.imageId);
                 return (
                   <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group">
                     <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg">
-                      <CardHeader className="p-0">
-                        <div className="relative h-48 w-full">
-                          {image && (
-                            <Image
-                              src={image.imageUrl}
-                              alt={recipe.name}
-                              fill
-                              className="object-cover transition-transform group-hover:scale-105"
-                              data-ai-hint={image.imageHint}
-                            />
-                          )}
-                        </div>
-                      </CardHeader>
                       <CardContent className="p-4">
                         <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
                         <div className="flex flex-wrap gap-2">
