@@ -4,22 +4,23 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PlusCircle, ChefHat } from 'lucide-react';
-import { addDays, format, startOfDay } from 'date-fns';
+import { PlusCircle, ChefHat, ChevronLeft, ChevronRight } from 'lucide-react';
+import { addDays, format, startOfDay, getDaysInMonth, startOfMonth, getDay, subMonths, addMonths } from 'date-fns';
 
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
 import { getLongTermMealPlans } from '@/services/meal-plan-service';
 import type { LongTermMealPlan, DailyPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 type PlansByDate = Map<string, DailyPlan>;
 
 export default function PlansPage() {
   const [plans, setPlans] = useState<LongTermMealPlan[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const router = useRouter();
 
   useEffect(() => {
@@ -44,12 +45,15 @@ export default function PlansPage() {
     });
     return map;
   }, [plans, isLoaded]);
-
-  const plannedDays = useMemo(() => {
-    return Array.from(plansByDate.keys()).map((dateStr) => new Date(dateStr));
-  }, [plansByDate]);
-
+  
   const selectedDayPlan = selectedDate ? plansByDate.get(selectedDate.toISOString().split('T')[0]) : null;
+
+  const daysInMonth = getDaysInMonth(currentDate);
+  const firstDayOfMonth = startOfMonth(currentDate);
+  const startingDayOfWeek = getDay(firstDayOfMonth); // 0 (Sun) to 6 (Sat)
+  const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   if (!isLoaded) {
     return (
@@ -93,17 +97,57 @@ export default function PlansPage() {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <Card>
-            <CardContent className="p-2 md:p-6">
-               <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  modifiers={{ planned: plannedDays }}
-                  modifiersClassNames={{
-                      planned: 'bg-primary/20 text-primary-foreground rounded-full',
-                  }}
-                  className="w-full"
-              />
+            <CardHeader className="flex flex-row items-center justify-between p-4">
+              <h3 className="text-xl font-semibold font-headline">
+                {format(currentDate, 'MMMM yyyy')}
+              </h3>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={() => setCurrentDate(subMonths(currentDate, 1))}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setCurrentDate(addMonths(currentDate, 1))}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="p-2 md:p-4">
+                <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-muted-foreground">
+                    {weekDays.map(day => <div key={day} className="py-2">{day}</div>)}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                    {emptyDays.map(d => <div key={`empty-${d}`} className="h-16"></div>)}
+                    {days.map(day => {
+                        const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                        const dateKey = date.toISOString().split('T')[0];
+                        const hasPlan = plansByDate.has(dateKey);
+                        const isSelected = format(selectedDate, 'yyyy-MM-dd') === dateKey;
+                        const isToday = format(new Date(), 'yyyy-MM-dd') === dateKey;
+
+                        return (
+                            <button 
+                                key={day}
+                                onClick={() => setSelectedDate(date)}
+                                className={cn(
+                                    "relative flex h-16 w-full items-start justify-start p-2 text-sm transition-colors rounded-md",
+                                    "hover:bg-accent hover:text-accent-foreground",
+                                    isSelected ? "bg-primary text-primary-foreground hover:bg-primary" : "bg-transparent",
+                                    isToday && !isSelected && "bg-secondary/50",
+                                )}
+                            >
+                                <span className={cn(
+                                    "flex items-center justify-center rounded-full h-6 w-6",
+                                    isSelected && "bg-primary-foreground text-primary font-bold"
+                                )}>{day}</span>
+                                {hasPlan && (
+                                     <span className={cn(
+                                         "absolute bottom-2 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full",
+                                         isSelected ? "bg-primary-foreground" : "bg-primary"
+                                      )} />
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
             </CardContent>
           </Card>
         </div>
@@ -153,3 +197,5 @@ export default function PlansPage() {
     </div>
   );
 }
+
+    
