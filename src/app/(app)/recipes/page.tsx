@@ -13,6 +13,7 @@ import { AddRecipeDialog } from '@/components/add-recipe-dialog';
 import { useRecipes } from '@/hooks/use-recipes';
 import { CUISINES } from '@/lib/constants';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RecipesPage() {
   const { recipes, addRecipe, isLoaded } = useRecipes();
@@ -89,23 +90,37 @@ export default function RecipesPage() {
         </TabsList>
         <TabsContent value={activeTab}>
             <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredRecipes.map((recipe) => {
-                return (
-                  <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group">
-                    <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg">
-                      <CardContent className="p-4">
-                        <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="secondary">{recipe.cuisine}</Badge>
-                          {recipe.dietaryTags.map((tag) => (
-                            <Badge key={tag} variant="outline">{tag}</Badge>
-                          ))}
-                        </div>
-                      </CardContent>
+              {!isLoaded ? (
+                Array.from({ length: 6 }).map((_, index) => (
+                    <Card key={index}>
+                        <CardContent className="p-4 space-y-3">
+                            <Skeleton className="h-6 w-3/4" />
+                            <div className="flex flex-wrap gap-2">
+                                <Skeleton className="h-5 w-20" />
+                                <Skeleton className="h-5 w-24" />
+                            </div>
+                        </CardContent>
                     </Card>
-                  </Link>
-                );
-              })}
+                ))
+              ) : (
+                filteredRecipes.map((recipe) => {
+                  return (
+                    <Link key={recipe.id} href={`/recipes/${recipe.id}`} className="group">
+                      <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg">
+                        <CardContent className="p-4">
+                          <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant="secondary">{recipe.cuisine}</Badge>
+                            {recipe.dietaryTags.map((tag) => (
+                              <Badge key={tag} variant="outline">{tag}</Badge>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  );
+                })
+              )}
             </div>
             {filteredRecipes.length === 0 && isLoaded && (
                 <div className="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center mt-4">
