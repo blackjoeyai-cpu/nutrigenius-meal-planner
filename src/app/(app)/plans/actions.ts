@@ -1,9 +1,10 @@
+
 "use server";
 
 import { z } from "zod";
 import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
 import { addMealPlan } from "@/services/meal-plan-service";
-import type { Recipe, MealPlan, RecipeDetails } from "@/lib/types";
+import type { Recipe, MealPlan, RecipeDetails, DailyPlan } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { generateRecipeDetails } from "@/ai/flows/generate-recipe";
 import { addRecipe } from "@/services/recipe-service";
@@ -74,27 +75,6 @@ export async function generatePlanAction(
       language: language,
     });
 
-    for (const day of result.days) {
-      for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
-        const meal = day[mealType];
-        if (meal.id.startsWith("new-recipe-")) {
-          const recipeDetails: RecipeDetails = await generateRecipeDetails({
-            prompt: `A ${cuisine} ${meal.title} that is ${dietaryPreferences} and fits a ${calorieTarget} calorie diet.`,
-            language: language,
-          });
-
-          const newRecipeId = await addRecipe(recipeDetails);
-
-          day[mealType] = {
-            id: newRecipeId,
-            title: recipeDetails.name,
-            description: meal.description, // Keep AI's short description
-            calories: recipeDetails.nutrition.calories,
-          };
-        }
-      }
-    }
-
     return {
       message: "Successfully generated long-term meal plan.",
       errors: null,
@@ -124,26 +104,48 @@ export async function saveMealPlan(
     generationSource: string;
   },
 ) {
-  // Only save the meal plan if it was generated purely from the recipe catalog.
-  // This ensures data integrity, as we can guarantee all recipe IDs are valid.
-  if (plan.generationSource === "catalog") {
-    const planToSave = {
-      createdAt: new Date(),
-      days: plan.days,
-      dietaryPreferences: plan.dietaryPreferences,
-      calorieTarget: plan.calorieTarget,
-      allergies: plan.allergies,
-      cuisine: plan.cuisine,
+  const language = "Malay";
+  const resolvedDays: DailyPlan[] = [];
+
+  for (const day of plan.days) {
+    const resolvedDay: DailyPlan = {
+      breakfast: { ...day.breakfast },
+      lunch: { ...day.lunch },
+      dinner: { ...day.dinner },
     };
 
-    await addMealPlan(planToSave);
-    revalidatePath("/plans");
+    for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
+      const meal = day[mealType];
+      if (meal.id.startsWith("new-recipe-")) {
+        const recipeDetails: RecipeDetails = await generateRecipeDetails({
+          prompt: `A ${plan.cuisine} ${meal.title} that is ${plan.dietaryPreferences} and fits a ${plan.calorieTarget} calorie diet.`,
+          language: language,
+        });
 
-    return { success: true, message: "Plan saved successfully." };
+        const newRecipeId = await addRecipe(recipeDetails);
+
+        resolvedDay[mealType] = {
+          id: newRecipeId,
+          title: recipeDetails.name,
+          description: meal.description,
+          calories: recipeDetails.nutrition.calories,
+        };
+      }
+    }
+    resolvedDays.push(resolvedDay);
   }
 
-  return {
-    success: false,
-    message: "Only plans generated from the catalog can be saved at this time.",
+  const planToSave = {
+    createdAt: new Date(),
+    days: resolvedDays,
+    dietaryPreferences: plan.dietaryPreferences,
+    calorieTarget: plan.calorieTarget,
+    allergies: plan.allergies,
+    cuisine: plan.cuisine,
   };
+
+  await addMealPlan(planToSave);
+  revalidatePath("/plans");
+
+  return { success: true, message: "Plan saved successfully." };
 }

@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
@@ -220,34 +221,45 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   }: {
     mealType: MealType;
     meal: DailyPlan[MealType];
-  }) => (
-    <Card className="transition-shadow group-hover:shadow-md relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
-        onClick={() => handleRegenerateMeal(mealType)}
-        disabled={isRegenerating !== null}
-      >
-        {isRegenerating === mealType ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <RefreshCw className="h-4 w-4" />
-        )}
-      </Button>
-      <Link href={`/recipes/${meal.id}`} className="group block">
-        <CardHeader>
-          <CardTitle>
-            {mealType.charAt(0).toUpperCase() + mealType.slice(1)}: {meal.title}
-          </CardTitle>
-          <CardDescription>{meal.calories} calories</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p>{meal.description}</p>
-        </CardContent>
-      </Link>
-    </Card>
-  );
+  }) => {
+    const isNewRecipe = meal.id.startsWith("new-recipe-");
+    const Wrapper = isNewRecipe ? "div" : Link;
+    const props = isNewRecipe ? {} : { href: `/recipes/${meal.id}` };
+
+    return (
+      <Wrapper {...props} className="group block">
+        <Card className="transition-shadow group-hover:shadow-md relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleRegenerateMeal(mealType);
+            }}
+            disabled={isRegenerating !== null}
+          >
+            {isRegenerating === mealType ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+          </Button>
+          <CardHeader>
+            <CardTitle>
+              {mealType.charAt(0).toUpperCase() + mealType.slice(1)}:{" "}
+              {meal.title}
+            </CardTitle>
+            <CardDescription>{meal.calories} calories</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>{meal.description}</p>
+          </CardContent>
+        </Card>
+      </Wrapper>
+    );
+  };
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 pt-6">
@@ -470,12 +482,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                 </CardDescription>
               </CardHeader>
               <CardFooter className="flex gap-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={
-                    isSaving || generatedPlan.generationSource !== "catalog"
-                  }
-                >
+                <Button onClick={handleSave} disabled={isSaving}>
                   {isSaving ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
@@ -488,18 +495,6 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   Discard
                 </Button>
               </CardFooter>
-              {generatedPlan.generationSource !== "catalog" && (
-                <CardContent>
-                  <Alert variant="destructive" className="mt-4">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>
-                      Saving is disabled unless &quot;Use my existing
-                      recipes&quot; is selected. This ensures all saved recipes
-                      have valid links.
-                    </AlertDescription>
-                  </Alert>
-                </CardContent>
-              )}
             </Card>
           </div>
         ) : (

@@ -1,9 +1,10 @@
+
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
 import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
 import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
-import { type Recipe, type RecipeDetails } from "@/lib/types";
+import { type Recipe, type RecipeDetails, type DailyPlan } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { generateRecipeDetails } from "@/ai/flows/generate-recipe";
@@ -63,29 +64,6 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
       generationSource,
       language: language,
     });
-
-    // Process any newly generated recipes
-    for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
-      const meal = result[mealType];
-      if (meal.id.startsWith("new-recipe-")) {
-        // First, generate the detailed recipe content from the AI
-        const recipeDetails: RecipeDetails = await generateRecipeDetails({
-          prompt: `A ${cuisine} ${meal.title} that is ${dietaryPreferences} and fits a ${calorieTarget} calorie diet.`,
-          language: language,
-        });
-
-        // Then, save this new recipe to the database to get a permanent ID
-        const newRecipeId = await addRecipe(recipeDetails);
-
-        // Finally, update the meal plan with the permanent ID and correct details
-        result[mealType] = {
-          id: newRecipeId,
-          title: recipeDetails.name,
-          description: meal.description, // Keep AI's short description for the plan
-          calories: recipeDetails.nutrition.calories,
-        };
-      }
-    }
 
     const fullPlan = {
       days: [{ ...result }],
@@ -150,27 +128,12 @@ export async function regenerateMealAction(
   }
 
   try {
-    let newMeal = await regenerateSingleMeal({
+    const newMeal = await regenerateSingleMeal({
       ...validatedFields.data,
       language: language,
     });
 
-    if (newMeal.id.startsWith("new-recipe-")) {
-      const recipeDetails = await generateRecipeDetails({
-        prompt: `A ${validatedFields.data.cuisine} ${newMeal.title} that is ${validatedFields.data.dietaryPreferences} and fits a ${validatedFields.data.calorieTarget} calorie diet.`,
-        language: language,
-      });
-
-      const newRecipeId = await addRecipe(recipeDetails);
-
-      newMeal = {
-        id: newRecipeId,
-        title: recipeDetails.name,
-        description: newMeal.description,
-        calories: recipeDetails.nutrition.calories,
-      };
-    }
-
+    // We do not save the recipe here, just return the placeholder
     return { success: true, meal: newMeal };
   } catch (error) {
     console.error("Error regenerating meal:", error);
@@ -214,6 +177,7 @@ export async function saveDailyPlan(
   plan: z.infer<typeof DailyMealPlanSaveSchema>,
 ) {
   const validatedFields = DailyMealPlanSaveSchema.safeParse(plan);
+  const language = "Malay";
 
   if (!validatedFields.success) {
     return {
@@ -224,9 +188,39 @@ export async function saveDailyPlan(
 
   try {
     const { planId, date, ...planData } = validatedFields.data;
+    const resolvedDays: DailyPlan[] = [];
+
+    for (const day of planData.days) {
+      const resolvedDay: DailyPlan = {
+        breakfast: { ...day.breakfast },
+        lunch: { ...day.lunch },
+        dinner: { ...day.dinner },
+      };
+
+      for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
+        const meal = day[mealType];
+        if (meal.id.startsWith("new-recipe-")) {
+          const recipeDetails: RecipeDetails = await generateRecipeDetails({
+            prompt: `A ${planData.cuisine} ${meal.title} that is ${planData.dietaryPreferences} and fits a ${planData.calorieTarget} calorie diet.`,
+            language: language,
+          });
+
+          const newRecipeId = await addRecipe(recipeDetails);
+
+          resolvedDay[mealType] = {
+            id: newRecipeId,
+            title: recipeDetails.name,
+            description: meal.description,
+            calories: recipeDetails.nutrition.calories,
+          };
+        }
+      }
+      resolvedDays.push(resolvedDay);
+    }
+
     const planToSave = {
       createdAt: date ? new Date(date) : new Date(),
-      days: planData.days,
+      days: resolvedDays,
       dietaryPreferences: planData.dietaryPreferences,
       calorieTarget: planData.calorieTarget,
       allergies: planData.allergies,

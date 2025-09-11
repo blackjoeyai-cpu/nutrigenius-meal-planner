@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useState, Fragment } from "react";
 import { useFormStatus } from "react-dom";
 import {
   Card,
@@ -244,76 +245,48 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 <AccordionTrigger>Day {index + 1}</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-2">
-                    <Link
-                      href={`/recipes/${day.breakfast.id}`}
-                      className="group block"
-                    >
-                      <Card className="transition-shadow group-hover:shadow-md">
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Breakfast: {day.breakfast.title}
-                          </CardTitle>
-                          <CardDescription>
-                            {day.breakfast.calories} calories
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    </Link>
-                    <Link
-                      href={`/recipes/${day.lunch.id}`}
-                      className="group block"
-                    >
-                      <Card className="transition-shadow group-hover:shadow-md">
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Lunch: {day.lunch.title}
-                          </CardTitle>
-                          <CardDescription>
-                            {day.lunch.calories} calories
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    </Link>
-                    <Link
-                      href={`/recipes/${day.dinner.id}`}
-                      className="group block"
-                    >
-                      <Card className="transition-shadow group-hover:shadow-md">
-                        <CardHeader>
-                          <CardTitle className="text-lg">
-                            Dinner: {day.dinner.title}
-                          </CardTitle>
-                          <CardDescription>
-                            {day.dinner.calories} calories
-                          </CardDescription>
-                        </CardHeader>
-                      </Card>
-                    </Link>
+                    {[day.breakfast, day.lunch, day.dinner].map(
+                      (meal, mealIndex) => {
+                        const isNewRecipe = meal.id.startsWith("new-recipe-");
+                        const Wrapper = isNewRecipe ? "div" : Link;
+                        const props = isNewRecipe
+                          ? {}
+                          : { href: `/recipes/${meal.id}` };
+
+                        return (
+                          <Wrapper
+                            key={mealIndex}
+                            {...props}
+                            className="group block"
+                          >
+                            <Card className="transition-shadow group-hover:shadow-md">
+                              <CardHeader>
+                                <CardTitle className="text-lg">
+                                  {
+                                    ["Breakfast", "Lunch", "Dinner"][
+                                      mealIndex
+                                    ]
+                                  }
+                                  : {meal.title}
+                                </CardTitle>
+                                <CardDescription>
+                                  {meal.calories} calories
+                                </CardDescription>
+                              </CardHeader>
+                            </Card>
+                          </Wrapper>
+                        );
+                      },
+                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>
-          {generatedPlan.generationSource !== "catalog" && (
-            <Alert variant="destructive" className="mt-4">
-              <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>Saving Disabled</AlertTitle>
-              <AlertDescription>
-                Saving is only enabled when &quot;Use my existing recipes&quot;
-                is selected. This ensures that all recipes in your saved plan
-                have valid links.
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
         <CardFooter className="flex-col items-start gap-4">
           <div className="flex gap-2">
-            <Button
-              onClick={handleSave}
-              disabled={
-                isSaving || generatedPlan.generationSource !== "catalog"
-              }
-            >
+            <Button onClick={handleSave} disabled={isSaving}>
               {isSaving ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
