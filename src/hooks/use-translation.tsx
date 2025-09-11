@@ -42,8 +42,8 @@ export const LocalizationProvider = ({
   }, []);
 
   const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
     localStorage.setItem("language", lang);
+    window.location.reload();
   };
 
   const t = useCallback(

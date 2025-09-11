@@ -28,15 +28,20 @@ const ptSansHeadline = PT_Sans({
 //   description: "AI-powered meal planning and nutrition tracking.",
 // };
 
-function LocalizedContent({ children }: { children: React.ReactNode }) {
+function AppBody({ children }: { children: React.ReactNode }) {
   const { language } = useTranslation();
-
   useEffect(() => {
-    // This will set the lang attribute on the html tag
     document.documentElement.lang = language;
   }, [language]);
 
-  return <div key={language}>{children}</div>;
+  return (
+    <body
+      className={`font-sans ${ptSans.variable} ${ptSansHeadline.variable}`}
+    >
+      {children}
+      <Toaster />
+    </body>
+  );
 }
 
 export default function RootLayout({
@@ -47,12 +52,7 @@ export default function RootLayout({
   return (
     <LocalizationProvider>
       <html lang="en" suppressHydrationWarning>
-        <body
-          className={`font-sans ${ptSans.variable} ${ptSansHeadline.variable}`}
-        >
-          <LocalizedContent>{children}</LocalizedContent>
-          <Toaster />
-        </body>
+        <AppBody>{children}</AppBody>
       </html>
     </LocalizationProvider>
   );
