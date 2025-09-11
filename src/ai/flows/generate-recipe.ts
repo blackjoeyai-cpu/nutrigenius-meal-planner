@@ -18,6 +18,10 @@ const GenerateRecipeInputSchema = z.object({
   prompt: z
     .string()
     .describe("The user’s idea or prompt for the recipe to be generated."),
+  language: z
+    .string()
+    .optional()
+    .describe("The language for the generated recipe (e.g., 'English', 'Malay')."),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
@@ -92,7 +96,7 @@ const prompt = ai.definePrompt({
   output: { schema: AISchema },
   prompt: `You are a creative chef who specializes in creating new and exciting recipes.
   A user will provide you with a prompt for a recipe, and you must generate a complete, well-structured recipe based on their idea.
-  The entire recipe output MUST be in English.
+  The entire recipe output MUST be in {{#if language}}{{language}}{{else}}English{{/if}}.
 
   User's recipe idea: {{{prompt}}}
 

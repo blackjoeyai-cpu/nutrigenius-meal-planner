@@ -6,7 +6,10 @@ import { generateRecipe } from "@/ai/flows/generate-recipe";
 import { updateRecipe, addRecipe } from "@/services/recipe-service";
 import { revalidatePath } from "next/cache";
 
-export async function generateRecipeAction(input: { prompt: string }) {
+export async function generateRecipeAction(input: {
+  prompt: string;
+  language?: string;
+}) {
   return await generateRecipe(input);
 }
 

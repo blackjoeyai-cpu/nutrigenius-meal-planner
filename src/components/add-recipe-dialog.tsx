@@ -86,6 +86,7 @@ export function AddRecipeDialog({
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
+  const [generationLanguage, setGenerationLanguage] = useState("English");
   const { toast } = useToast();
   const isEditMode = !!recipeToEdit;
 
@@ -138,6 +139,7 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
+        language: generationLanguage,
       });
       if (result) {
         form.reset({
@@ -246,23 +248,37 @@ export function AddRecipeDialog({
                 onChange={(e) => setGenerationPrompt(e.target.value)}
               />
             </div>
-            <Button
-              onClick={handleGenerateRecipe}
-              disabled={isGenerating || !generationPrompt}
-              className="w-full sm:w-auto"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Recipe
-                </>
-              )}
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+               <Select
+                value={generationLanguage}
+                onValueChange={setGenerationLanguage}
+              >
+                <SelectTrigger className="w-full sm:w-[120px]">
+                  <SelectValue placeholder="Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="English">English</SelectItem>
+                  <SelectItem value="Malay">Malay</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={handleGenerateRecipe}
+                disabled={isGenerating || !generationPrompt}
+                className="w-full sm:w-auto"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate Recipe
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
 
