@@ -38,6 +38,7 @@ import { useState, useEffect } from "react";
 import {
   generateRecipeAction,
   updateRecipeAction,
+  addRecipeAction,
 } from "@/app/recipes/actions";
 import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -183,7 +184,7 @@ export function AddRecipeDialog({
       return { quantity: parts[0].trim() || "", item: parts[1].trim() };
     });
 
-    const recipeData = {
+    const recipeData: RecipeDetails = {
       ...data,
       ingredients: ingredientsArray,
       instructions: data.instructions.split("\n"),
@@ -198,6 +199,7 @@ export function AddRecipeDialog({
           description: "Recipe updated successfully.",
         });
       } else {
+        await addRecipeAction(recipeData);
         await onRecipeAdd(recipeData);
         toast({
           title: "Success",

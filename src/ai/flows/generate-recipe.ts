@@ -2,17 +2,14 @@
 /**
  * @fileOverview Generates a complete recipe from a user's text description.
  *
- * - generateRecipe - A function that creates a recipe and saves it to the database.
- * - generateRecipeDetails - An internal function that only generates recipe details without saving.
+ * - generateRecipeDetails - A function that only generates recipe details without saving.
  * - GenerateRecipeInput - The input type for the generateRecipe function.
- * - GenerateRecipeOutput - The return type for the generateRecipe function.
+ * - RecipeDetails - The return type for the generateRecipeDetails function.
  */
 
 import { ai } from "@/ai/genkit";
 import { z } from "genkit";
 import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
-import { addRecipe } from "@/services/recipe-service";
-import type { Recipe } from "@/lib/types";
 
 const GenerateRecipeInputSchema = z.object({
   prompt: z
@@ -21,7 +18,9 @@ const GenerateRecipeInputSchema = z.object({
   language: z
     .string()
     .optional()
-    .describe("The language for the generated recipe (e.g., 'English', 'Malay')."),
+    .describe(
+      "The language for the generated recipe (e.g., 'English', 'Malay').",
+    ),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
@@ -68,21 +67,10 @@ const AISchema = z.object({
     .describe("Nutritional information per serving."),
 });
 
-const GenerateRecipeOutputSchema = AISchema.extend({
-  id: z.string().describe("The ID of the newly created recipe."),
-});
-
-export type GenerateRecipeOutput = z.infer<typeof GenerateRecipeOutputSchema>;
 export type RecipeDetails = z.infer<typeof AISchema>;
 
-export async function generateRecipe(
-  input: GenerateRecipeInput,
-): Promise<GenerateRecipeOutput> {
-  return generateRecipeFlow(input);
-}
-
 /**
- * Internal flow to generate recipe details without saving to the database.
+ * Generates recipe details without saving to the database.
  */
 export async function generateRecipeDetails(
   input: GenerateRecipeInput,
@@ -130,22 +118,5 @@ const generateRecipeDetailsFlow = ai.defineFlow(
       throw new Error("Failed to generate recipe details from AI.");
     }
     return output;
-  },
-);
-
-const generateRecipeFlow = ai.defineFlow(
-  {
-    name: "generateRecipeFlow",
-    inputSchema: GenerateRecipeInputSchema,
-    outputSchema: GenerateRecipeOutputSchema,
-    retries: 3,
-  },
-  async (input) => {
-    const details = await generateRecipeDetails(input);
-    const recipeId = await addRecipe(details);
-    return {
-      id: recipeId,
-      ...details,
-    };
   },
 );

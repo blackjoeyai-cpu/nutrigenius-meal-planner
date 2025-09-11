@@ -38,9 +38,8 @@ export default async function RecipesPage({
           </p>
         </div>
         <AddRecipeDialog
-          onRecipeAdd={async (recipe) => {
+          onRecipeAdd={async () => {
             "use server";
-            await addRecipeAction(recipe);
             await refreshRecipesAction();
           }}
           onRecipeUpdate={async () => {
