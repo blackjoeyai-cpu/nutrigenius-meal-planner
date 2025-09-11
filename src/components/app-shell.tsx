@@ -2,7 +2,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Link } from "next-intl/navigation";
+import Link from "next/link";
 import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
 import { useTranslations } from 'next-intl';
 
@@ -72,9 +72,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   isActive={pathname.includes(item.href)}
                   tooltip={{ children: item.label }}
                 >
-                  <Link href={item.href}>
-                    <item.icon />
-                    <span>{item.label}</span>
+                  <Link href={item.href} legacyBehavior passHref>
+                    <a>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </a>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
