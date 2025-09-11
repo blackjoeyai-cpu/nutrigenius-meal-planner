@@ -56,8 +56,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Link, useRouter } from "next-intl/client";
 import { Skeleton } from "./ui/skeleton";
 import { useTranslations } from "next-intl";
 

@@ -1,6 +1,7 @@
+
 "use client";
 import { useState, useMemo } from "react";
-import Link from "next/link";
+import { Link } from "next-intl/client";
 import { PlusCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
