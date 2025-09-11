@@ -5,21 +5,21 @@ import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import Link from 'next/link';
-import { Sparkles, Loader2, Flame, AlertTriangle, PlusCircle, Save, XCircle } from "lucide-react";
+import { Sparkles, Loader2, Flame, AlertTriangle, PlusCircle, Save, XCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { createMealPlan, saveDailyPlan } from "@/app/(app)/generate/actions";
+import { createMealPlan, saveDailyPlan, regenerateMealAction } from "@/app/(app)/generate/actions";
 import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Recipe, MealPlan } from "@/lib/types";
+import type { Recipe, MealPlan, DailyPlan } from "@/lib/types";
 import { useRecipes } from "@/hooks/use-recipes";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -55,6 +55,8 @@ type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
   generationSource: string;
 }
 
+type MealType = "breakfast" | "lunch" | "dinner";
+
 export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [state, formAction, isPending] = useActionState(createMealPlan, initialState);
   const { ingredients } = useIngredients();
@@ -75,6 +77,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
   const [generationSource, setGenerationSource] = useState("catalog");
   const [isSaving, setIsSaving] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState<MealType | null>(null);
 
   const planId = searchParams.get("planId");
   const date = searchParams.get("date");
@@ -125,6 +128,74 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
      state.message = "";
      state.errors = null;
   }
+
+  const handleRegenerateMeal = async (mealType: MealType) => {
+    if (!generatedPlan) return;
+
+    setIsRegenerating(mealType);
+
+    const currentMeals: Partial<DailyPlan> = { ...generatedPlan.days[0] };
+    delete currentMeals[mealType];
+
+    const input = {
+      dietaryPreferences,
+      calorieTarget: parseInt(calorieTarget),
+      allergies: allergies || "none",
+      cuisine,
+      ingredients: selectedIngredients.join(','),
+      availableRecipes: JSON.stringify(recipes),
+      generationSource: generationSource as "catalog" | "new" | "combined",
+      mealToRegenerate: mealType,
+      currentMeals,
+    };
+
+    const result = await regenerateMealAction(input);
+
+    if (result.success && result.meal) {
+      const newPlan = { ...generatedPlan };
+      newPlan.days[0][mealType] = result.meal;
+      setGeneratedPlan(newPlan);
+      toast({
+        title: "Meal Regenerated!",
+        description: `Your ${mealType} has been updated.`,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.message || "Failed to regenerate meal.",
+        variant: "destructive",
+      });
+    }
+
+    setIsRegenerating(null);
+  };
+
+  const MealCard = ({ mealType, meal }: { mealType: MealType; meal: DailyPlan[MealType] }) => (
+    <Card className="transition-shadow group-hover:shadow-md relative">
+       <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
+            onClick={() => handleRegenerateMeal(mealType)}
+            disabled={isRegenerating !== null}
+        >
+            {isRegenerating === mealType ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+                <RefreshCw className="h-4 w-4" />
+            )}
+        </Button>
+      <Link href={`/recipes/${meal.id}`} className="group block">
+        <CardHeader>
+          <CardTitle>{mealType.charAt(0).toUpperCase() + mealType.slice(1)}: {meal.title}</CardTitle>
+          <CardDescription>{meal.calories} calories</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>{meal.description}</p>
+        </CardContent>
+      </Link>
+    </Card>
+  );
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 pt-6">
@@ -303,39 +374,9 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             </div>
         ) : generatedPlan ? (
           <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4">
-             <Link href={`/recipes/${generatedPlan.days[0].breakfast.id}`} className="group block">
-              <Card className="transition-shadow group-hover:shadow-md">
-                <CardHeader>
-                  <CardTitle>Breakfast: {generatedPlan.days[0].breakfast.title}</CardTitle>
-                  <CardDescription>{generatedPlan.days[0].breakfast.calories} calories</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>{generatedPlan.days[0].breakfast.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href={`/recipes/${generatedPlan.days[0].lunch.id}`} className="group block">
-              <Card className="transition-shadow group-hover:shadow-md">
-                <CardHeader>
-                  <CardTitle>Lunch: {generatedPlan.days[0].lunch.title}</CardTitle>
-                  <CardDescription>{generatedPlan.days[0].lunch.calories} calories</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>{generatedPlan.days[0].lunch.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href={`/recipes/${generatedPlan.days[0].dinner.id}`} className="group block">
-              <Card className="transition-shadow group-hover:shadow-md">
-                <CardHeader>
-                  <CardTitle>Dinner: {generatedPlan.days[0].dinner.title}</CardTitle>
-                  <CardDescription>{generatedPlan.days[0].dinner.calories} calories</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>{generatedPlan.days[0].dinner.description}</p>
-                </CardContent>
-              </Card>
-            </Link>
+            <MealCard mealType="breakfast" meal={generatedPlan.days[0].breakfast} />
+            <MealCard mealType="lunch" meal={generatedPlan.days[0].lunch} />
+            <MealCard mealType="dinner" meal={generatedPlan.days[0].dinner} />
              <Card>
                 <CardHeader>
                     <CardTitle>Happy with this plan?</CardTitle>

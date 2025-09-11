@@ -2,11 +2,11 @@
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
+import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
 import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
-import type { Recipe } from "@/lib/types";
+import type { Recipe, DailyPlan } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { DailyPlan } from "@/lib/types";
 
 const MealPlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -74,6 +74,39 @@ export async function createMealPlan(prevState: any, formData: FormData) {
     };
   }
 }
+
+const RegenerateMealSchema = z.object({
+    dietaryPreferences: z.string(),
+    calorieTarget: z.coerce.number(),
+    allergies: z.string(),
+    cuisine: z.string(),
+    ingredients: z.string().optional(),
+    availableRecipes: z.string(),
+    generationSource: z.enum(["catalog", "new", "combined"]),
+    mealToRegenerate: z.enum(["breakfast", "lunch", "dinner"]),
+    currentMeals: z.object({
+        breakfast: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }).optional(),
+        lunch: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }).optional(),
+        dinner: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }).optional(),
+    }),
+});
+
+export async function regenerateMealAction(input: z.infer<typeof RegenerateMealSchema>) {
+    const validatedFields = RegenerateMealSchema.safeParse(input);
+
+    if (!validatedFields.success) {
+        return { success: false, message: "Invalid input." };
+    }
+
+    try {
+        const newMeal = await regenerateSingleMeal(validatedFields.data);
+        return { success: true, meal: newMeal };
+    } catch (error) {
+        console.error("Error regenerating meal:", error);
+        return { success: false, message: "Failed to regenerate meal." };
+    }
+}
+
 
 const DailyMealPlanSaveSchema = z.object({
     days: z.array(z.object({
