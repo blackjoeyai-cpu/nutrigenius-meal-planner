@@ -2,7 +2,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { Link } from "next-intl/navigation";
 import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
 import { useTranslations } from 'next-intl';
 
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Logo } from "@/components/logo";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { cn } from "@/lib/utils";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -51,7 +50,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   const currentLabel =
-    menuItems.find((item) => pathname.includes(item.href.substring(1)))?.label || "NutriGenius";
+    menuItems.find((item) => pathname.includes(item.href))?.label || "NutriGenius";
 
   if (isMobile === undefined) {
     return null;
@@ -69,7 +68,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.includes(item.href.substring(1))}
+                  isActive={pathname.includes(item.href)}
                   tooltip={{ children: item.label }}
                 >
                   <Link href={item.href}>
