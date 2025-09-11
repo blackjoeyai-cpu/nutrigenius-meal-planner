@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
+import { BookOpen, Menu, Sparkles, CalendarDays } from "lucide-react";
 
 import {
   SidebarProvider,
@@ -39,11 +39,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       href: "/plans",
       label: "My Plans",
       icon: CalendarDays,
-    },
-    {
-      href: "/settings",
-      label: "Settings",
-      icon: Settings,
     },
   ];
 
