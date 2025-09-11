@@ -12,7 +12,7 @@ import { ai } from "@/ai/genkit";
 import { z } from "genkit";
 import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
 import { addRecipe } from "@/services/recipe-service";
-import type { Recipe } from "@/lib/types";
+import type { RecipeDetails } from "@/lib/types";
 
 const GenerateRecipeInputSchema = z.object({
   prompt: z
