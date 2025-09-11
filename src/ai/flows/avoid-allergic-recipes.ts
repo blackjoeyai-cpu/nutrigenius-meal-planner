@@ -43,6 +43,12 @@ const GenerateSafeMealPlanInputSchema = z.object({
     .describe(
       "The source for recipe generation. 'catalog' uses only available recipes. 'new' generates all new recipes. 'combined' uses available recipes first, then generates new ones if necessary.",
     ),
+  language: z
+    .string()
+    .optional()
+    .describe(
+      "The language for the recipe to be generated in, e.g., 'Malay'.",
+    ),
 });
 export type GenerateSafeMealPlanInput = z.infer<
   typeof GenerateSafeMealPlanInputSchema
@@ -86,6 +92,12 @@ const prompt = ai.definePrompt({
   The meal plan MUST NOT include any of the following ingredients, as the user is allergic to them: {{{allergies}}}.
   {{#if ingredients}}
   The meal plan should try to incorporate the following ingredients that the user has on hand: {{{ingredients}}}.
+  {{/if}}
+
+  {{#if language}}
+  If you generate any new recipes, the entire recipe output (title, description) MUST be in the following language: {{{language}}}.
+  {{else}}
+  Any new recipes you generate MUST be in English.
   {{/if}}
 
   Recipe Generation Source: {{{generationSource}}}

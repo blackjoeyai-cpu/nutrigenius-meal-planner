@@ -68,6 +68,7 @@ export async function generatePlanAction(
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
       numberOfDays,
       generationSource,
+      language: "Malay",
     });
 
     return {
@@ -95,16 +96,14 @@ export async function generatePlanAction(
 }
 
 export async function saveMealPlan(
-  plan: Omit<MealPlan, "id" | "userId" | "createdAt"> & {
+  plan: Omit<MealPlan, "id" | "createdAt"> & {
     generationSource: string;
   },
 ) {
   // Only save the meal plan if it was generated purely from the recipe catalog.
   // This ensures data integrity, as we can guarantee all recipe IDs are valid.
   if (plan.generationSource === "catalog") {
-    const userId = "anonymous";
     const planToSave = {
-      userId,
       createdAt: new Date(),
       days: plan.days,
       dietaryPreferences: plan.dietaryPreferences,

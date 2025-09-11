@@ -58,6 +58,7 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
       ingredients: ingredients || "none",
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
       generationSource,
+      language: "Malay",
     });
 
     const fullPlan = {
@@ -122,7 +123,10 @@ export async function regenerateMealAction(
   }
 
   try {
-    const newMeal = await regenerateSingleMeal(validatedFields.data);
+    const newMeal = await regenerateSingleMeal({
+      ...validatedFields.data,
+      language: "Malay",
+    });
     return { success: true, meal: newMeal };
   } catch (error) {
     console.error("Error regenerating meal:", error);
@@ -176,9 +180,7 @@ export async function saveDailyPlan(
 
   try {
     const { planId, date, ...planData } = validatedFields.data;
-    const userId = "anonymous";
     const planToSave = {
-      userId,
       createdAt: date ? new Date(date) : new Date(),
       days: planData.days,
       dietaryPreferences: planData.dietaryPreferences,
