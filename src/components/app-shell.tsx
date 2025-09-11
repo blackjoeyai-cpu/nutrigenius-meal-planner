@@ -51,7 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   ];
 
   const currentLabel =
-    menuItems.find((item) => pathname.includes(item.href))?.label || "NutriGenius";
+    menuItems.find((item) => pathname.includes(item.href.substring(1)))?.label || "NutriGenius";
 
   if (isMobile === undefined) {
     return null;
@@ -69,14 +69,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.includes(item.href)}
+                  isActive={pathname.includes(item.href.substring(1))}
                   tooltip={{ children: item.label }}
                 >
-                  <Link href={item.href} legacyBehavior passHref>
-                    <a>
-                      <item.icon />
-                      <span>{item.label}</span>
-                    </a>
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
