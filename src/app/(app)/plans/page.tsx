@@ -50,7 +50,7 @@ export default function PlansPage() {
 
   useEffect(() => {
     async function fetchPlans() {
-      const fetchedPlans = await getMealPlans("anonymous");
+      const fetchedPlans = await getMealPlans();
       setPlans(fetchedPlans);
       setIsLoaded(true);
     }
