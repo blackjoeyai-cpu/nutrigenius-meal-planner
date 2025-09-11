@@ -38,7 +38,7 @@ import {
   createMealPlan,
   saveDailyPlan,
   regenerateMealAction,
-} from "@/app/(app)/generate/actions";
+} from "@/app/[locale]/generate/actions";
 import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
@@ -50,7 +50,7 @@ import { useRecipes } from "@/hooks/use-recipes";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
-import { useTranslation } from "@/hooks/use-translation";
+import { useTranslations, useLocale } from "next-intl";
 
 const initialState = {
   message: "",
@@ -104,7 +104,8 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { t, language } = useTranslation();
+  const t = useTranslations("DailyPlanForm");
+  const locale = useLocale();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -199,7 +200,8 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       generationSource: generationSource as "catalog" | "new" | "combined",
       mealToRegenerate: mealType,
       currentMeals,
-      language: language === "ms" ? "Malay" : undefined,
+      mealToReplace,
+      language: locale === "ms" ? "Malay" : undefined,
     };
 
     const result = await regenerateMealAction(input);

@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { useTranslation } from "@/hooks/use-translation";
+import { useTranslations } from "next-intl";
 
 type PlansByDate = Map<
   string,
@@ -48,7 +48,7 @@ export default function PlansPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const router = useRouter();
-  const { t, language } = useTranslation();
+  const t = useTranslations("PlansPage");
 
   useEffect(() => {
     async function fetchPlans() {
@@ -122,7 +122,7 @@ export default function PlansPage() {
   }
 
   return (
-    <div className="space-y-6" key={language}>
+    <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-2">
           <h2 className="font-headline text-3xl font-bold tracking-tight">

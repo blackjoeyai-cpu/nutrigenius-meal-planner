@@ -38,10 +38,10 @@ import { useState, useEffect } from "react";
 import {
   generateRecipeAction,
   updateRecipeAction,
-} from "@/app/(app)/recipes/actions";
+} from "@/app/[locale]/recipes/actions";
 import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslation } from "@/hooks/use-translation";
+import { useTranslations, useLocale } from "next-intl";
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -81,7 +81,8 @@ export function AddRecipeDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
   const { toast } = useToast();
-  const { t, language } = useTranslation();
+  const t = useTranslations("AddRecipeDialog");
+  const locale = useLocale();
   const isEditMode = !!recipeToEdit;
 
   const form = useForm<RecipeFormValues>({
@@ -133,7 +134,7 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
-        language: language === "ms" ? "Malay" : undefined,
+        language: locale === "ms" ? "Malay" : undefined,
       });
       if (result) {
         form.reset({

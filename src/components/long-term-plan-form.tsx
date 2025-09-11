@@ -39,7 +39,7 @@ import {
   Save,
   XCircle,
 } from "lucide-react";
-import { generatePlanAction, saveMealPlan } from "@/app/(app)/plans/actions";
+import { generatePlanAction, saveMealPlan } from "@/app/[locale]/plans/actions";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,7 +59,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "./ui/skeleton";
-import { useTranslation } from "@/hooks/use-translation";
+import { useTranslations } from "next-intl";
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -131,7 +131,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  const { t, language } = useTranslation();
+  const t = useTranslations("LongTermPlanForm");
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -257,6 +257,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   <div className="space-y-4 pl-2">
                     {[day.breakfast, day.lunch, day.dinner].map(
                       (meal, mealIndex) => {
+                        const mealType = ["breakfast", "lunch", "dinner"][
+                          mealIndex
+                        ] as "breakfast" | "lunch" | "dinner";
                         const isNewRecipe = meal.id.startsWith("new-recipe-");
                         const Wrapper = isNewRecipe ? "div" : Link;
                         const props = isNewRecipe
@@ -274,8 +277,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                             <Card className="transition-shadow group-hover:shadow-md">
                               <CardHeader>
                                 <CardTitle className="text-lg">
-                                  {t(["breakfast", "lunch", "dinner"][mealIndex])}:{" "}
-                                  {meal.title}
+                                  {t(mealType)}: {meal.title}
                                 </CardTitle>
                                 <CardDescription>
                                   {meal.calories} {t("calories_short")}

@@ -9,10 +9,23 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useTranslation } from "@/hooks/use-translation";
+import { useLocale, useTranslations } from "next-intl";
+import { usePathname, useRouter } from 'next-intl/client';
+import { useTransition } from "react";
 
 export default function SettingsPage() {
-  const { t, language, setLanguage } = useTranslation();
+  const t = useTranslations("SettingsPage");
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+
+
+  function onSelectLocale(nextLocale: string) {
+    startTransition(() => {
+      router.replace(pathname, {locale: nextLocale});
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -30,9 +43,10 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <RadioGroup
-            value={language}
-            onValueChange={(value) => setLanguage(value as "en" | "ms")}
+            defaultValue={locale}
+            onValueChange={onSelectLocale}
             className="grid gap-2"
+            disabled={isPending}
           >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="en" id="en" />

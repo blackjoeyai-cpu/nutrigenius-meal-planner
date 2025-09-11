@@ -12,6 +12,7 @@ import {
   Edit,
 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export default function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const t = useTranslations("RecipeDetail");
 
   const fetchRecipe = useCallback(async () => {
     setIsLoaded(false);
@@ -96,22 +98,22 @@ export default function RecipeDetailPage() {
           >
             <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
-              Edit Recipe
+              {t("edit_recipe")}
             </Button>
           </AddRecipeDialog>
         </div>
         <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />
-            <span>Prep: {recipe.prepTime} min</span>
+            <span>{t('prep_time')}: {recipe.prepTime} min</span>
           </div>
           <div className="flex items-center gap-2">
             <Soup className="h-4 w-4" />
-            <span>Cook: {recipe.cookTime} min</span>
+            <span>{t('cook_time')}: {recipe.cookTime} min</span>
           </div>
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            <span>Servings: {recipe.servings}</span>
+            <span>{t('servings')}: {recipe.servings}</span>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -129,7 +131,7 @@ export default function RecipeDetailPage() {
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
         <div className="md:col-span-1">
           <h2 className="mb-4 text-2xl font-semibold font-headline">
-            Ingredients
+            {t("ingredients")}
           </h2>
           <ul className="space-y-2">
             {recipe.ingredients.map((ing, index) => (
@@ -142,7 +144,7 @@ export default function RecipeDetailPage() {
         </div>
         <div className="md:col-span-2">
           <h2 className="mb-4 text-2xl font-semibold font-headline">
-            Instructions
+            {t("instructions")}
           </h2>
           <ol className="list-inside list-decimal space-y-4">
             {recipe.instructions.map((step, index) => (
@@ -156,35 +158,35 @@ export default function RecipeDetailPage() {
 
       <div>
         <h2 className="mb-4 text-2xl font-semibold font-headline">
-          Nutritional Information
+          {t("nutritional_information")}
         </h2>
-        <p className="mb-4 text-muted-foreground">Per serving</p>
+        <p className="mb-4 text-muted-foreground">{t('per_serving')}</p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Card>
             <CardContent className="p-4 text-center">
               <Flame className="mx-auto mb-2 h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">Calories</p>
+              <p className="text-sm text-muted-foreground">{t('calories')}</p>
               <p className="text-lg font-bold">{recipe.nutrition.calories}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Beef className="mx-auto mb-2 h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">Protein</p>
+              <p className="text-sm text-muted-foreground">{t('protein')}</p>
               <p className="text-lg font-bold">{recipe.nutrition.protein}g</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Wheat className="mx-auto mb-2 h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">Carbs</p>
+              <p className="text-sm text-muted-foreground">{t('carbs')}</p>
               <p className="text-lg font-bold">{recipe.nutrition.carbs}g</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Droplets className="mx-auto mb-2 h-6 w-6 text-primary" />
-              <p className="text-sm text-muted-foreground">Fat</p>
+              <p className="text-sm text-muted-foreground">{t('fat')}</p>
               <p className="text-lg font-bold">{recipe.nutrition.fat}g</p>
             </CardContent>
           </Card>

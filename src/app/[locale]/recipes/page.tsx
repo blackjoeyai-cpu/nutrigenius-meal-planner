@@ -2,6 +2,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { PlusCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,6 @@ import { useRecipes } from "@/hooks/use-recipes";
 import { CUISINES } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useTranslation } from "@/hooks/use-translation";
 
 export default function RecipesPage() {
   const { recipes, addRecipe, isLoaded } = useRecipes();
@@ -27,7 +27,7 @@ export default function RecipesPage() {
   const [cuisineFilter, setCuisineFilter] = useState("Any");
   const [activeTab, setActiveTab] = useState("All");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const { t, language } = useTranslation();
+  const t = useTranslations("RecipesPage");
 
   const filteredRecipes = useMemo(() => {
     if (!isLoaded) return [];
@@ -50,7 +50,7 @@ export default function RecipesPage() {
   const mealTypes = ["All", "Breakfast", "Lunch", "Dinner"];
 
   return (
-    <div className="space-y-6" key={language}>
+    <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-2">
           <h2 className="font-headline text-3xl font-bold tracking-tight">
