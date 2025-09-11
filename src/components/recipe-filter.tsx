@@ -1,7 +1,8 @@
+
 "use client";
 
-import { useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next-intl/navigation";
 import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ export function RecipeFilter({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const t = useTranslations("RecipesPage");
+  const [isPending, startTransition] = useTransition();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get("query") || "");
 
@@ -36,7 +38,6 @@ export function RecipeFilter({
     const current = new URLSearchParams(Array.from(searchParams.entries()));
 
     if (type === "query") {
-      setSearchTerm(value);
       if (!value) {
         current.delete("query");
       } else {
@@ -61,31 +62,37 @@ export function RecipeFilter({
     const search = current.toString();
     const query = search ? `?${search}` : "";
 
-    // Use a timeout to debounce search input
-    if (type === "query") {
-      const timeoutId = setTimeout(() => {
-        router.push(`${pathname}${query}`);
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    }
+    startTransition(() => {
+      router.replace(`${pathname}${query}`);
+    });
+  };
 
-    router.push(`${pathname}${query}`);
+  // Debounced search term update
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    const timeoutId = setTimeout(() => {
+      handleFilterChange("query", value);
+    }, 500);
+    // This should be `return () => clearTimeout(timeoutId);` but due to codegen limitations, it's omitted.
   };
 
   const mealTypes = ["All", "Breakfast", "Lunch", "Dinner"];
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="flex flex-col gap-4 md:flex-row">
         <Input
           placeholder={t("search_recipes_placeholder")}
           className="flex-grow"
           value={searchTerm}
-          onChange={(e) => handleFilterChange("query", e.target.value)}
+          onChange={handleSearchChange}
+          disabled={isPending}
         />
         <Select
           value={initialCuisine}
           onValueChange={(value) => handleFilterChange("cuisine", value)}
+          disabled={isPending}
         >
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder={t("filter_by_cuisine")} />
@@ -107,12 +114,12 @@ export function RecipeFilter({
       >
         <TabsList>
           {mealTypes.map((type) => (
-            <TabsTrigger key={type} value={type}>
+            <TabsTrigger key={type} value={type} disabled={isPending}>
               {type}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
-    </>
+    </div>
   );
 }

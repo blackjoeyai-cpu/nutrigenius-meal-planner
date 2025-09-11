@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,6 +39,7 @@ import { useState, useEffect } from "react";
 import {
   generateRecipeAction,
   updateRecipeAction,
+  addRecipeAction,
 } from "@/app/[locale]/recipes/actions";
 import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -66,8 +68,10 @@ type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 type AddRecipeDialogProps = {
   children: React.ReactNode;
   recipeToEdit?: Recipe;
-  onRecipeAdd: (recipe: RecipeDetails) => Promise<unknown>;
+  onRecipeAdd: (recipe: RecipeDetails) => Promise<void>;
   onRecipeUpdate: () => Promise<void>;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function AddRecipeDialog({
@@ -75,8 +79,13 @@ export function AddRecipeDialog({
   recipeToEdit,
   onRecipeAdd,
   onRecipeUpdate,
+  open: openProp,
+  onOpenChange: onOpenChangeProp,
 }: AddRecipeDialogProps) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp ?? internalOpen;
+  const setOpen = onOpenChangeProp ?? setInternalOpen;
+
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
   const { toast } = useToast();
@@ -212,9 +221,13 @@ export function AddRecipeDialog({
     }
   }
 
+  const DialogTrigger = children ? (
+    <div onClick={() => setOpen(true)}>{children}</div>
+  ) : null;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <div onClick={() => setOpen(true)}>{children}</div>
+      {DialogTrigger}
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>

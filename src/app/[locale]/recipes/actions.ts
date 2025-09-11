@@ -1,3 +1,4 @@
+
 "use server";
 
 import type { RecipeDetails } from "@/lib/types";
@@ -25,10 +26,9 @@ export async function updateRecipeAction(id: string, data: RecipeDetails) {
 
 export async function addRecipeAction(data: RecipeDetails) {
   const result = await addRecipe(data);
-  revalidatePath("/recipes");
   return result;
 }
 
 export async function refreshRecipesAction() {
-  revalidatePath("/recipes");
+  revalidatePath("/(en|ms)/recipes", "layout");
 }
