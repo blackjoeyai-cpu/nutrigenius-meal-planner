@@ -1,3 +1,4 @@
+
 "use client";
 
 import * as React from "react";
@@ -32,7 +33,7 @@ type SidebarContext = {
   setOpen: (open: boolean) => void;
   openMobile: boolean;
   setOpenMobile: (open: boolean) => void;
-  isMobile: boolean | undefined;
+  isMobile: boolean;
   toggleSidebar: () => void;
 };
 
@@ -121,7 +122,7 @@ const SidebarProvider = React.forwardRef<
         state,
         open,
         setOpen,
-        isMobile,
+        isMobile: isMobile || false,
         openMobile,
         setOpenMobile,
         toggleSidebar,
@@ -136,6 +137,10 @@ const SidebarProvider = React.forwardRef<
         toggleSidebar,
       ],
     );
+
+    if (isMobile === undefined) {
+      return null;
+    }
 
     return (
       <SidebarContext.Provider value={contextValue}>
@@ -184,10 +189,6 @@ const Sidebar = React.forwardRef<
     ref,
   ) => {
     const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
-
-    if (isMobile === undefined) {
-      return null;
-    }
 
     if (collapsible === "none") {
       return (

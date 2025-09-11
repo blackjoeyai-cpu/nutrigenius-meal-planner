@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname } from "next/navigation";
@@ -51,6 +52,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const currentLabel =
     menuItems.find((item) => item.href === pathname)?.label || "NutriGenius";
+
+  if (isMobile === undefined) {
+    return null;
+  }
 
   return (
     <SidebarProvider>
