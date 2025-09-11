@@ -2,11 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Recipe } from "@/lib/types";
-import {
-  getRecipes as fetchRecipes,
-  addRecipe as saveRecipe,
-} from "@/services/recipe-service";
-import { addRecipeAction } from "@/app/(app)/recipes/actions";
+import { getRecipes } from "@/services/recipe-service";
+import { addRecipeAction } from "@/app/[locale]/recipes/actions";
 
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -14,7 +11,7 @@ export const useRecipes = () => {
 
   const loadRecipes = useCallback(async () => {
     try {
-      const fetchedRecipes = await fetchRecipes();
+      const fetchedRecipes = await getRecipes();
       setRecipes(fetchedRecipes);
     } catch (error) {
       console.error("Error fetching recipes:", error);
