@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useRouter, Link } from "next-intl/navigation";
+import { useRouter } from "next/navigation";
+import { Link } from "next-intl/navigation";
 import {
   PlusCircle,
   ChefHat,

@@ -1,7 +1,8 @@
 
 "use client";
 
-import { usePathname, Link } from "next-intl/navigation";
+import { usePathname } from "next/navigation";
+import { Link } from "next-intl/navigation";
 import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
 import { useTranslations } from 'next-intl';
 
