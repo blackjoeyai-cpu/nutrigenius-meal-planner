@@ -131,7 +131,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -206,7 +206,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
         variant: "destructive",
       });
     }
-  }, [state, toast]);
+  }, [state, toast, t]);
 
   if (isPending) {
     return (

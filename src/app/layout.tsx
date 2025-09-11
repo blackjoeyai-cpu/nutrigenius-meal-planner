@@ -27,15 +27,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`font-sans ${ptSans.variable} ${ptSansHeadline.variable}`}
-      >
-        <LocalizationProvider>
+    <LocalizationProvider>
+      <html lang="en" suppressHydrationWarning>
+        <body
+          className={`font-sans ${ptSans.variable} ${ptSansHeadline.variable}`}
+        >
           {children}
           <Toaster />
-        </LocalizationProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </LocalizationProvider>
   );
 }

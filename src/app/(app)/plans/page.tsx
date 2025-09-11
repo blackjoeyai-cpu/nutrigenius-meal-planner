@@ -48,7 +48,7 @@ export default function PlansPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   useEffect(() => {
     async function fetchPlans() {

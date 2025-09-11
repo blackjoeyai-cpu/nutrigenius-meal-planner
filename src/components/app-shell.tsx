@@ -24,7 +24,7 @@ import { useTranslation } from "@/hooks/use-translation";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation(); // Depend on language state
 
   const menuItems = [
     {
@@ -49,13 +49,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     },
   ];
 
+  const currentLabel =
+    menuItems.find((item) => item.href === pathname)?.label || "NutriGenius";
+
   if (isMobile) {
     return (
       <>
         <div className="flex h-14 items-center border-b bg-background px-4 lg:h-[60px] lg:px-6">
           <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
-            {menuItems.find((item) => item.href === pathname)?.label ||
-              "NutriGenius"}
+            {currentLabel}
           </h1>
         </div>
         <main className="flex-1 p-4 pb-20">{children}</main>
@@ -115,8 +117,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="sr-only">Toggle navigation menu</span>
           </SidebarTrigger>
           <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
-            {menuItems.find((item) => item.href === pathname)?.label ||
-              "NutriGenius"}
+            {currentLabel}
           </h1>
         </header>
         <main className="flex-1 p-4 lg:p-6">{children}</main>

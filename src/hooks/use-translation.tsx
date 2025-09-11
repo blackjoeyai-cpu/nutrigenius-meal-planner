@@ -10,14 +10,17 @@ import React, {
 import en from "@/locales/en.json";
 import ms from "@/locales/ms.json";
 
-const translations = { en, ms };
+const translations = {
+  en: en as Record<string, string>,
+  ms: ms as Record<string, string>,
+};
 
 type Language = "en" | "ms";
 
 type LocalizationContextType = {
   language: Language;
   setLanguage: (language: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 };
 
 const LocalizationContext = createContext<LocalizationContextType | undefined>(
@@ -44,8 +47,17 @@ export const LocalizationProvider = ({
   };
 
   const t = useCallback(
-    (key: string): string => {
-      return translations[language][key as keyof typeof translations[Language]] || key;
+    (key: string, params?: Record<string, string | number>): string => {
+      let translation = translations[language][key] || key;
+      if (params) {
+        Object.keys(params).forEach((paramKey) => {
+          translation = translation.replace(
+            new RegExp(`{{${paramKey}}}`, "g"),
+            String(params[paramKey]),
+          );
+        });
+      }
+      return translation;
     },
     [language],
   );
