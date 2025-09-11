@@ -1,7 +1,8 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Recipe } from "@/lib/types";
+import type { Recipe, RecipeDetails } from "@/lib/types";
 import { getRecipes } from "@/services/recipe-service";
 import { addRecipeAction } from "@/app/[locale]/recipes/actions";
 
@@ -25,7 +26,7 @@ export const useRecipes = () => {
   }, [loadRecipes]);
 
   const addRecipe = useCallback(
-    async (newRecipe: Omit<Recipe, "id" | "imageId">) => {
+    async (newRecipe: RecipeDetails) => {
       try {
         await addRecipeAction(newRecipe);
         // Refresh recipes after adding a new one
