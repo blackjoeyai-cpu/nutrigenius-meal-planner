@@ -14,7 +14,7 @@ import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
 const GenerateRecipeInputSchema = z.object({
   prompt: z
     .string()
-    .describe("The user’s idea or prompt for the recipe to be generated."),
+    .describe("The user's idea or prompt for the recipe to be generated."),
   language: z
     .string()
     .optional()
@@ -110,7 +110,6 @@ const generateRecipeDetailsFlow = ai.defineFlow(
     name: "generateRecipeDetailsFlow",
     inputSchema: GenerateRecipeInputSchema,
     outputSchema: AISchema,
-    retries: 3,
   },
   async (input) => {
     const { output } = await prompt(input);

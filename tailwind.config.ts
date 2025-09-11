@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 import tailwindcssTypography from "@tailwindcss/typography";
-import { ThemeConfig } from "tailwindcss/types/config";
 
 export default {
   darkMode: ["class"],
@@ -113,28 +112,28 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in-up": "fade-in-up 0.5s ease-out",
       },
-      typography: (theme: ThemeConfig) => ({
+      typography: {
         DEFAULT: {
           css: {
-            "--tw-prose-body": theme("colors.foreground"),
-            "--tw-prose-headings": theme("colors.foreground"),
-            "--tw-prose-lead": theme("colors.foreground"),
-            "--tw-prose-links": theme("colors.primary.DEFAULT"),
-            "--tw-prose-bold": theme("colors.foreground"),
-            "--tw-prose-counters": theme("colors.muted.foreground"),
-            "--tw-prose-bullets": theme("colors.muted.foreground"),
-            "--tw-prose-hr": theme("colors.border"),
-            "--tw-prose-quotes": theme("colors.foreground"),
-            "--tw-prose-quote-borders": theme("colors.border"),
-            "--tw-prose-captions": theme("colors.muted.foreground"),
-            "--tw-prose-code": theme("colors.foreground"),
-            "--tw-prose-pre-code": theme("colors.foreground"),
-            "--tw-prose-pre-bg": theme("colors.muted.DEFAULT"),
-            "--tw-prose-th-borders": theme("colors.border"),
-            "--tw-prose-td-borders": theme("colors.border"),
+            "--tw-prose-body": "hsl(var(--foreground))",
+            "--tw-prose-headings": "hsl(var(--foreground))",
+            "--tw-prose-lead": "hsl(var(--foreground))",
+            "--tw-prose-links": "hsl(var(--primary))",
+            "--tw-prose-bold": "hsl(var(--foreground))",
+            "--tw-prose-counters": "hsl(var(--muted-foreground))",
+            "--tw-prose-bullets": "hsl(var(--muted-foreground))",
+            "--tw-prose-hr": "hsl(var(--border))",
+            "--tw-prose-quotes": "hsl(var(--foreground))",
+            "--tw-prose-quote-borders": "hsl(var(--border))",
+            "--tw-prose-captions": "hsl(var(--muted-foreground))",
+            "--tw-prose-code": "hsl(var(--foreground))",
+            "--tw-prose-pre-code": "hsl(var(--foreground))",
+            "--tw-prose-pre-bg": "hsl(var(--muted))",
+            "--tw-prose-th-borders": "hsl(var(--border))",
+            "--tw-prose-td-borders": "hsl(var(--border))",
           },
         },
-      }),
+      },
     },
   },
   plugins: [tailwindcssAnimate, tailwindcssTypography],

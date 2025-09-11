@@ -14,8 +14,8 @@ import { z } from "genkit";
 const GenerateLongTermMealPlanInputSchema = z.object({
   dietaryPreferences: z
     .string()
-    .describe("The user’s dietary preferences (e.g., vegetarian, vegan)."),
-  calorieTarget: z.number().describe("The user’s daily calorie target."),
+    .describe("The user's dietary preferences (e.g., vegetarian, vegan)."),
+  calorieTarget: z.number().describe("The user's daily calorie target."),
   allergies: z
     .string()
     .describe("A comma-separated list of ingredients the user is allergic to."),

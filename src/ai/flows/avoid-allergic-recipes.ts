@@ -15,9 +15,9 @@ const GenerateSafeMealPlanInputSchema = z.object({
   dietaryPreferences: z
     .string()
     .describe(
-      "The user’s dietary preferences (e.g., vegetarian, vegan, paleo).",
+      "The user's dietary preferences (e.g., vegetarian, vegan, paleo).",
     ),
-  calorieTarget: z.number().describe("The user’s daily calorie target."),
+  calorieTarget: z.number().describe("The user's daily calorie target."),
   allergies: z
     .string()
     .describe(
