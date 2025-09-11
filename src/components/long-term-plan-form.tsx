@@ -128,7 +128,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     initialState,
   );
   const { toast } = useToast();
-  const { ingredients: allIngredients } = useIngredients();
+  const { ingredients: allIngredients } = useIngredients(recipes);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
 

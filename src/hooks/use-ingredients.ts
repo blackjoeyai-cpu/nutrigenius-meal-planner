@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRecipes } from "./use-recipes";
+import type { Recipe } from "@/lib/types";
 
-export const useIngredients = () => {
-  const { recipes, isLoaded: recipesLoaded } = useRecipes();
+export const useIngredients = (recipes: Recipe[]) => {
   const [ingredients, setIngredients] = useState<string[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    if (recipesLoaded) {
+    if (recipes) {
       const allIngredients = recipes.flatMap((recipe) =>
         recipe.ingredients.map((ing) => ing.item),
       );
@@ -17,7 +16,7 @@ export const useIngredients = () => {
       setIngredients(uniqueIngredients);
       setIsLoaded(true);
     }
-  }, [recipes, recipesLoaded]);
+  }, [recipes]);
 
   return { ingredients, isLoaded };
 };

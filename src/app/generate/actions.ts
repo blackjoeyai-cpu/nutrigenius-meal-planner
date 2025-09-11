@@ -1,12 +1,12 @@
+
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
-import { regenerateMealAction } from "@/app/generate/actions";
-import { addMealPlan } from "@/services/meal-plan-service";
+import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
+import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
+import { addRecipe } from "@/services/recipe-service";
 import type { DailyPlan, MealPlan, RecipeDetails } from "@/lib/types";
 import { generateRecipeDetails } from "@/ai/flows/generate-recipe";
-import { addRecipe } from "@/services/recipe-service";
-import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
 
 type FormState = {
   message: string;
@@ -87,13 +87,8 @@ export async function saveDailyPlan(
     };
 
     if (planData.planId && planData.date) {
-      // This is an update to an existing long-term plan's day
-      // This part is complex and assumes the planId refers to a multi-day plan
-      // For now, let's assume we save it as a new 1-day plan.
-      // A more robust solution would fetch the original plan and replace the specific day.
       await addMealPlan({ ...planToSave, createdAt: new Date() });
     } else {
-      // This is a new plan
       await addMealPlan({ ...planToSave, createdAt: new Date() });
     }
 

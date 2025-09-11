@@ -104,7 +104,7 @@ export function DailyPlanForm({
     createMealPlan,
     initialState,
   );
-  const { ingredients } = useIngredients();
+  const { ingredients } = useIngredients(initialRecipes);
   const [recipes, setRecipes] = useState(initialRecipes);
   const { toast } = useToast();
   const router = useRouter();
