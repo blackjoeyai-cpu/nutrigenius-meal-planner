@@ -223,11 +223,45 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     meal: DailyPlan[MealType];
   }) => {
     const isNewRecipe = meal.id.startsWith("new-recipe-");
-    const Wrapper = isNewRecipe ? "div" : Link;
-    const props = isNewRecipe ? {} : { href: `/recipes/${meal.id}` };
+
+    if (isNewRecipe) {
+      return (
+        <div className="group block">
+          <Card className="transition-shadow group-hover:shadow-md relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleRegenerateMeal(mealType);
+              }}
+              disabled={isRegenerating !== null}
+            >
+              {isRegenerating === mealType ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+            </Button>
+            <CardHeader>
+              <CardTitle>
+                {mealType.charAt(0).toUpperCase() + mealType.slice(1)}:{" "}
+                {meal.title}
+              </CardTitle>
+              <CardDescription>{meal.calories} calories</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p>{meal.description}</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
 
     return (
-      <Wrapper {...props} className="group block">
+      <Link href={`/recipes/${meal.id}`} className="group block">
         <Card className="transition-shadow group-hover:shadow-md relative">
           <Button
             variant="ghost"
@@ -257,7 +291,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             <p>{meal.description}</p>
           </CardContent>
         </Card>
-      </Wrapper>
+      </Link>
     );
   };
 

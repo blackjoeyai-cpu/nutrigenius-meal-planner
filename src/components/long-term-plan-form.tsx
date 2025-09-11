@@ -248,15 +248,33 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     {[day.breakfast, day.lunch, day.dinner].map(
                       (meal, mealIndex) => {
                         const isNewRecipe = meal.id.startsWith("new-recipe-");
-                        const Wrapper = isNewRecipe ? "div" : Link;
-                        const props = isNewRecipe
-                          ? {}
-                          : { href: `/recipes/${meal.id}` };
+                        
+                        if (isNewRecipe) {
+                          return (
+                            <div key={mealIndex} className="group block">
+                              <Card className="transition-shadow group-hover:shadow-md">
+                                <CardHeader>
+                                  <CardTitle className="text-lg">
+                                    {
+                                      ["Breakfast", "Lunch", "Dinner"][
+                                        mealIndex
+                                      ]
+                                    }
+                                    : {meal.title}
+                                  </CardTitle>
+                                  <CardDescription>
+                                    {meal.calories} calories
+                                  </CardDescription>
+                                </CardHeader>
+                              </Card>
+                            </div>
+                          );
+                        }
 
                         return (
-                          <Wrapper
+                          <Link
                             key={mealIndex}
-                            {...props}
+                            href={`/recipes/${meal.id}`}
                             className="group block"
                           >
                             <Card className="transition-shadow group-hover:shadow-md">
@@ -274,7 +292,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                                 </CardDescription>
                               </CardHeader>
                             </Card>
-                          </Wrapper>
+                          </Link>
                         );
                       },
                     )}
