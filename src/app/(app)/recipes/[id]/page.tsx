@@ -2,7 +2,7 @@
 "use client";
 
 import { notFound, useParams } from 'next/navigation';
-import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets } from 'lucide-react';
+import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets, Edit } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -11,20 +11,24 @@ import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getRecipeById } from '@/services/recipe-service';
 import type { Recipe } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { AddRecipeDialog } from '@/components/add-recipe-dialog';
 
 export default function RecipeDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  useEffect(() => {
-    const fetchRecipe = async () => {
+  const fetchRecipe = async () => {
       setIsLoaded(false);
       const fetchedRecipe = await getRecipeById(id);
       setRecipe(fetchedRecipe);
       setIsLoaded(true);
     };
+
+  useEffect(() => {
     if (id) {
         fetchRecipe();
     }
@@ -72,7 +76,23 @@ export default function RecipeDetailPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in-0">
       <div className="space-y-4">
-        <h1 className="text-4xl font-bold font-headline">{recipe.name}</h1>
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <h1 className="text-4xl font-bold font-headline">{recipe.name}</h1>
+            <AddRecipeDialog
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                onRecipeAdd={() => {
+                    setIsEditDialogOpen(false);
+                    fetchRecipe(); // Refetch recipe to show updated data
+                }}
+                recipeToEdit={recipe}
+             >
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Edit Recipe
+                </Button>
+            </AddRecipeDialog>
+        </div>
         <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4" />

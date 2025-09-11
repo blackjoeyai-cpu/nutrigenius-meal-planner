@@ -3,7 +3,7 @@
 
 import { db } from "@/lib/firebase";
 import type { Recipe } from "@/lib/types";
-import { collection, addDoc, getDocs, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, doc, getDoc, updateDoc } from "firebase/firestore";
 
 /**
  * Adds a new recipe to the Firestore database.
@@ -22,6 +22,22 @@ export async function addRecipe(recipe: Omit<Recipe, 'id' | 'imageId'>): Promise
     throw new Error("Could not add recipe to the database.");
   }
 }
+
+/**
+ * Updates an existing recipe in the Firestore database.
+ * @param id - The ID of the recipe to update.
+ * @param recipe - The updated recipe data.
+ */
+export async function updateRecipe(id: string, recipe: Omit<Recipe, 'id' | 'imageId'>): Promise<void> {
+    try {
+        const recipeRef = doc(db, "recipes", id);
+        await updateDoc(recipeRef, recipe);
+    } catch (e) {
+        console.error("Error updating document: ", e);
+        throw new Error("Could not update recipe in the database.");
+    }
+}
+
 
 /**
  * Retrieves all recipes from the Firestore database.

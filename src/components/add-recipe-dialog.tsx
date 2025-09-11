@@ -22,9 +22,10 @@ import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
 import type { Recipe } from "@/lib/types";
 import { MultiSelect } from "./ui/multi-select";
 import { ScrollArea } from "./ui/scroll-area";
-import { useState } from "react";
-import { generateRecipeAction } from "@/app/(app)/recipes/actions";
+import { useState, useEffect } from "react";
+import { generateRecipeAction, updateRecipeAction } from "@/app/(app)/recipes/actions";
 import { Loader2, Sparkles } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 
 const recipeFormSchema = z.object({
@@ -50,13 +51,16 @@ type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 type AddRecipeDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipeAdd: (recipe: Omit<Recipe, 'id' | 'imageId'>) => void;
+  onRecipeAdd: (recipe: Omit<Recipe, 'id' | 'imageId'> | Recipe) => void;
   children: React.ReactNode;
+  recipeToEdit?: Recipe;
 };
 
-export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: AddRecipeDialogProps) {
+export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children, recipeToEdit }: AddRecipeDialogProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
+  const { toast } = useToast();
+  const isEditMode = !!recipeToEdit;
   
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
@@ -73,6 +77,31 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
       nutrition: { calories: 0, protein: 0, carbs: 0, fat: 0 },
     },
   });
+
+  useEffect(() => {
+    if (recipeToEdit && open) {
+      form.reset({
+        name: recipeToEdit.name,
+        cuisine: recipeToEdit.cuisine,
+        mealTypes: recipeToEdit.mealTypes,
+        dietaryTags: recipeToEdit.dietaryTags,
+        ingredients: recipeToEdit.ingredients.map(i => `${i.quantity} ${i.item}`).join('\n'),
+        instructions: recipeToEdit.instructions.join('\n'),
+        prepTime: recipeToEdit.prepTime,
+        cookTime: recipeToEdit.cookTime,
+        servings: recipeToEdit.servings,
+        nutrition: {
+          calories: recipeToEdit.nutrition.calories,
+          protein: recipeToEdit.nutrition.protein,
+          carbs: recipeToEdit.nutrition.carbs,
+          fat: recipeToEdit.nutrition.fat,
+        },
+      });
+    } else if (!open) {
+      form.reset();
+      setGenerationPrompt("");
+    }
+  }, [recipeToEdit, open, form]);
 
   async function handleGenerateRecipe() {
     if (!generationPrompt) return;
@@ -100,25 +129,49 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
         }
     } catch (error) {
         console.error("Failed to generate recipe:", error);
-        // Optionally, show a toast notification for the error
+        toast({
+            title: "Error",
+            description: "Failed to generate recipe. Please try again.",
+            variant: "destructive"
+        })
     } finally {
         setIsGenerating(false);
     }
   }
 
 
-  function onSubmit(data: RecipeFormValues) {
+  async function onSubmit(data: RecipeFormValues) {
     const ingredientsArray = data.ingredients.split('\n').map(line => {
-      const [quantity, ...itemParts] = line.split(' ');
-      return { quantity, item: itemParts.join(' ') };
+      const parts = line.split(' ');
+      const quantity = parts.shift() || "";
+      const item = parts.join(' ');
+      return { quantity, item };
     });
 
-    const newRecipe = {
+    const recipeData = {
       ...data,
       ingredients: ingredientsArray,
       instructions: data.instructions.split('\n'),
     };
-    onRecipeAdd(newRecipe);
+
+    if (isEditMode && recipeToEdit) {
+        try {
+            await updateRecipeAction(recipeToEdit.id, recipeData);
+            toast({
+                title: "Success",
+                description: "Recipe updated successfully."
+            })
+            onRecipeAdd(recipeData);
+        } catch (error) {
+             toast({
+                title: "Error",
+                description: "Failed to update recipe.",
+                variant: "destructive"
+            })
+        }
+    } else {
+        onRecipeAdd(recipeData);
+    }
     form.reset();
     setGenerationPrompt("");
   }
@@ -128,37 +181,38 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
         {children}
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Add a New Recipe</DialogTitle>
+          <DialogTitle>{isEditMode ? "Edit Recipe" : "Add a New Recipe"}</DialogTitle>
           <DialogDescription>
-            Fill out the form below or use AI to generate a new recipe.
+            {isEditMode ? "Update the details for your recipe." : "Fill out the form below or use AI to generate a new recipe."}
           </DialogDescription>
         </DialogHeader>
-
-        <div className="space-y-4 p-4 border rounded-md">
-            <div className="space-y-2">
-                <Label htmlFor="generation-prompt">Generate with AI</Label>
-                 <Textarea
-                    id="generation-prompt"
-                    placeholder="e.g., A healthy and spicy salmon dish with roasted vegetables"
-                    value={generationPrompt}
-                    onChange={(e) => setGenerationPrompt(e.target.value)}
-                />
+        
+        {!isEditMode && (
+             <div className="space-y-4 p-4 border rounded-md">
+                <div className="space-y-2">
+                    <Label htmlFor="generation-prompt">Generate with AI</Label>
+                    <Textarea
+                        id="generation-prompt"
+                        placeholder="e.g., A healthy and spicy salmon dish with roasted vegetables"
+                        value={generationPrompt}
+                        onChange={(e) => setGenerationPrompt(e.target.value)}
+                    />
+                </div>
+                <Button onClick={handleGenerateRecipe} disabled={isGenerating || !generationPrompt} className="w-full sm:w-auto">
+                    {isGenerating ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Generating...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            Generate Recipe
+                        </>
+                    )}
+                </Button>
             </div>
-            <Button onClick={handleGenerateRecipe} disabled={isGenerating || !generationPrompt} className="w-full sm:w-auto">
-                 {isGenerating ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                    </>
-                 ) : (
-                    <>
-                        <Sparkles className="mr-2 h-4 w-4" />
-                        Generate Recipe
-                    </>
-                 )}
-            </Button>
-        </div>
-
+        )}
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -380,7 +434,7 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children }: A
             </ScrollArea>
             <DialogFooter className="pt-4">
                 <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-                <Button type="submit">Add Recipe</Button>
+                <Button type="submit">{isEditMode ? 'Update Recipe' : 'Add Recipe'}</Button>
             </DialogFooter>
           </form>
         </Form>
