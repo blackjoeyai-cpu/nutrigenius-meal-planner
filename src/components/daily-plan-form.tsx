@@ -199,7 +199,6 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       generationSource: generationSource as "catalog" | "new" | "combined",
       mealToRegenerate: mealType,
       currentMeals,
-      mealToReplace,
       language: language === "ms" ? "Malay" : undefined,
     };
 
