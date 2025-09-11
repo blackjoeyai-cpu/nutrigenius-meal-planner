@@ -1,0 +1,152 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+      - release
+      - dev
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  validate:
+    name: 🧪 Validate & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate commit message (for PRs)
+        if: github.event_name == 'pull_request'
+        run: |
+          git log --format="%s" origin/${{ github.base_ref }}..${{ github.head_ref }} | \
+          while read commit_msg; do
+            if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+"; then
+              echo "Invalid commit message: $commit_msg"
+              echo "Please follow conventional commit format: type(scope): description"
+              exit 1
+            fi
+          done
+          echo "All commit messages follow conventional format"
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Analyze code
+        run: npm run lint
+
+      - name: Check formatting
+        run: npx prettier --check .
+
+      - name: 📝 Write Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Validation & Test Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "- Status: ✅ Passed" >> $GITHUB_STEP_SUMMARY
+            echo "- Code Analysis: ✅ Clean" >> $GITHUB_STEP_SUMMARY
+            echo "- Format Check: ✅ Compliant" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Status: ❌ Failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  build:
+    name: 🌐 Build
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: .next
+
+      - name: 📝 Write Build Summary
+        if: always()
+        run: |
+          echo "## 🌐 Build Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "- Status: ✅ Build successful" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Status: ❌ Build failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  deploy:
+    name: 🚀 Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: build
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (
+        github.ref == 'refs/heads/main' ||
+        github.ref == 'refs/heads/release'
+      ))
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        id: vercel-deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
+            vercel --prod --token $VERCEL_TOKEN --confirm
+          else
+            vercel --token $VERCEL_TOKEN --confirm
+          fi
+      - name: 📝 Write Deployment Summary
+        if: always()
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "- Status: ✅ Deployed successfully to Vercel" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- Status: ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
+          fi
