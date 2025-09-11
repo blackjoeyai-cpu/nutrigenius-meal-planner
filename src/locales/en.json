@@ -154,6 +154,8 @@
     "success": "Success",
     "error_generating_recipe": "Failed to generate recipe. Please try again.",
     "success_recipe_updated": "Recipe updated successfully.",
+    "success_recipe_added": "Recipe added successfully.",
+    "error_adding_recipe": "Failed to add recipe.",
     "error_updating_recipe": "Failed to update recipe."
   },
   "PlansPage": {

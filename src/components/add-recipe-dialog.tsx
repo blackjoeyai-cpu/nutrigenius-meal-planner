@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
-import type { Recipe } from "@/lib/types";
+import type { Recipe, RecipeDetails } from "@/lib/types";
 import { MultiSelect } from "./ui/multi-select";
 import { ScrollArea } from "./ui/scroll-area";
 import { useState, useEffect } from "react";
@@ -64,20 +64,19 @@ const recipeFormSchema = z.object({
 type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 
 type AddRecipeDialogProps = {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onRecipeAdd: (recipe: Omit<Recipe, "id" | "imageId"> | Recipe) => void;
   children: React.ReactNode;
   recipeToEdit?: Recipe;
+  onRecipeAdd: (recipe: RecipeDetails) => Promise<unknown>;
+  onRecipeUpdate: () => Promise<void>;
 };
 
 export function AddRecipeDialog({
-  open,
-  onOpenChange,
-  onRecipeAdd,
   children,
   recipeToEdit,
+  onRecipeAdd,
+  onRecipeUpdate,
 }: AddRecipeDialogProps) {
+  const [open, setOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
   const { toast } = useToast();
@@ -184,31 +183,38 @@ export function AddRecipeDialog({
       instructions: data.instructions.split("\n"),
     };
 
-    if (isEditMode && recipeToEdit) {
-      try {
+    try {
+      if (isEditMode && recipeToEdit) {
         await updateRecipeAction(recipeToEdit.id, recipeData);
+        await onRecipeUpdate();
         toast({
           title: t("success"),
           description: t("success_recipe_updated"),
         });
-        onRecipeAdd(recipeData);
-      } catch {
+      } else {
+        await onRecipeAdd(recipeData);
         toast({
-          title: t("error"),
-          description: t("error_updating_recipe"),
-          variant: "destructive",
+          title: t("success"),
+          description: t("success_recipe_added"),
         });
       }
-    } else {
-      onRecipeAdd(recipeData);
+      setOpen(false);
+      form.reset();
+      setGenerationPrompt("");
+    } catch (error) {
+      toast({
+        title: t("error"),
+        description: isEditMode
+          ? t("error_updating_recipe")
+          : t("error_adding_recipe"),
+        variant: "destructive",
+      });
     }
-    form.reset();
-    setGenerationPrompt("");
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {children}
+    <Dialog open={open} onOpenChange={setOpen}>
+      <div onClick={() => setOpen(true)}>{children}</div>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
@@ -488,7 +494,7 @@ export function AddRecipeDialog({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => onOpenChange(false)}
+                onClick={() => setOpen(false)}
               >
                 {t("cancel")}
               </Button>

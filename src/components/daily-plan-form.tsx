@@ -44,13 +44,15 @@ import { useIngredients } from "@/hooks/use-ingredients";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Recipe, MealPlan, DailyPlan } from "@/lib/types";
-import { useRecipes } from "@/hooks/use-recipes";
+import type { Recipe, MealPlan, DailyPlan, RecipeDetails } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Link } from "next-intl/navigation";
+import { useRouter, useSearchParams, Link } from "next-intl/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { useTranslations, useLocale } from "next-intl";
+import {
+  refreshRecipesAction,
+  addRecipeAction,
+} from "@/app/[locale]/recipes/actions";
 
 const initialState = {
   message: "",
@@ -93,14 +95,13 @@ type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
 
 type MealType = "breakfast" | "lunch" | "dinner";
 
-export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
+export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }) {
   const [state, formAction, isPending] = useActionState(
     createMealPlan,
     initialState,
   );
   const { ingredients } = useIngredients();
-  const { addRecipe } = useRecipes();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [recipes, setRecipes] = useState(initialRecipes);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -278,6 +279,14 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     );
   };
 
+  const handleRecipeAdd = async (recipe: RecipeDetails) => {
+    await addRecipeAction(recipe);
+  };
+
+  const handleRecipeUpdate = async () => {
+    await refreshRecipesAction();
+  };
+
   return (
     <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-2">
       <Card>
@@ -307,19 +316,11 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   {t("not_enough_recipes_desc_daily")}
                 </AlertDescription>
                 <div className="mt-4">
-                  <AddRecipeDialog
-                    open={isAddDialogOpen}
-                    onOpenChange={setIsAddDialogOpen}
-                    onRecipeAdd={(newRecipe) => {
-                      addRecipe(newRecipe);
-                      setIsAddDialogOpen(false);
-                    }}
+                   <AddRecipeDialog
+                    onRecipeAdd={handleRecipeAdd}
+                    onRecipeUpdate={handleRecipeUpdate}
                   >
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={() => setIsAddDialogOpen(true)}
-                    >
+                    <Button type="button" variant="secondary">
                       <PlusCircle className="mr-2 h-4 w-4" />
                       {t("add_recipe")}
                     </Button>

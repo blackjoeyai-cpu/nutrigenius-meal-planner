@@ -4,6 +4,7 @@ import type { RecipeDetails } from "@/lib/types";
 import { generateRecipe } from "@/ai/flows/generate-recipe";
 import { updateRecipe, addRecipe } from "@/services/recipe-service";
 import { getLocale } from "next-intl/server";
+import { revalidatePath } from "next/cache";
 
 export async function generateRecipeAction(input: {
   prompt: string;
@@ -17,9 +18,17 @@ export async function generateRecipeAction(input: {
 }
 
 export async function updateRecipeAction(id: string, data: RecipeDetails) {
-  return await updateRecipe(id, data);
+  const result = await updateRecipe(id, data);
+  revalidatePath("/recipes");
+  return result;
 }
 
 export async function addRecipeAction(data: RecipeDetails) {
-  return await addRecipe(data);
+  const result = await addRecipe(data);
+  revalidatePath("/recipes");
+  return result;
+}
+
+export async function refreshRecipesAction() {
+  revalidatePath("/recipes");
 }

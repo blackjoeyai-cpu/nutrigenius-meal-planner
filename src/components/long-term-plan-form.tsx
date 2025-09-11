@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
-import type { Recipe, MealPlan } from "@/lib/types";
+import type { Recipe, MealPlan, RecipeDetails } from "@/lib/types";
 import {
   AlertTriangle,
   Loader2,
@@ -47,7 +47,6 @@ import { useForm } from "react-hook-form";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { MultiSelect } from "./ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
-import { useRecipes } from "@/hooks/use-recipes";
 import { AddRecipeDialog } from "./add-recipe-dialog";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import {
@@ -56,10 +55,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "./ui/accordion";
-import { useRouter } from "next/navigation";
-import { Link } from "next-intl/navigation";
+import { useRouter, Link } from "next-intl/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { useTranslations } from "next-intl";
+import {
+  refreshRecipesAction,
+  addRecipeAction,
+} from "@/app/[locale]/recipes/actions";
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -127,8 +129,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   );
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients();
-  const { addRecipe } = useRecipes();
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const t = useTranslations("LongTermPlanForm");
@@ -314,6 +314,14 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     );
   }
 
+  const handleRecipeAdd = async (recipe: RecipeDetails) => {
+    await addRecipeAction(recipe);
+  };
+
+  const handleRecipeUpdate = async () => {
+    await refreshRecipesAction();
+  };
+
   return (
     <Card className="mt-6">
       <Form {...form}>
@@ -353,18 +361,10 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   </AlertDescription>
                   <div className="mt-4">
                     <AddRecipeDialog
-                      open={isAddDialogOpen}
-                      onOpenChange={setIsAddDialogOpen}
-                      onRecipeAdd={(newRecipe) => {
-                        addRecipe(newRecipe);
-                        setIsAddDialogOpen(false);
-                      }}
+                      onRecipeAdd={handleRecipeAdd}
+                      onRecipeUpdate={handleRecipeUpdate}
                     >
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={() => setIsAddDialogOpen(true)}
-                      >
+                      <Button type="button" variant="secondary">
                         <PlusCircle className="mr-2 h-4 w-4" />
                         {t("add_recipe")}
                       </Button>

@@ -4,13 +4,23 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DailyPlanForm } from "@/components/daily-plan-form";
 import { LongTermPlanForm } from "@/components/long-term-plan-form";
-import { useRecipes } from "@/hooks/use-recipes";
+import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
+import { getRecipes } from "@/services/recipe-service";
+import type { Recipe } from "@/lib/types";
 
 export default function GeneratePage() {
-  const { recipes, isLoaded: recipesLoaded } = useRecipes();
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipesLoaded, setRecipesLoaded] = useState(false);
   const t = useTranslations("GeneratePage");
+
+  useEffect(() => {
+    getRecipes().then((r) => {
+      setRecipes(r);
+      setRecipesLoaded(true);
+    });
+  }, []);
 
   if (!recipesLoaded) {
     return (

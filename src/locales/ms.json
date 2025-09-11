@@ -154,6 +154,8 @@
     "success": "Berjaya",
     "error_generating_recipe": "Gagal menjana resipi. Sila cuba lagi.",
     "success_recipe_updated": "Resipi berjaya dikemas kini.",
+    "success_recipe_added": "Resipi berjaya ditambah.",
+    "error_adding_recipe": "Gagal menambah resipi.",
     "error_updating_recipe": "Gagal mengemas kini resipi."
   },
   "PlansPage": {
