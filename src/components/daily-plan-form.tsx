@@ -47,7 +47,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Recipe, MealPlan, DailyPlan } from "@/lib/types";
 import { useRecipes } from "@/hooks/use-recipes";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter, useSearchParams, Link } from "next-intl/client";
+import { useRouter, useSearchParams, Link } from "next-intl/navigation";
 import { Skeleton } from "./ui/skeleton";
 import { useTranslations, useLocale } from "next-intl";
 
