@@ -19,51 +19,31 @@ import { Logo } from "@/components/logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-
-const menuItems = [
-  {
-    href: "/recipes",
-    label: "Recipes",
-    icon: BookOpen,
-  },
-  {
-    href: "/generate",
-    label: "Generate Plan",
-    icon: Sparkles,
-  },
-  {
-    href: "/plans",
-    label: "My Plans",
-    icon: CalendarDays,
-  },
-];
-
-function BottomNavigation() {
-  const pathname = usePathname();
-  return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-t-lg md:hidden">
-      <div className="grid h-16 grid-cols-3">
-        {menuItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "flex flex-col items-center justify-center gap-1 text-sm font-medium",
-              pathname === item.href ? "text-primary" : "text-muted-foreground",
-            )}
-          >
-            <item.icon className="h-5 w-5" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </div>
-    </nav>
-  );
-}
+import { LanguageSwitcher } from "./language-switcher";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { t } = useTranslation();
+
+  const menuItems = [
+    {
+      href: "/recipes",
+      label: t("recipes"),
+      icon: BookOpen,
+    },
+    {
+      href: "/generate",
+      label: t("generate_plan"),
+      icon: Sparkles,
+    },
+    {
+      href: "/plans",
+      label: t("my_plans"),
+      icon: CalendarDays,
+    },
+  ];
 
   if (isMobile) {
     return (
@@ -75,7 +55,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </h1>
         </div>
         <main className="flex-1 p-4 pb-20">{children}</main>
-        <BottomNavigation />
+        <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-t-lg md:hidden">
+          <div className="grid h-16 grid-cols-3">
+            {menuItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1 text-sm font-medium",
+                  pathname === item.href
+                    ? "text-primary"
+                    : "text-muted-foreground",
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+          </div>
+        </nav>
       </>
     );
   }
@@ -105,7 +103,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
-          {/* Can add footer items here if needed */}
+          <LanguageSwitcher />
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>

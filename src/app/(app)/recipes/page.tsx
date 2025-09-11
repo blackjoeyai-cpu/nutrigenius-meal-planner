@@ -19,6 +19,7 @@ import { useRecipes } from "@/hooks/use-recipes";
 import { CUISINES } from "@/lib/constants";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "@/hooks/use-translation";
 
 export default function RecipesPage() {
   const { recipes, addRecipe, isLoaded } = useRecipes();
@@ -26,6 +27,7 @@ export default function RecipesPage() {
   const [cuisineFilter, setCuisineFilter] = useState("Any");
   const [activeTab, setActiveTab] = useState("All");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { t } = useTranslation();
 
   const filteredRecipes = useMemo(() => {
     if (!isLoaded) return [];
@@ -52,10 +54,10 @@ export default function RecipesPage() {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-2">
           <h2 className="text-3xl font-bold tracking-tight font-headline">
-            Browse Recipes
+            {t("browse_recipes")}
           </h2>
           <p className="text-muted-foreground">
-            Find or create your next favorite meal from our collection.
+            {t("browse_recipes_description")}
           </p>
         </div>
         <AddRecipeDialog
@@ -68,7 +70,7 @@ export default function RecipesPage() {
         >
           <Button onClick={() => setIsAddDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Recipe
+            {t("add_recipe")}
           </Button>
         </AddRecipeDialog>
       </div>
