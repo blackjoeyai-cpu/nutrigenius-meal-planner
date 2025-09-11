@@ -168,7 +168,10 @@ export function AddRecipeDialog({
 
   async function onSubmit(data: RecipeFormValues) {
     const ingredientsArray = data.ingredients.split("\n").map((line) => {
-      const parts = line.match(/^([^\s]+\s*[^s]*)\s+(.*)$/)?.slice(1) || ["", line];
+      const parts = line.match(/^([^\s]+\s*[^s]*)\s+(.*)$/)?.slice(1) || [
+        "",
+        line,
+      ];
       return { quantity: parts[0].trim() || "", item: parts[1].trim() };
     });
 

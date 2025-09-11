@@ -1,4 +1,3 @@
-
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";

@@ -12,7 +12,6 @@ import { ai } from "@/ai/genkit";
 import { z } from "genkit";
 import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
 import { addRecipe } from "@/services/recipe-service";
-import type { Recipe } from "@/lib/types";
 
 const GenerateRecipeInputSchema = z.object({
   prompt: z
@@ -126,7 +125,6 @@ const generateRecipeDetailsFlow = ai.defineFlow(
     name: "generateRecipeDetailsFlow",
     inputSchema: GenerateRecipeInputSchema,
     outputSchema: AISchema,
-    retries: 3,
   },
   async (input) => {
     const { output } = await prompt(input);
@@ -142,7 +140,6 @@ const generateRecipeFlow = ai.defineFlow(
     name: "generateRecipeFlow",
     inputSchema: GenerateRecipeInputSchema,
     outputSchema: GenerateRecipeOutputSchema,
-    retries: 3,
   },
   async (input) => {
     const details = await generateRecipeDetails(input);

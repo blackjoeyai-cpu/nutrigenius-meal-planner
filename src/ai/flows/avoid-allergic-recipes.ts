@@ -46,9 +46,7 @@ const GenerateSafeMealPlanInputSchema = z.object({
   language: z
     .string()
     .optional()
-    .describe(
-      "The language for the recipe to be generated in, e.g., 'Malay'.",
-    ),
+    .describe("The language for the recipe to be generated in, e.g., 'Malay'."),
 });
 export type GenerateSafeMealPlanInput = z.infer<
   typeof GenerateSafeMealPlanInputSchema

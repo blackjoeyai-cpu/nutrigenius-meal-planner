@@ -48,9 +48,7 @@ const GenerateLongTermMealPlanInputSchema = z.object({
   language: z
     .string()
     .optional()
-    .describe(
-      "The language for the recipe to be generated in, e.g., 'Malay'.",
-    ),
+    .describe("The language for the recipe to be generated in, e.g., 'Malay'."),
 });
 export type GenerateLongTermMealPlanInput = z.infer<
   typeof GenerateLongTermMealPlanInputSchema

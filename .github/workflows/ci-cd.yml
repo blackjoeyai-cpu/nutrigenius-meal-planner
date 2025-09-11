@@ -52,6 +52,9 @@ jobs:
       - name: Analyze code
         run: npm run lint
 
+      - name: Check types
+        run: npm run typecheck
+
       - name: Check formatting
         run: npx prettier --check .
 
@@ -62,6 +65,7 @@ jobs:
           if [ "${{ job.status }}" == "success" ]; then
             echo "- Status: ✅ Passed" >> $GITHUB_STEP_SUMMARY
             echo "- Code Analysis: ✅ Clean" >> $GITHUB_STEP_SUMMARY
+            echo "- Type Check: ✅ Passed" >> $GITHUB_STEP_SUMMARY
             echo "- Format Check: ✅ Compliant" >> $GITHUB_STEP_SUMMARY
           else
             echo "- Status: ❌ Failed" >> $GITHUB_STEP_SUMMARY
@@ -137,16 +141,20 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
-            vercel --prod --token $VERCEL_TOKEN --confirm
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
           else
-            vercel --token $VERCEL_TOKEN --confirm
+            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
           fi
+          DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -o 'https://[^ ]*' | head -1)
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+
       - name: 📝 Write Deployment Summary
         if: always()
         run: |
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "- Status: ✅ Deployed successfully to Vercel" >> $GITHUB_STEP_SUMMARY
+            echo "- URL: ${{ steps.vercel-deploy.outputs.deployment-url }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "- Status: ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
           fi
