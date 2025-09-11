@@ -3,9 +3,10 @@
 import { z } from "zod";
 import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
 import { addMealPlan } from "@/services/meal-plan-service";
-import type { Recipe, MealPlan } from "@/lib/types";
+import type { Recipe, MealPlan, RecipeDetails } from "@/lib/types";
 import { revalidatePath } from "next/cache";
-import { generateRecipe } from "@/ai/flows/generate-recipe";
+import { generateRecipeDetails } from "@/ai/flows/generate-recipe";
+import { addRecipe } from "@/services/recipe-service";
 
 const GeneratePlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -77,15 +78,18 @@ export async function generatePlanAction(
       for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
         const meal = day[mealType];
         if (meal.id.startsWith("new-recipe-")) {
-          const fullRecipe = await generateRecipe({
+          const recipeDetails: RecipeDetails = await generateRecipeDetails({
             prompt: `A ${cuisine} ${meal.title} that is ${dietaryPreferences} and fits a ${calorieTarget} calorie diet.`,
             language: language,
           });
+
+          const newRecipeId = await addRecipe(recipeDetails);
+
           day[mealType] = {
-            id: fullRecipe.id,
-            title: fullRecipe.name,
+            id: newRecipeId,
+            title: recipeDetails.name,
             description: meal.description, // Keep AI's short description
-            calories: fullRecipe.nutrition.calories,
+            calories: recipeDetails.nutrition.calories,
           };
         }
       }

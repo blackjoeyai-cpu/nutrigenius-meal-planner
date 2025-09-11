@@ -3,10 +3,11 @@
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
 import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
 import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
-import type { Recipe } from "@/lib/types";
+import { type Recipe, type RecipeDetails } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { generateRecipe } from "@/ai/flows/generate-recipe";
+import { generateRecipeDetails } from "@/ai/flows/generate-recipe";
+import { addRecipe } from "@/services/recipe-service";
 
 const MealPlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -67,15 +68,21 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
     for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
       const meal = result[mealType];
       if (meal.id.startsWith("new-recipe-")) {
-        const fullRecipe = await generateRecipe({
+        // First, generate the detailed recipe content from the AI
+        const recipeDetails: RecipeDetails = await generateRecipeDetails({
           prompt: `A ${cuisine} ${meal.title} that is ${dietaryPreferences} and fits a ${calorieTarget} calorie diet.`,
           language: language,
         });
+
+        // Then, save this new recipe to the database to get a permanent ID
+        const newRecipeId = await addRecipe(recipeDetails);
+
+        // Finally, update the meal plan with the permanent ID and correct details
         result[mealType] = {
-          id: fullRecipe.id,
-          title: fullRecipe.name,
-          description: meal.description, // Keep AI's short description
-          calories: fullRecipe.nutrition.calories,
+          id: newRecipeId,
+          title: recipeDetails.name,
+          description: meal.description, // Keep AI's short description for the plan
+          calories: recipeDetails.nutrition.calories,
         };
       }
     }
@@ -149,15 +156,18 @@ export async function regenerateMealAction(
     });
 
     if (newMeal.id.startsWith("new-recipe-")) {
-      const fullRecipe = await generateRecipe({
+      const recipeDetails = await generateRecipeDetails({
         prompt: `A ${validatedFields.data.cuisine} ${newMeal.title} that is ${validatedFields.data.dietaryPreferences} and fits a ${validatedFields.data.calorieTarget} calorie diet.`,
         language: language,
       });
+
+      const newRecipeId = await addRecipe(recipeDetails);
+
       newMeal = {
-        id: fullRecipe.id,
-        title: fullRecipe.name,
+        id: newRecipeId,
+        title: recipeDetails.name,
         description: newMeal.description,
-        calories: fullRecipe.nutrition.calories,
+        calories: recipeDetails.nutrition.calories,
       };
     }
 

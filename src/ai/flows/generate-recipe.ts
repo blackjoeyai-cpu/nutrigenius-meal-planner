@@ -2,7 +2,8 @@
 /**
  * @fileOverview Generates a complete recipe from a user's text description.
  *
- * - generateRecipe - A function that creates a recipe.
+ * - generateRecipe - A function that creates a recipe and saves it to the database.
+ * - generateRecipeDetails - An internal function that only generates recipe details without saving.
  * - GenerateRecipeInput - The input type for the generateRecipe function.
  * - GenerateRecipeOutput - The return type for the generateRecipe function.
  */
@@ -24,8 +25,7 @@ const GenerateRecipeInputSchema = z.object({
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
-const GenerateRecipeOutputSchema = z.object({
-  id: z.string().describe("The ID of the newly created recipe."),
+const AISchema = z.object({
   name: z.string().describe("The name of the recipe."),
   cuisine: z
     .enum(CUISINES as [string, ...string[]])
@@ -68,14 +68,26 @@ const GenerateRecipeOutputSchema = z.object({
     .describe("Nutritional information per serving."),
 });
 
-const AISchema = GenerateRecipeOutputSchema.omit({ id: true });
+const GenerateRecipeOutputSchema = AISchema.extend({
+  id: z.string().describe("The ID of the newly created recipe."),
+});
 
 export type GenerateRecipeOutput = z.infer<typeof GenerateRecipeOutputSchema>;
+export type RecipeDetails = z.infer<typeof AISchema>;
 
 export async function generateRecipe(
   input: GenerateRecipeInput,
 ): Promise<GenerateRecipeOutput> {
   return generateRecipeFlow(input);
+}
+
+/**
+ * Internal flow to generate recipe details without saving to the database.
+ */
+export async function generateRecipeDetails(
+  input: GenerateRecipeInput,
+): Promise<RecipeDetails> {
+  return generateRecipeDetailsFlow(input);
 }
 
 const prompt = ai.definePrompt({
@@ -109,6 +121,22 @@ const prompt = ai.definePrompt({
   `,
 });
 
+const generateRecipeDetailsFlow = ai.defineFlow(
+  {
+    name: "generateRecipeDetailsFlow",
+    inputSchema: GenerateRecipeInputSchema,
+    outputSchema: AISchema,
+    retries: 3,
+  },
+  async (input) => {
+    const { output } = await prompt(input);
+    if (!output) {
+      throw new Error("Failed to generate recipe details from AI.");
+    }
+    return output;
+  },
+);
+
 const generateRecipeFlow = ai.defineFlow(
   {
     name: "generateRecipeFlow",
@@ -117,14 +145,11 @@ const generateRecipeFlow = ai.defineFlow(
     retries: 3,
   },
   async (input) => {
-    const { output } = await prompt(input);
-    if (!output) {
-      throw new Error("Failed to generate recipe details from AI.");
-    }
-    const recipeId = await addRecipe(output);
+    const details = await generateRecipeDetails(input);
+    const recipeId = await addRecipe(details);
     return {
       id: recipeId,
-      ...output,
+      ...details,
     };
   },
 );
