@@ -5,5 +5,8 @@
   "language": "Bahasa",
   "browse_recipes": "Semak Imbas Resipi",
   "browse_recipes_description": "Cari atau cipta hidangan kegemaran anda yang seterusnya dari koleksi kami.",
-  "add_recipe": "Tambah Resipi"
+  "add_recipe": "Tambah Resipi",
+  "settings": "Tetapan",
+  "settings_description": "Urus pilihan aplikasi anda.",
+  "select_language": "Pilih Bahasa"
 }

@@ -5,5 +5,8 @@
   "language": "Language",
   "browse_recipes": "Browse Recipes",
   "browse_recipes_description": "Find or create your next favorite meal from our collection.",
-  "add_recipe": "Add Recipe"
+  "add_recipe": "Add Recipe",
+  "settings": "Settings",
+  "settings_description": "Manage your application preferences.",
+  "select_language": "Select Language"
 }

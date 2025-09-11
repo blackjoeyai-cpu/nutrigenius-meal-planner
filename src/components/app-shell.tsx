@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { BookOpen, Menu, Sparkles, CalendarDays } from "lucide-react";
+import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
 
 import {
   SidebarProvider,
@@ -19,7 +19,6 @@ import { Logo } from "@/components/logo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { LanguageSwitcher } from "./language-switcher";
 import { useTranslation } from "@/hooks/use-translation";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -43,6 +42,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       label: t("my_plans"),
       icon: CalendarDays,
     },
+    {
+      href: "/settings",
+      label: t("settings"),
+      icon: Settings,
+    },
   ];
 
   if (isMobile) {
@@ -56,7 +60,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
         <main className="flex-1 p-4 pb-20">{children}</main>
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-t-lg md:hidden">
-          <div className="grid h-16 grid-cols-3">
+          <div className="grid h-16 grid-cols-4">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
@@ -102,9 +106,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-          <LanguageSwitcher />
-        </SidebarFooter>
+        <SidebarFooter></SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
