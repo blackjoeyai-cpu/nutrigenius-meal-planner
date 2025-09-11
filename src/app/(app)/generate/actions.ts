@@ -4,7 +4,7 @@
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
 import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
 import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
-import type { Recipe, DailyPlan } from "@/lib/types";
+import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 
@@ -18,7 +18,7 @@ const MealPlanSchema = z.object({
   generationSource: z.enum(["catalog", "new", "combined"]),
 });
 
-export async function createMealPlan(prevState: any, formData: FormData) {
+export async function createMealPlan(prevState: unknown, formData: FormData) {
   const validatedFields = MealPlanSchema.safeParse({
     dietaryPreferences: formData.get("dietaryPreferences"),
     calorieTarget: formData.get("calorieTarget"),

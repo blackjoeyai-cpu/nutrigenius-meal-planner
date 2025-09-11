@@ -15,10 +15,10 @@ const GeneratePlanSchema = z.object({
   ingredients: z.string().optional(),
   recipes: z.string().optional(),
   numberOfDays: z.coerce.number().min(1, "Number of days must be at least 1.").max(30, "Cannot generate more than 30 days."),
-  generationSource: z.enum(["catalog", "new", "combined"]),
+  generationSource: z.enum(['catalog', 'new', 'combined']),
 });
 
-export async function generatePlanAction(prevState: any, formData: FormData) {
+export async function generatePlanAction(prevState: unknown, formData: FormData) {
   const validatedFields = GeneratePlanSchema.safeParse({
     dietaryPreferences: formData.get("dietaryPreferences"),
     calorieTarget: formData.get("calorieTarget"),

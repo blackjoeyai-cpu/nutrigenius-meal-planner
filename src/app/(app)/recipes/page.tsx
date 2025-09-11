@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { PlusCircle } from 'lucide-react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -36,13 +36,13 @@ export default function RecipesPage() {
   const mealTypes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight font-headline">
+    <div class="space-y-6">
+      <div class="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+        <div class="space-y-2">
+          <h2 class="text-3xl font-bold tracking-tight font-headline">
             Browse Recipes
           </h2>
-          <p className="text-muted-foreground">
+          <p class="text-muted-foreground">
             Find or create your next favorite meal from our collection.
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function RecipesPage() {
         </AddRecipeDialog>
       </div>
 
-      <div className="flex flex-col gap-4 md:flex-row">
+      <div class="flex flex-col gap-4 md:flex-row">
         <Input
           placeholder="Search recipes or ingredients..."
           className="flex-grow"
@@ -89,13 +89,13 @@ export default function RecipesPage() {
           ))}
         </TabsList>
         <TabsContent value={activeTab}>
-            <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
               {!isLoaded ? (
                 Array.from({ length: 6 }).map((_, index) => (
                     <Card key={index}>
                         <CardContent className="p-4 space-y-3">
                             <Skeleton className="h-6 w-3/4" />
-                            <div className="flex flex-wrap gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <Skeleton className="h-5 w-20" />
                                 <Skeleton className="h-5 w-24" />
                             </div>
@@ -109,7 +109,7 @@ export default function RecipesPage() {
                       <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg animate-in fade-in-0">
                         <CardContent className="p-4">
                           <CardTitle className="mb-2 text-lg font-headline">{recipe.name}</CardTitle>
-                          <div className="flex flex-wrap gap-2">
+                          <div class="flex flex-wrap gap-2">
                             <Badge variant="secondary">{recipe.cuisine}</Badge>
                             {recipe.dietaryTags.map((tag) => (
                               <Badge key={tag} variant="outline">{tag}</Badge>
@@ -123,9 +123,9 @@ export default function RecipesPage() {
               )}
             </div>
             {filteredRecipes.length === 0 && isLoaded && (
-                <div className="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center mt-4">
-                  <h3 className="text-xl font-semibold">No Recipes Found</h3>
-                  <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+                <div class="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center mt-4">
+                  <h3 class="text-xl font-semibold">No Recipes Found</h3>
+                  <p class="text-muted-foreground">Try adjusting your search or filters.</p>
                 </div>
               )}
         </TabsContent>

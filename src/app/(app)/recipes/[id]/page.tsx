@@ -3,7 +3,7 @@
 
 import { notFound, useParams } from 'next/navigation';
 import { Clock, Users, Soup, Flame, Beef, Wheat, Droplets, Edit } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,18 +21,18 @@ export default function RecipeDetailPage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   
-  const fetchRecipe = async () => {
+  const fetchRecipe = useCallback(async () => {
       setIsLoaded(false);
       const fetchedRecipe = await getRecipeById(id);
       setRecipe(fetchedRecipe);
       setIsLoaded(true);
-    };
+    }, [id]);
 
   useEffect(() => {
     if (id) {
         fetchRecipe();
     }
-  }, [id]);
+  }, [id, fetchRecipe]);
 
 
   if (!isLoaded) {

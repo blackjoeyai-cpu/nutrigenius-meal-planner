@@ -162,7 +162,7 @@ export function AddRecipeDialog({ open, onOpenChange, onRecipeAdd, children, rec
                 description: "Recipe updated successfully."
             })
             onRecipeAdd(recipeData);
-        } catch (error) {
+        } catch {
              toast({
                 title: "Error",
                 description: "Failed to update recipe.",

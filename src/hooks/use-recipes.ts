@@ -26,7 +26,7 @@ export const useRecipes = () => {
 
   const addRecipe = useCallback(async (newRecipe: Omit<Recipe, 'id' | 'imageId'>) => {
     try {
-      const newRecipeId = await saveRecipe(newRecipe);
+      await saveRecipe(newRecipe);
       // Refresh recipes after adding a new one
       await loadRecipes();
     } catch (error) {

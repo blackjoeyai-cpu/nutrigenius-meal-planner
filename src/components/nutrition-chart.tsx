@@ -35,8 +35,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function NutritionChart({ data, title, description, type }: { data: any[], title: string, description: string, type: "macros" | "calories" }) {
-  const key = type === 'macros' ? 'macros' : 'calories';
+export function NutritionChart({ data, title, description, type }: { data: Array<{ name: string; calories?: number; protein?: number; carbs?: number; fat?: number }>, title: string, description: string, type: "macros" | "calories" }) {
 
   return (
     <Card>

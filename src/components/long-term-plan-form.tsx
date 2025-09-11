@@ -260,7 +260,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Saving Disabled</AlertTitle>
               <AlertDescription>
-                Saving is only enabled when "Use my existing recipes" is
+                Saving is only enabled when &quot;Use my existing recipes&quot; is
                 selected. This ensures that all recipes in your saved plan have
                 valid links.
               </AlertDescription>
@@ -294,7 +294,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
         <Form {...form}>
           <form
-            action={(formData) => {
+            action={() => {
                 const combinedData = new FormData();
                 const formValues = form.getValues();
                 
@@ -480,7 +480,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                                 options={allIngredients.map(i => ({ value: i, label: i }))}
                                 selected={field.value}
                                 onChange={field.onChange}
-                                className="w-full"
                                 placeholder="Select ingredients you have..."
                             />
                         </FormControl>

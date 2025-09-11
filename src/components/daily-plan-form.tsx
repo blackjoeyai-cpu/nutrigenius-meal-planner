@@ -394,7 +394,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                         Discard
                     </Button>
                 </CardFooter>
-                 {generatedPlan.generationSource !== 'catalog' && <CardContent><Alert variant="destructive" className="mt-4"><AlertTriangle className="h-4 w-4" /><AlertDescription>Saving is disabled unless "Use my existing recipes" is selected. This ensures all saved recipes have valid links.</AlertDescription></Alert></CardContent>}
+                 {generatedPlan.generationSource !== 'catalog' && <CardContent><Alert variant="destructive" className="mt-4"><AlertTriangle className="h-4 w-4" /><AlertDescription>Saving is disabled unless &quot;Use my existing recipes&quot; is selected. This ensures all saved recipes have valid links.</AlertDescription></Alert></CardContent>}
             </Card>
           </div>
         ) : (

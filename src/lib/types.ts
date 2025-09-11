@@ -1,6 +1,4 @@
 
-import type { Timestamp } from "firebase/firestore";
-
 export type Recipe = {
   id: string;
   name: string;

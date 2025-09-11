@@ -21,7 +21,6 @@ export function MultiSelect({
   selected,
   onChange,
   placeholder = "Select...",
-  className,
 }: {
   options: Option[]
   selected: string[]
@@ -119,7 +118,7 @@ export function MultiSelect({
                         e.preventDefault()
                         e.stopPropagation()
                       }}
-                      onSelect={(_value) => {
+                      onSelect={() => {
                         setInputValue("")
                         onChange([...selected, option.value])
                       }}
