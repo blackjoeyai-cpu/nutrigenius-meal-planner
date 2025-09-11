@@ -141,11 +141,11 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
-            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --confirm)
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
           else
-            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --confirm)
+            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
           fi
-          DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -o 'https://[^ ]*\' | sed 's/\'//')
+          DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -o 'https://[^ ]*' | head -1)
           echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
 
       - name: 📝 Write Deployment Summary
