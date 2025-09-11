@@ -129,7 +129,10 @@ export function AddRecipeDialog({
     if (!generationPrompt) return;
     setIsGenerating(true);
     try {
-      const result = await generateRecipeAction({ prompt: generationPrompt });
+      const result = await generateRecipeAction({
+        prompt: generationPrompt,
+        language: "Malay",
+      });
       if (result) {
         form.reset({
           name: result.name,
@@ -165,10 +168,8 @@ export function AddRecipeDialog({
 
   async function onSubmit(data: RecipeFormValues) {
     const ingredientsArray = data.ingredients.split("\n").map((line) => {
-      const parts = line.split(" ");
-      const quantity = parts.shift() || "";
-      const item = parts.join(" ");
-      return { quantity, item };
+      const parts = line.match(/^([^\s]+\s*[^s]*)\s+(.*)$/)?.slice(1) || ["", line];
+      return { quantity: parts[0].trim() || "", item: parts[1].trim() };
     });
 
     const recipeData = {

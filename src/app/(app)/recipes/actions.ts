@@ -7,9 +7,13 @@ import type { Recipe } from "@/lib/types";
 
 const GenerateRecipeSchema = z.object({
   prompt: z.string(),
+  language: z.string().optional(),
 });
 
-export async function generateRecipeAction(input: { prompt: string }) {
+export async function generateRecipeAction(input: {
+  prompt: string;
+  language?: string;
+}) {
   const validatedFields = GenerateRecipeSchema.safeParse(input);
 
   if (!validatedFields.success) {
