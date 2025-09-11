@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import {
   Card,
@@ -8,13 +8,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
 const chartConfig = {
   calories: {
@@ -33,10 +33,25 @@ const chartConfig = {
     label: "Fat (g)",
     color: "hsl(var(--chart-2))",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
-export function NutritionChart({ data, title, description, type }: { data: Array<{ name: string; calories?: number; protein?: number; carbs?: number; fat?: number }>, title: string, description: string, type: "macros" | "calories" }) {
-
+export function NutritionChart({
+  data,
+  title,
+  description,
+  type,
+}: {
+  data: Array<{
+    name: string;
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  }>;
+  title: string;
+  description: string;
+  type: "macros" | "calories";
+}) {
   return (
     <Card>
       <CardHeader>
@@ -58,19 +73,18 @@ export function NutritionChart({ data, title, description, type }: { data: Array
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            {type === 'macros' ? (
-                <>
-                    <Bar dataKey="protein" fill="var(--color-protein)" radius={4} />
-                    <Bar dataKey="carbs" fill="var(--color-carbs)" radius={4} />
-                    <Bar dataKey="fat" fill="var(--color-fat)" radius={4} />
-                </>
+            {type === "macros" ? (
+              <>
+                <Bar dataKey="protein" fill="var(--color-protein)" radius={4} />
+                <Bar dataKey="carbs" fill="var(--color-carbs)" radius={4} />
+                <Bar dataKey="fat" fill="var(--color-fat)" radius={4} />
+              </>
             ) : (
-                <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
+              <Bar dataKey="calories" fill="var(--color-calories)" radius={4} />
             )}
-
           </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,4 +1,3 @@
-
 export const DIETARY_PREFERENCES = [
   "None",
   "Vegetarian",

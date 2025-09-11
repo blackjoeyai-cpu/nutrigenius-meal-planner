@@ -1,9 +1,11 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import type { Recipe } from "@/lib/types";
-import { getRecipes as fetchRecipes, addRecipe as saveRecipe } from "@/services/recipe-service";
+import {
+  getRecipes as fetchRecipes,
+  addRecipe as saveRecipe,
+} from "@/services/recipe-service";
 
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -24,15 +26,18 @@ export const useRecipes = () => {
     loadRecipes();
   }, [loadRecipes]);
 
-  const addRecipe = useCallback(async (newRecipe: Omit<Recipe, 'id' | 'imageId'>) => {
-    try {
-      await saveRecipe(newRecipe);
-      // Refresh recipes after adding a new one
-      await loadRecipes();
-    } catch (error) {
-      console.error("Error adding recipe:", error);
-    }
-  }, [loadRecipes]);
+  const addRecipe = useCallback(
+    async (newRecipe: Omit<Recipe, "id" | "imageId">) => {
+      try {
+        await saveRecipe(newRecipe);
+        // Refresh recipes after adding a new one
+        await loadRecipes();
+      } catch (error) {
+        console.error("Error adding recipe:", error);
+      }
+    },
+    [loadRecipes],
+  );
 
   return { recipes, addRecipe, isLoaded, refreshRecipes: loadRecipes };
 };

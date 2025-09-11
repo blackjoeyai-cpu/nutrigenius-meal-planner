@@ -8,9 +8,9 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-*   [Node.js](https://nodejs.org/) (v20 or later recommended)
-*   [npm](https://www.npmjs.com/)
-*   A Google Cloud project with the **Gemini API** and **Firebase** enabled. You can create one for free at the [Google Cloud console](https://console.cloud.google.com/).
+- [Node.js](https://nodejs.org/) (v20 or later recommended)
+- [npm](https://www.npmjs.com/)
+- A Google Cloud project with the **Gemini API** and **Firebase** enabled. You can create one for free at the [Google Cloud console](https://console.cloud.google.com/).
 
 ### Installation
 
@@ -80,25 +80,22 @@ This project is configured for deployment to [Vercel](https://vercel.com/). The 
 For the deployment to succeed and connect to your Google Cloud backend, you must add the following environment variables to your Vercel project settings:
 
 1.  **Google Cloud Authentication:**
-
-    *   Create a Google Cloud Service Account with the **Vertex AI User** role in your Google Cloud project.
-    *   Create a JSON key for this service account and download it.
-    *   Copy the entire JSON content and add it as a Vercel environment variable named `GOOGLE_APPLICATION_CREDENTIALS_JSON`.
+    - Create a Google Cloud Service Account with the **Vertex AI User** role in your Google Cloud project.
+    - Create a JSON key for this service account and download it.
+    - Copy the entire JSON content and add it as a Vercel environment variable named `GOOGLE_APPLICATION_CREDENTIALS_JSON`.
 
 2.  **Vercel Integration:**
-
-    *   `VERCEL_TOKEN`: Your Vercel account token.
-    *   `VERCEL_ORG_ID`: The ID of your Vercel organization.
-    *   `VERCEL_PROJECT_ID`: The ID of your Vercel project.
+    - `VERCEL_TOKEN`: Your Vercel account token.
+    - `VERCEL_ORG_ID`: The ID of your Vercel organization.
+    - `VERCEL_PROJECT_ID`: The ID of your Vercel project.
 
 3.  **Firebase Client Configuration:**
-
-    *   You must also add all the `NEXT_PUBLIC_FIREBASE_*` variables from your `.env.local` file to Vercel's environment variables.
+    - You must also add all the `NEXT_PUBLIC_FIREBASE_*` variables from your `.env.local` file to Vercel's environment variables.
 
 ## CI/CD Workflow
 
 The `.github/workflows/ci-cd.yml` file contains the GitHub Actions workflow that automates testing and deployment. It includes jobs for:
 
-*   **Validation:** Linting, formatting checks, and conventional commit message validation.
-*   **Building:** Creating a production build of the Next.js application.
-*   **Deploying:** Pushing the build to Vercel for preview or production environments.
+- **Validation:** Linting, formatting checks, and conventional commit message validation.
+- **Building:** Creating a production build of the Next.js application.
+- **Deploying:** Pushing the build to Vercel for preview or production environments.

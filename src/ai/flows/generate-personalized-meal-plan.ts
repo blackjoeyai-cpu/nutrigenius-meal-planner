@@ -1,4 +1,4 @@
-'use server';
+"use server";
 /**
  * @fileOverview Generates a personalized meal plan based on user dietary preferences, calorie targets, and restrictions.
  *
@@ -7,19 +7,23 @@
  * - GeneratePersonalizedMealPlanOutput - The return type for the generatePersonalizedMealPlan function.
  */
 
-import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import { ai } from "@/ai/genkit";
+import { z } from "genkit";
 
 const GeneratePersonalizedMealPlanInputSchema = z.object({
   dietaryPreferences: z
     .string()
-    .describe('The dietary preferences of the user (e.g., vegetarian, vegan, paleo).'),
+    .describe(
+      "The dietary preferences of the user (e.g., vegetarian, vegan, paleo).",
+    ),
   calorieTarget: z
     .number()
-    .describe('The daily calorie target for the meal plan.'),
+    .describe("The daily calorie target for the meal plan."),
   dietaryRestrictions: z
     .string()
-    .describe('Any dietary restrictions or allergies of the user (e.g., gluten-free, nut allergy).'),
+    .describe(
+      "Any dietary restrictions or allergies of the user (e.g., gluten-free, nut allergy).",
+    ),
 });
 export type GeneratePersonalizedMealPlanInput = z.infer<
   typeof GeneratePersonalizedMealPlanInputSchema
@@ -28,22 +32,24 @@ export type GeneratePersonalizedMealPlanInput = z.infer<
 const GeneratePersonalizedMealPlanOutputSchema = z.object({
   mealPlan: z
     .string()
-    .describe('A detailed meal plan including breakfast, lunch, and dinner recipes.'),
+    .describe(
+      "A detailed meal plan including breakfast, lunch, and dinner recipes.",
+    ),
 });
 export type GeneratePersonalizedMealPlanOutput = z.infer<
   typeof GeneratePersonalizedMealPlanOutputSchema
 >;
 
 export async function generatePersonalizedMealPlan(
-  input: GeneratePersonalizedMealPlanInput
+  input: GeneratePersonalizedMealPlanInput,
 ): Promise<GeneratePersonalizedMealPlanOutput> {
   return generatePersonalizedMealPlanFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: 'generatePersonalizedMealPlanPrompt',
-  input: {schema: GeneratePersonalizedMealPlanInputSchema},
-  output: {schema: GeneratePersonalizedMealPlanOutputSchema},
+  name: "generatePersonalizedMealPlanPrompt",
+  input: { schema: GeneratePersonalizedMealPlanInputSchema },
+  output: { schema: GeneratePersonalizedMealPlanOutputSchema },
   prompt: `You are a personal nutritionist who creates personalized meal plans based on user preferences and restrictions.
 
   Based on the following dietary preferences: {{{dietaryPreferences}}},
@@ -59,12 +65,12 @@ const prompt = ai.definePrompt({
 
 const generatePersonalizedMealPlanFlow = ai.defineFlow(
   {
-    name: 'generatePersonalizedMealPlanFlow',
+    name: "generatePersonalizedMealPlanFlow",
     inputSchema: GeneratePersonalizedMealPlanInputSchema,
     outputSchema: GeneratePersonalizedMealPlanOutputSchema,
   },
-  async input => {
-    const {output} = await prompt(input);
+  async (input) => {
+    const { output } = await prompt(input);
     return output!;
-  }
+  },
 );

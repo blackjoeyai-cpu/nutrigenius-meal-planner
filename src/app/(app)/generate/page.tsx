@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,16 +7,16 @@ import { useRecipes } from "@/hooks/use-recipes";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function GeneratePage() {
-    const { recipes, isLoaded: recipesLoaded } = useRecipes();
-    
-    if (!recipesLoaded) {
-        return (
-             <div className="space-y-4">
-                <Skeleton className="h-10 w-48" />
-                <Skeleton className="h-[500px] w-full" />
-            </div>
-        )
-    }
+  const { recipes, isLoaded: recipesLoaded } = useRecipes();
+
+  if (!recipesLoaded) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-[500px] w-full" />
+      </div>
+    );
+  }
 
   return (
     <Tabs defaultValue="daily" className="w-full">

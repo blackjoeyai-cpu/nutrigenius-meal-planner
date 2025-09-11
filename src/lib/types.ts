@@ -1,4 +1,3 @@
-
 export type Recipe = {
   id: string;
   name: string;
@@ -28,19 +27,23 @@ export type UserProfile = {
 
 // Represents a single day's plan as stored within a long-term plan
 export type DailyPlan = {
-  breakfast: { id: string; title: string; description: string; calories: number; };
-  lunch: { id: string; title: string; description: string; calories: number; };
-  dinner: { id: string; title: string; description: string; calories: number; };
-}
+  breakfast: {
+    id: string;
+    title: string;
+    description: string;
+    calories: number;
+  };
+  lunch: { id: string; title: string; description: string; calories: number };
+  dinner: { id: string; title: string; description: string; calories: number };
+};
 
 export type MealPlan = {
-    id: string;
-    userId: string;
-    createdAt: string; // Changed from Timestamp to string for serialization
-    days: DailyPlan[];
-    dietaryPreferences: string;
-    calorieTarget: number;
-    allergies: string;
-    cuisine: string;
-}
-
+  id: string;
+  userId: string;
+  createdAt: string; // Changed from Timestamp to string for serialization
+  days: DailyPlan[];
+  dietaryPreferences: string;
+  calorieTarget: number;
+  allergies: string;
+  cuisine: string;
+};

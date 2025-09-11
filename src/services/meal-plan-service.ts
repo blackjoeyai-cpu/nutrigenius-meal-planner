@@ -1,77 +1,83 @@
-
 "use server";
 
 import { db } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, where, doc, updateDoc } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import type { DailyPlan, MealPlan } from "@/lib/types";
 
-
 type MealPlanForDb = {
-    userId: string;
-    createdAt: Date;
-    days: DailyPlan[];
-    dietaryPreferences: string;
-    calorieTarget: number;
-    allergies: string;
-    cuisine: string;
-}
+  userId: string;
+  createdAt: Date;
+  days: DailyPlan[];
+  dietaryPreferences: string;
+  calorieTarget: number;
+  allergies: string;
+  cuisine: string;
+};
 
 /**
  * Adds a new meal plan to the Firestore database.
  */
 export async function addMealPlan(plan: MealPlanForDb): Promise<string> {
-    try {
-        const docRef = await addDoc(collection(db, "mealplans"), plan);
-        return docRef.id;
-    } catch (e) {
-        console.error("Error adding meal plan: ", e);
-        throw new Error("Could not add meal plan to the database.");
-    }
-}
-
-export async function updateMealPlan(planId: string, updatedPlanData: Partial<MealPlanForDb>): Promise<void> {
   try {
-    const planRef = doc(db, 'mealplans', planId);
-    await updateDoc(planRef, updatedPlanData);
+    const docRef = await addDoc(collection(db, "mealplans"), plan);
+    return docRef.id;
   } catch (e) {
-    console.error('Error updating meal plan: ', e);
-    throw new Error('Could not update meal plan in the database.');
+    console.error("Error adding meal plan: ", e);
+    throw new Error("Could not add meal plan to the database.");
   }
 }
 
+export async function updateMealPlan(
+  planId: string,
+  updatedPlanData: Partial<MealPlanForDb>,
+): Promise<void> {
+  try {
+    const planRef = doc(db, "mealplans", planId);
+    await updateDoc(planRef, updatedPlanData);
+  } catch (e) {
+    console.error("Error updating meal plan: ", e);
+    throw new Error("Could not update meal plan in the database.");
+  }
+}
 
 /**
  * Retrieves all meal plans for a user from the Firestore database.
  */
 export async function getMealPlans(userId: string): Promise<MealPlan[]> {
-    try {
-        const q = query(
-            collection(db, "mealplans"), 
-            where("userId", "==", userId)
-        );
-        const querySnapshot = await getDocs(q);
-        const plans: MealPlan[] = [];
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const createdAtTimestamp = data.createdAt as import("firebase/firestore").Timestamp;
-            plans.push({ 
-                id: doc.id, 
-                ...data,
-                // Convert timestamp to a serializable format (ISO string)
-                createdAt: createdAtTimestamp.toDate().toISOString(),
-             } as MealPlan);
-        });
+  try {
+    const q = query(collection(db, "mealplans"), where("userId", "==", userId));
+    const querySnapshot = await getDocs(q);
+    const plans: MealPlan[] = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const createdAtTimestamp =
+        data.createdAt as import("firebase/firestore").Timestamp;
+      plans.push({
+        id: doc.id,
+        ...data,
+        // Convert timestamp to a serializable format (ISO string)
+        createdAt: createdAtTimestamp.toDate().toISOString(),
+      } as MealPlan);
+    });
 
-        // Sort the plans by creation date in descending order (newest first)
-        plans.sort((a, b) => {
-            const dateA = new Date(a.createdAt).getTime();
-            const dateB = new Date(b.createdAt).getTime();
-            return dateB - dateA;
-        });
+    // Sort the plans by creation date in descending order (newest first)
+    plans.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateB - dateA;
+    });
 
-        return plans;
-    } catch(e) {
-        console.error("Error fetching meal plans: ", e);
-        throw new Error("Could not fetch meal plans.");
-    }
+    return plans;
+  } catch (e) {
+    console.error("Error fetching meal plans: ", e);
+    throw new Error("Could not fetch meal plans.");
+  }
 }
