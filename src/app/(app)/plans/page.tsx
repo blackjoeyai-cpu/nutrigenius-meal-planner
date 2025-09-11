@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
+import { useTranslation } from "@/hooks/use-translation";
 
 type PlansByDate = Map<
   string,
@@ -47,6 +48,7 @@ export default function PlansPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const router = useRouter();
+  const { t } = useTranslation();
 
   useEffect(() => {
     async function fetchPlans() {
@@ -78,7 +80,7 @@ export default function PlansPage() {
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDayOfMonth = startOfMonth(currentDate);
-  const startingDayOfWeek = getDay(firstDayOfMonth); // 0 (Sun) to 6 (Sat)
+  const startingDayOfWeek = getDay(firstDayOfMonth);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -108,7 +110,7 @@ export default function PlansPage() {
           <div className="md:col-span-2">
             <Skeleton className="h-96 w-full" />
           </div>
-          <div className="md:col-span-1 space-y-4">
+          <div className="space-y-4 md:col-span-1">
             <Skeleton className="h-10 w-full" />
             <Skeleton className="h-32 w-full" />
             <Skeleton className="h-32 w-full" />
@@ -123,16 +125,14 @@ export default function PlansPage() {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight font-headline">
-            My Meal Calendar
+          <h2 className="font-headline text-3xl font-bold tracking-tight">
+            {t("meal_calendar")}
           </h2>
-          <p className="text-muted-foreground">
-            Select a date to view your meal plan.
-          </p>
+          <p className="text-muted-foreground">{t("meal_calendar_desc")}</p>
         </div>
         <Button onClick={() => router.push("/generate")}>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Generate New Plan
+          {t("generate_new_plan")}
         </Button>
       </div>
 
@@ -140,7 +140,7 @@ export default function PlansPage() {
         <div className="lg:col-span-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between p-4">
-              <h3 className="text-xl font-semibold font-headline">
+              <h3 className="font-headline text-xl font-semibold">
                 {format(currentDate, "MMMM yyyy")}
               </h3>
               <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export default function PlansPage() {
                       key={day}
                       onClick={() => setSelectedDate(date)}
                       className={cn(
-                        "relative flex h-16 w-full items-start justify-start p-2 text-sm transition-colors rounded-md",
+                        "relative flex h-16 w-full items-start justify-start rounded-md p-2 text-sm transition-colors",
                         "hover:bg-accent hover:text-accent-foreground",
                         isSelected
                           ? "bg-primary text-primary-foreground hover:bg-primary"
@@ -198,9 +198,9 @@ export default function PlansPage() {
                     >
                       <span
                         className={cn(
-                          "flex items-center justify-center rounded-full h-6 w-6",
+                          "flex h-6 w-6 items-center justify-center rounded-full",
                           isSelected &&
-                            "bg-primary-foreground text-primary font-bold",
+                            "bg-primary-foreground font-bold text-primary",
                         )}
                       >
                         {day}
@@ -208,7 +208,7 @@ export default function PlansPage() {
                       {hasPlan && (
                         <span
                           className={cn(
-                            "absolute bottom-2 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full",
+                            "absolute bottom-2 left-1/2 h-2 w-2 -translate-x-1/2 rounded-full",
                             isSelected ? "bg-primary-foreground" : "bg-primary",
                           )}
                         />
@@ -222,11 +222,11 @@ export default function PlansPage() {
         </div>
 
         <div className="space-y-4 lg:col-span-1">
-          <h3 className="text-2xl font-semibold font-headline">
-            {selectedDate ? format(selectedDate, "PPP") : "Select a date"}
+          <h3 className="font-headline text-2xl font-semibold">
+            {selectedDate ? format(selectedDate, "PPP") : t("select_a_date")}
           </h3>
           {selectedDayPlan ? (
-            <div className="space-y-4 animate-in fade-in-0 zoom-in-95">
+            <div className="animate-in fade-in-0 zoom-in-95 space-y-4">
               <Link
                 href={`/recipes/${selectedDayPlan.breakfast.id}`}
                 className="group block"
@@ -234,10 +234,10 @@ export default function PlansPage() {
                 <Card className="transition-shadow group-hover:shadow-md">
                   <CardHeader>
                     <CardTitle className="text-lg">
-                      Breakfast: {selectedDayPlan.breakfast.title}
+                      {t("breakfast")}: {selectedDayPlan.breakfast.title}
                     </CardTitle>
                     <CardDescription>
-                      {selectedDayPlan.breakfast.calories} calories
+                      {selectedDayPlan.breakfast.calories} {t("calories_short")}
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -249,10 +249,10 @@ export default function PlansPage() {
                 <Card className="transition-shadow group-hover:shadow-md">
                   <CardHeader>
                     <CardTitle className="text-lg">
-                      Lunch: {selectedDayPlan.lunch.title}
+                      {t("lunch")}: {selectedDayPlan.lunch.title}
                     </CardTitle>
                     <CardDescription>
-                      {selectedDayPlan.lunch.calories} calories
+                      {selectedDayPlan.lunch.calories} {t("calories_short")}
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -264,10 +264,10 @@ export default function PlansPage() {
                 <Card className="transition-shadow group-hover:shadow-md">
                   <CardHeader>
                     <CardTitle className="text-lg">
-                      Dinner: {selectedDayPlan.dinner.title}
+                      {t("dinner")}: {selectedDayPlan.dinner.title}
                     </CardTitle>
                     <CardDescription>
-                      {selectedDayPlan.dinner.calories} calories
+                      {selectedDayPlan.dinner.calories} {t("calories_short")}
                     </CardDescription>
                   </CardHeader>
                 </Card>
@@ -275,18 +275,18 @@ export default function PlansPage() {
               <Separator />
               <Button onClick={handleRegenerate} className="w-full">
                 <RefreshCw className="mr-2 h-4 w-4" />
-                Regenerate Plan
+                {t("regenerate_plan")}
               </Button>
             </div>
           ) : (
-            <Card className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center h-full animate-in fade-in-0 zoom-in-95">
+            <Card className="h-full animate-in fade-in-0 zoom-in-95 flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/30 py-16 text-center">
               <CardContent className="flex flex-col items-center justify-center p-6">
                 <ChefHat className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h4 className="mt-4 text-lg font-semibold">
-                  No Plan for This Day
+                  {t("no_plan_for_day")}
                 </h4>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Generate a new plan to fill your calendar.
+                  {t("no_plan_for_day_desc")}
                 </p>
               </CardContent>
             </Card>

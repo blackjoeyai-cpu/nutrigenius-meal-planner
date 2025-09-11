@@ -53,7 +53,7 @@ export default function RecipesPage() {
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight font-headline">
+          <h2 className="font-headline text-3xl font-bold tracking-tight">
             {t("browse_recipes")}
           </h2>
           <p className="text-muted-foreground">
@@ -77,14 +77,14 @@ export default function RecipesPage() {
 
       <div className="flex flex-col gap-4 md:flex-row">
         <Input
-          placeholder="Search recipes or ingredients..."
+          placeholder={t("search_recipes_placeholder")}
           className="flex-grow"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
         <Select value={cuisineFilter} onValueChange={setCuisineFilter}>
           <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Filter by cuisine" />
+            <SelectValue placeholder={t("filter_by_cuisine")} />
           </SelectTrigger>
           <SelectContent>
             {CUISINES.map((cuisine) => (
@@ -105,11 +105,11 @@ export default function RecipesPage() {
           ))}
         </TabsList>
         <TabsContent value={activeTab}>
-          <div className="grid grid-cols-1 gap-4 mt-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {!isLoaded
               ? Array.from({ length: 6 }).map((_, index) => (
                   <Card key={index}>
-                    <CardContent className="p-4 space-y-3">
+                    <CardContent className="space-y-3 p-4">
                       <Skeleton className="h-6 w-3/4" />
                       <div className="flex flex-wrap gap-2">
                         <Skeleton className="h-5 w-20" />
@@ -125,9 +125,9 @@ export default function RecipesPage() {
                       href={`/recipes/${recipe.id}`}
                       className="group"
                     >
-                      <Card className="h-full overflow-hidden transition-all group-hover:shadow-lg animate-in fade-in-0">
+                      <Card className="animate-in fade-in-0 h-full overflow-hidden transition-all group-hover:shadow-lg">
                         <CardContent className="p-4">
-                          <CardTitle className="mb-2 text-lg font-headline">
+                          <CardTitle className="mb-2 font-headline text-lg">
                             {recipe.name}
                           </CardTitle>
                           <div className="flex flex-wrap gap-2">
@@ -145,10 +145,10 @@ export default function RecipesPage() {
                 })}
           </div>
           {filteredRecipes.length === 0 && isLoaded && (
-            <div className="col-span-full flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center mt-4">
-              <h3 className="text-xl font-semibold">No Recipes Found</h3>
+            <div className="col-span-full mt-4 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
+              <h3 className="text-xl font-semibold">{t("no_recipes_found")}</h3>
               <p className="text-muted-foreground">
-                Try adjusting your search or filters.
+                {t("no_recipes_found_desc")}
               </p>
             </div>
           )}
