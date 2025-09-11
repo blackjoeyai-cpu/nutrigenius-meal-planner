@@ -5,6 +5,7 @@ import { generateLongTermMealPlan } from "@/ai/flows/generate-long-term-plan";
 import { addMealPlan } from "@/services/meal-plan-service";
 import type { Recipe, MealPlan } from "@/lib/types";
 import { revalidatePath } from "next/cache";
+import { generateRecipe } from "@/ai/flows/generate-recipe";
 
 const GeneratePlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -58,6 +59,7 @@ export async function generatePlanAction(
       generationSource,
     } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
+    const language = "Malay";
 
     const result = await generateLongTermMealPlan({
       dietaryPreferences,
@@ -68,8 +70,26 @@ export async function generatePlanAction(
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
       numberOfDays,
       generationSource,
-      language: "Malay",
+      language: language,
     });
+
+    for (const day of result.days) {
+      for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
+        const meal = day[mealType];
+        if (meal.id.startsWith("new-recipe-")) {
+          const fullRecipe = await generateRecipe({
+            prompt: `A ${cuisine} ${meal.title} that is ${dietaryPreferences} and fits a ${calorieTarget} calorie diet.`,
+            language: language,
+          });
+          day[mealType] = {
+            id: fullRecipe.id,
+            title: fullRecipe.name,
+            description: meal.description, // Keep AI's short description
+            calories: fullRecipe.nutrition.calories,
+          };
+        }
+      }
+    }
 
     return {
       message: "Successfully generated long-term meal plan.",

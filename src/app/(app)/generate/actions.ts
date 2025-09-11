@@ -6,6 +6,7 @@ import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
 import type { Recipe } from "@/lib/types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { generateRecipe } from "@/ai/flows/generate-recipe";
 
 const MealPlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -49,6 +50,7 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
       generationSource,
     } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
+    const language = "Malay";
 
     const result = await generateSafeMealPlan({
       dietaryPreferences,
@@ -58,8 +60,25 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
       ingredients: ingredients || "none",
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
       generationSource,
-      language: "Malay",
+      language: language,
     });
+
+    // Process any newly generated recipes
+    for (const mealType of ["breakfast", "lunch", "dinner"] as const) {
+      const meal = result[mealType];
+      if (meal.id.startsWith("new-recipe-")) {
+        const fullRecipe = await generateRecipe({
+          prompt: `A ${cuisine} ${meal.title} that is ${dietaryPreferences} and fits a ${calorieTarget} calorie diet.`,
+          language: language,
+        });
+        result[mealType] = {
+          id: fullRecipe.id,
+          title: fullRecipe.name,
+          description: meal.description, // Keep AI's short description
+          calories: fullRecipe.nutrition.calories,
+        };
+      }
+    }
 
     const fullPlan = {
       days: [{ ...result }],
@@ -113,6 +132,7 @@ export async function regenerateMealAction(
   input: z.infer<typeof RegenerateMealSchema>,
 ) {
   const validatedFields = RegenerateMealSchema.safeParse(input);
+  const language = "Malay";
 
   if (!validatedFields.success) {
     console.error(
@@ -123,10 +143,24 @@ export async function regenerateMealAction(
   }
 
   try {
-    const newMeal = await regenerateSingleMeal({
+    let newMeal = await regenerateSingleMeal({
       ...validatedFields.data,
-      language: "Malay",
+      language: language,
     });
+
+    if (newMeal.id.startsWith("new-recipe-")) {
+      const fullRecipe = await generateRecipe({
+        prompt: `A ${validatedFields.data.cuisine} ${newMeal.title} that is ${validatedFields.data.dietaryPreferences} and fits a ${validatedFields.data.calorieTarget} calorie diet.`,
+        language: language,
+      });
+      newMeal = {
+        id: fullRecipe.id,
+        title: fullRecipe.name,
+        description: newMeal.description,
+        calories: fullRecipe.nutrition.calories,
+      };
+    }
+
     return { success: true, meal: newMeal };
   } catch (error) {
     console.error("Error regenerating meal:", error);

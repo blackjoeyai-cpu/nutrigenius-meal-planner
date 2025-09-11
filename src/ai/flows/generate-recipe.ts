@@ -10,16 +10,22 @@
 import { ai } from "@/ai/genkit";
 import { z } from "genkit";
 import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
+import { addRecipe } from "@/services/recipe-service";
+import type { Recipe } from "@/lib/types";
 
 const GenerateRecipeInputSchema = z.object({
   prompt: z
     .string()
     .describe("The user’s idea or prompt for the recipe to be generated."),
-  language: z.string().optional().describe("The language for the recipe to be generated in, e.g., 'Malay'."),
+  language: z
+    .string()
+    .optional()
+    .describe("The language for the recipe to be generated in, e.g., 'Malay'."),
 });
 export type GenerateRecipeInput = z.infer<typeof GenerateRecipeInputSchema>;
 
 const GenerateRecipeOutputSchema = z.object({
+  id: z.string().describe("The ID of the newly created recipe."),
   name: z.string().describe("The name of the recipe."),
   cuisine: z
     .enum(CUISINES as [string, ...string[]])
@@ -62,6 +68,8 @@ const GenerateRecipeOutputSchema = z.object({
     .describe("Nutritional information per serving."),
 });
 
+const AISchema = GenerateRecipeOutputSchema.omit({ id: true });
+
 export type GenerateRecipeOutput = z.infer<typeof GenerateRecipeOutputSchema>;
 
 export async function generateRecipe(
@@ -73,7 +81,7 @@ export async function generateRecipe(
 const prompt = ai.definePrompt({
   name: "generateRecipePrompt",
   input: { schema: GenerateRecipeInputSchema },
-  output: { schema: GenerateRecipeOutputSchema },
+  output: { schema: AISchema },
   prompt: `You are a creative chef who specializes in creating new and exciting recipes.
   A user will provide you with a prompt for a recipe, and you must generate a complete, well-structured recipe based on their idea.
   {{#if language}}
@@ -110,6 +118,13 @@ const generateRecipeFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("Failed to generate recipe details from AI.");
+    }
+    const recipeId = await addRecipe(output);
+    return {
+      id: recipeId,
+      ...output,
+    };
   },
 );
