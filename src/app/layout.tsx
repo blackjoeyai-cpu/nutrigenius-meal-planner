@@ -10,6 +10,7 @@ import {
   useTranslation,
 } from "@/hooks/use-translation";
 import { useEffect } from "react";
+import { cn } from "@/lib/utils";
 
 const ptSans = PT_Sans({
   subsets: ["latin"],
@@ -34,14 +35,7 @@ function AppBody({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  return (
-    <body
-      className={`font-sans ${ptSans.variable} ${ptSansHeadline.variable}`}
-    >
-      {children}
-      <Toaster />
-    </body>
-  );
+  return <>{children}</>;
 }
 
 export default function RootLayout({
@@ -50,10 +44,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <LocalizationProvider>
-      <html lang="en" suppressHydrationWarning>
-        <AppBody>{children}</AppBody>
-      </html>
-    </LocalizationProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={cn(
+          "font-sans",
+          ptSans.variable,
+          ptSansHeadline.variable,
+        )}
+      >
+        <LocalizationProvider>
+          <AppBody>{children}</AppBody>
+        </LocalizationProvider>
+        <Toaster />
+      </body>
+    </html>
   );
 }
