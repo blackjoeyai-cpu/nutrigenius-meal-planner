@@ -1,4 +1,3 @@
-
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,6 +41,7 @@ import {
 } from "@/app/recipes/actions";
 import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguageStore } from "@/hooks/use-language-store";
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -86,7 +86,7 @@ export function AddRecipeDialog({
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
-  const [generationLanguage, setGenerationLanguage] = useState("English");
+  const { language } = useLanguageStore();
   const { toast } = useToast();
   const isEditMode = !!recipeToEdit;
 
@@ -139,7 +139,7 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
-        language: generationLanguage,
+        language: language,
       });
       if (result) {
         form.reset({
@@ -248,19 +248,7 @@ export function AddRecipeDialog({
                 onChange={(e) => setGenerationPrompt(e.target.value)}
               />
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-               <Select
-                value={generationLanguage}
-                onValueChange={setGenerationLanguage}
-              >
-                <SelectTrigger className="w-full sm:w-[120px]">
-                  <SelectValue placeholder="Language" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="English">English</SelectItem>
-                  <SelectItem value="Malay">Malay</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex justify-end">
               <Button
                 onClick={handleGenerateRecipe}
                 disabled={isGenerating || !generationPrompt}

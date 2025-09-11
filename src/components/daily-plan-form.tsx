@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -53,6 +52,7 @@ import {
   refreshRecipesAction,
   addRecipeAction,
 } from "@/app/recipes/actions";
+import { useLanguageStore } from "@/hooks/use-language-store";
 
 const initialState = {
   message: "",
@@ -100,15 +100,13 @@ export function DailyPlanForm({
 }: {
   recipes: Recipe[];
 }) {
-  const [state, formAction, isPending] = useActionState(
-    createMealPlan,
-    initialState,
-  );
+  const [state, formAction] = useActionState(createMealPlan, initialState);
   const { ingredients } = useIngredients(initialRecipes);
   const [recipes, setRecipes] = useState(initialRecipes);
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useLanguageStore();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -156,6 +154,7 @@ export function DailyPlanForm({
       ...generatedPlan,
       planId: planId || undefined,
       date: date || undefined,
+      language: language,
     };
 
     const result = await saveDailyPlan(planToSave);
@@ -204,6 +203,7 @@ export function DailyPlanForm({
       mealToRegenerate: mealType,
       currentMeals,
       mealToReplace,
+      language: language,
     };
 
     const result = await regenerateMealAction(input);
@@ -288,7 +288,12 @@ export function DailyPlanForm({
   return (
     <div className="grid grid-cols-1 gap-8 pt-6 lg:grid-cols-2">
       <Card>
-        <form action={formAction}>
+        <form
+          action={(formData) => {
+            formData.append("language", language);
+            formAction(formData);
+          }}
+        >
           <input
             type="hidden"
             name="ingredients"
@@ -445,20 +450,18 @@ export function DailyPlanForm({
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-2xl font-bold font-headline">
+          <h3 className="font-headline text-2xl font-bold">
             Your Generated Plan
           </h3>
-          {generatedPlan && !isPending && (
+          {generatedPlan && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Flame className="h-4 w-4" />
-              <span>
-                Total Calories: {totalCalories}
-              </span>
+              <span>Total Calories: {totalCalories}</span>
             </div>
           )}
         </div>
 
-        {isPending ? (
+        {useFormStatus().pending ? (
           <div className="space-y-4">
             <Card>
               <CardHeader>

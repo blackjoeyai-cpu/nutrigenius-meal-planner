@@ -21,6 +21,7 @@ const planFormSchema = z.object({
   cuisine: z.string(),
   generationSource: z.enum(["catalog", "new", "combined"]),
   ingredients: z.string().optional(),
+  language: z.string().optional(),
 });
 
 type FormState = {
@@ -42,6 +43,7 @@ export async function generatePlanAction(
     cuisine: formData.get("cuisine"),
     generationSource: formData.get("generationSource"),
     ingredients: formData.get("ingredients"),
+    language: formData.get("language"),
   });
 
   if (!validatedFields.success) {
@@ -120,10 +122,12 @@ async function processMeal(
   meal: DailyPlan[keyof DailyPlan],
   mealType: string,
   cuisine: string,
+  language?: string,
 ) {
   if (meal.id.startsWith("new-recipe-")) {
     const recipeDetails: RecipeDetails = await generateRecipeDetails({
       prompt: `A ${cuisine} ${meal.title} recipe suitable for ${mealType}. Description: ${meal.description}`,
+      language: language,
     });
     const newRecipeId = await addRecipe(recipeDetails);
     return { ...meal, id: newRecipeId, title: recipeDetails.name };

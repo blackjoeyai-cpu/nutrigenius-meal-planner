@@ -1,9 +1,8 @@
-
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, Menu, Sparkles, CalendarDays } from "lucide-react";
+import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
 
 import {
   SidebarProvider,
@@ -39,6 +38,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       href: "/plans",
       label: "My Plans",
       icon: CalendarDays,
+    },
+    {
+      href: "/settings",
+      label: "Settings",
+      icon: Settings,
     },
   ];
 
@@ -82,7 +86,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle navigation menu</span>
           </SidebarTrigger>
-          <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
+          <h1 className="flex-1 font-headline text-xl font-semibold md:text-2xl">
             {currentLabel}
           </h1>
         </header>

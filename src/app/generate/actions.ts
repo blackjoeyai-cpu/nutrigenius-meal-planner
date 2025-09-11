@@ -1,9 +1,8 @@
-
 "use server";
 
 import { generateSafeMealPlan } from "@/ai/flows/avoid-allergic-recipes";
 import { regenerateSingleMeal } from "@/ai/flows/regenerate-single-meal";
-import { addMealPlan, updateMealPlan } from "@/services/meal-plan-service";
+import { addMealPlan } from "@/services/meal-plan-service";
 import { addRecipe } from "@/services/recipe-service";
 import type { DailyPlan, MealPlan, RecipeDetails } from "@/lib/types";
 import { generateRecipeDetails } from "@/ai/flows/generate-recipe";
@@ -30,6 +29,7 @@ export async function createMealPlan(
         | "catalog"
         | "new"
         | "combined",
+      language: formData.get("language") as string | undefined,
     });
 
     const mealPlan: Omit<MealPlan, "id" | "createdAt"> = {
@@ -58,6 +58,7 @@ export async function saveDailyPlan(
   planData: Omit<MealPlan, "id" | "createdAt"> & {
     planId?: string;
     date?: string;
+    language?: string;
   },
 ): Promise<{ success: boolean; message: string }> {
   try {
@@ -67,12 +68,19 @@ export async function saveDailyPlan(
           day.breakfast,
           "breakfast",
           planData.cuisine,
+          planData.language,
         );
-        const lunch = await processMeal(day.lunch, "lunch", planData.cuisine);
+        const lunch = await processMeal(
+          day.lunch,
+          "lunch",
+          planData.cuisine,
+          planData.language,
+        );
         const dinner = await processMeal(
           day.dinner,
           "dinner",
           planData.cuisine,
+          planData.language,
         );
         return { breakfast, lunch, dinner };
       }),
@@ -102,10 +110,12 @@ async function processMeal(
   meal: DailyPlan[keyof DailyPlan],
   mealType: string,
   cuisine: string,
+  language?: string,
 ) {
   if (meal.id.startsWith("new-recipe-")) {
     const recipeDetails: RecipeDetails = await generateRecipeDetails({
       prompt: `A ${cuisine} ${meal.title} recipe suitable for ${mealType}. Description: ${meal.description}`,
+      language,
     });
     const newRecipeId = await addRecipe(recipeDetails);
     return { ...meal, id: newRecipeId, title: recipeDetails.name };

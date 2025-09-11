@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
@@ -62,6 +61,7 @@ import {
   refreshRecipesAction,
   addRecipeAction,
 } from "@/app/recipes/actions";
+import { useLanguageStore } from "@/hooks/use-language-store";
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -123,14 +123,12 @@ type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
 };
 
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
-  const [state, formAction, isPending] = useActionState(
-    generatePlanAction,
-    initialState,
-  );
+  const [state, formAction] = useActionState(generatePlanAction, initialState);
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients(recipes);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const { language } = useLanguageStore();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -207,7 +205,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     }
   }, [state, toast]);
 
-  if (isPending) {
+  if (useFormStatus().pending) {
     return (
       <Card className="mt-6">
         <CardHeader>
@@ -339,6 +337,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             );
 
             combinedData.append("recipes", JSON.stringify(recipes));
+            combinedData.append("language", language);
 
             form.handleSubmit(() => formAction(combinedData))();
           }}
