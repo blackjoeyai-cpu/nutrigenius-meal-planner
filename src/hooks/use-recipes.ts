@@ -6,6 +6,7 @@ import {
   getRecipes as fetchRecipes,
   addRecipe as saveRecipe,
 } from "@/services/recipe-service";
+import { addRecipeAction } from "@/app/(app)/recipes/actions";
 
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -29,7 +30,7 @@ export const useRecipes = () => {
   const addRecipe = useCallback(
     async (newRecipe: Omit<Recipe, "id" | "imageId">) => {
       try {
-        await saveRecipe(newRecipe);
+        await addRecipeAction(newRecipe);
         // Refresh recipes after adding a new one
         await loadRecipes();
       } catch (error) {
