@@ -75,6 +75,13 @@ export async function createMealPlan(prevState: any, formData: FormData) {
   }
 }
 
+const MealSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  calories: z.number(),
+});
+
 const RegenerateMealSchema = z.object({
     dietaryPreferences: z.string(),
     calorieTarget: z.coerce.number(),
@@ -85,16 +92,18 @@ const RegenerateMealSchema = z.object({
     generationSource: z.enum(["catalog", "new", "combined"]),
     mealToRegenerate: z.enum(["breakfast", "lunch", "dinner"]),
     currentMeals: z.object({
-        breakfast: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }).optional(),
-        lunch: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }).optional(),
-        dinner: z.object({ id: z.string(), title: z.string(), description: z.string(), calories: z.number() }).optional(),
+        breakfast: MealSchema.optional(),
+        lunch: MealSchema.optional(),
+        dinner: MealSchema.optional(),
     }),
+    mealToReplace: MealSchema,
 });
 
 export async function regenerateMealAction(input: z.infer<typeof RegenerateMealSchema>) {
     const validatedFields = RegenerateMealSchema.safeParse(input);
 
     if (!validatedFields.success) {
+        console.error("Regeneration validation error:", validatedFields.error.flatten());
         return { success: false, message: "Invalid input." };
     }
 

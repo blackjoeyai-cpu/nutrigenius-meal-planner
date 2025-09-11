@@ -38,6 +38,7 @@ const RegenerateSingleMealInputSchema = z.object({
     lunch: MealSchema.optional(),
     dinner: MealSchema.optional(),
   }).describe("The other meals in the day that are not being regenerated, to provide context."),
+  mealToReplace: MealSchema.describe("The meal that the user wants to replace."),
 });
 
 export type RegenerateSingleMealInput = z.infer<typeof RegenerateSingleMealInputSchema>;
@@ -55,6 +56,8 @@ const prompt = ai.definePrompt({
   output: {schema: MealSchema},
   prompt: `You are a nutritionist tasked with revising a daily meal plan for a user.
   The user wants to regenerate their {{{mealToRegenerate}}}.
+
+  **Crucially, you MUST generate a new recipe that is different from the previous one, which was "{{mealToReplace.title}}".**
 
   User's Preferences:
   - Dietary Preferences: {{{dietaryPreferences}}}
@@ -79,6 +82,7 @@ const prompt = ai.definePrompt({
 
   Your Task:
   - Generate a new recipe for the {{{mealToRegenerate}}}.
+  - The new meal should be different from "{{mealToReplace.title}}".
   - The new meal should complement the existing meals and align with the user's preferences.
   - Try to make the total daily calories (new meal + existing meals) come close to the {{{calorieTarget}}}.
 
@@ -92,7 +96,7 @@ const prompt = ai.definePrompt({
   {{{availableRecipes}}}
   {{/if}}
 
-  Return a single JSON object for the new {{{mealToRegagerate}}} meal.
+  Return a single JSON object for the new {{{mealToRegenerate}}} meal.
   The meal object must have an "id", "title", "description", and "calories".
   - If you select a recipe from the catalog, the "id" MUST be the original id.
   - If you generate a new recipe, the "id" should be a placeholder like "new-recipe-{{mealToRegenerate}}".`,

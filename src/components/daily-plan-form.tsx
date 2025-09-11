@@ -134,6 +134,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
 
     setIsRegenerating(mealType);
 
+    const mealToReplace = generatedPlan.days[0][mealType];
     const currentMeals: Partial<DailyPlan> = { ...generatedPlan.days[0] };
     delete currentMeals[mealType];
 
@@ -147,6 +148,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       generationSource: generationSource as "catalog" | "new" | "combined",
       mealToRegenerate: mealType,
       currentMeals,
+      mealToReplace,
     };
 
     const result = await regenerateMealAction(input);
@@ -154,7 +156,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     if (result.success && result.meal) {
       const newPlan = { ...generatedPlan };
       newPlan.days[0][mealType] = result.meal;
-      setGeneratedPlan(newPlan);
+      setGeneratedPlan(newPlan as ParsedPlan);
       toast({
         title: "Meal Regenerated!",
         description: `Your ${mealType} has been updated.`,
