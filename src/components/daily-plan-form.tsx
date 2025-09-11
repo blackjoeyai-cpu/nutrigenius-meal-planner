@@ -1,9 +1,11 @@
 
 "use client";
 
-import { useState, useEffect, Fragment } from "react";
+import { useState, useEffect } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Sparkles,
   Loader2,
@@ -37,7 +39,7 @@ import {
   createMealPlan,
   saveDailyPlan,
   regenerateMealAction,
-} from "@/app/[locale]/generate/actions";
+} from "@/app/generate/actions";
 import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { useIngredients } from "@/hooks/use-ingredients";
@@ -46,13 +48,11 @@ import { AddRecipeDialog } from "@/components/add-recipe-dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { Recipe, MealPlan, DailyPlan, RecipeDetails } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter, useSearchParams, Link } from "next-intl/navigation";
 import { Skeleton } from "./ui/skeleton";
-import { useTranslations, useLocale } from "next-intl";
 import {
   refreshRecipesAction,
   addRecipeAction,
-} from "@/app/[locale]/recipes/actions";
+} from "@/app/recipes/actions";
 
 const initialState = {
   message: "",
@@ -95,7 +95,11 @@ type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
 
 type MealType = "breakfast" | "lunch" | "dinner";
 
-export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }) {
+export function DailyPlanForm({
+  recipes: initialRecipes,
+}: {
+  recipes: Recipe[];
+}) {
   const [state, formAction, isPending] = useActionState(
     createMealPlan,
     initialState,
@@ -105,8 +109,6 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const t = useTranslations("DailyPlanForm");
-  const locale = useLocale();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -160,15 +162,15 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
     setIsSaving(false);
     if (result.success) {
       toast({
-        title: t("success"),
+        title: "Success",
         description: planId
-          ? t("success_plan_updated")
-          : t("success_plan_saved"),
+          ? "Your meal plan has been updated."
+          : "Your meal plan has been saved.",
       });
       router.push("/plans");
     } else {
       toast({
-        title: t("error"),
+        title: "Error",
         description: result.message,
         variant: "destructive",
       });
@@ -202,7 +204,6 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
       mealToRegenerate: mealType,
       currentMeals,
       mealToReplace,
-      language: locale === "ms" ? "Malay" : undefined,
     };
 
     const result = await regenerateMealAction(input);
@@ -212,15 +213,13 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
       newPlan.days[0][mealType] = result.meal;
       setGeneratedPlan(newPlan as ParsedPlan);
       toast({
-        title: t("success_meal_regenerated"),
-        description: t("success_meal_regenerated_desc", {
-          mealType: t(mealType),
-        }),
+        title: "Meal Regenerated!",
+        description: `Your ${mealType} has been updated.`,
       });
     } else {
       toast({
-        title: t("error"),
-        description: result.message || t("error_regenerating_meal"),
+        title: "Error",
+        description: result.message || "Failed to regenerate meal.",
         variant: "destructive",
       });
     }
@@ -238,6 +237,7 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
     const isNewRecipe = meal.id.startsWith("new-recipe-");
     const Wrapper = isNewRecipe ? "div" : Link;
     const props = isNewRecipe ? {} : { href: `/recipes/${meal.id}` };
+    const mealTypeTitle = mealType.charAt(0).toUpperCase() + mealType.slice(1);
 
     return (
       <Wrapper {...props} className="group block">
@@ -265,11 +265,9 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
           </Button>
           <CardHeader>
             <CardTitle>
-              {t(mealType)}: {meal.title}
+              {mealTypeTitle}: {meal.title}
             </CardTitle>
-            <CardDescription>
-              {meal.calories} {t("calories_short")}
-            </CardDescription>
+            <CardDescription>{meal.calories} calories</CardDescription>
           </CardHeader>
           <CardContent>
             <p>{meal.description}</p>
@@ -299,30 +297,34 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <CardHeader>
             <CardTitle>
-              {planId ? t("regenerate_daily_plan") : t("create_daily_plan")}
+              {planId
+                ? "Regenerate Daily Meal Plan"
+                : "Create Your Daily Meal Plan"}
             </CardTitle>
             <CardDescription>
               {planId
-                ? t("regenerate_daily_plan_desc")
-                : t("create_daily_plan_desc")}
+                ? "Adjust preferences and generate an updated plan for this day."
+                : "Provide your details and let our AI create a personalized meal plan for you."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {isCatalogGenerationBlocked && (
               <Alert variant="destructive">
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>{t("not_enough_recipes")}</AlertTitle>
+                <AlertTitle>Not Enough Recipes</AlertTitle>
                 <AlertDescription>
-                  {t("not_enough_recipes_desc_daily")}
+                  You need more than 3 recipes in your collection to generate a
+                  meal plan from your catalog. Please add more recipes, or
+                  choose a different generation source.
                 </AlertDescription>
                 <div className="mt-4">
-                   <AddRecipeDialog
+                  <AddRecipeDialog
                     onRecipeAdd={handleRecipeAdd}
                     onRecipeUpdate={handleRecipeUpdate}
                   >
                     <Button type="button" variant="secondary">
                       <PlusCircle className="mr-2 h-4 w-4" />
-                      {t("add_recipe")}
+                      Add Recipe
                     </Button>
                   </AddRecipeDialog>
                 </div>
@@ -330,7 +332,7 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
             )}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>{t("generation_source")}</Label>
+                <Label>Generation Source</Label>
                 <RadioGroup
                   name="generationSource"
                   value={generationSource}
@@ -339,21 +341,23 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="catalog" id="catalog" />
-                    <Label htmlFor="catalog">{t("source_catalog")}</Label>
+                    <Label htmlFor="catalog">Use my existing recipes</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="new" id="new" />
-                    <Label htmlFor="new">{t("source_new")}</Label>
+                    <Label htmlFor="new">Generate all new recipes</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="combined" id="combined" />
-                    <Label htmlFor="combined">{t("source_combined")}</Label>
+                    <Label htmlFor="combined">
+                      Combine existing and new recipes
+                    </Label>
                   </div>
                 </RadioGroup>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dietaryPreferences">
-                  {t("dietary_preferences")}
+                  Dietary Preferences
                 </Label>
                 <Select
                   name="dietaryPreferences"
@@ -361,7 +365,7 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
                   onValueChange={setDietaryPreferences}
                 >
                   <SelectTrigger id="dietaryPreferences">
-                    <SelectValue placeholder={t("select_preference")} />
+                    <SelectValue placeholder="Select a preference" />
                   </SelectTrigger>
                   <SelectContent>
                     {DIETARY_PREFERENCES.map((pref) => (
@@ -373,14 +377,14 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="cuisine">{t("cuisine")}</Label>
+                <Label htmlFor="cuisine">Cuisine</Label>
                 <Select
                   name="cuisine"
                   value={cuisine}
                   onValueChange={setCuisine}
                 >
                   <SelectTrigger id="cuisine">
-                    <SelectValue placeholder={t("select_cuisine")} />
+                    <SelectValue placeholder="Select a cuisine" />
                   </SelectTrigger>
                   <SelectContent>
                     {CUISINES.map((c) => (
@@ -392,7 +396,7 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="calorieTarget">{t("calorie_target")}</Label>
+                <Label htmlFor="calorieTarget">Daily Calorie Target</Label>
                 <Input
                   id="calorieTarget"
                   name="calorieTarget"
@@ -403,29 +407,29 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="ingredients">{t("ingredients_on_hand")}</Label>
+                <Label htmlFor="ingredients">Ingredients on Hand</Label>
                 <MultiSelect
                   options={ingredients.map((i) => ({ value: i, label: i }))}
                   selected={selectedIngredients}
                   onChange={setSelectedIngredients}
                   className="w-full"
-                  placeholder={t("select_ingredients")}
+                  placeholder="Select ingredients you have..."
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t("ingredients_on_hand_desc")}
+                  Select ingredients you have to be included in the meal plan.
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="allergies">{t("allergies")}</Label>
+                <Label htmlFor="allergies">Allergies or Restrictions</Label>
                 <Textarea
                   id="allergies"
                   name="allergies"
-                  placeholder={t("allergies_placeholder")}
+                  placeholder="e.g., peanuts, shellfish, dairy"
                   value={allergies}
                   onChange={(e) => setAllergies(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
-                  {t("allergies_desc")}
+                  Separate items with a comma.
                 </p>
               </div>
             </div>
@@ -433,7 +437,7 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
           <CardFooter>
             <SubmitButton
               disabled={isCatalogGenerationBlocked}
-              text={t("generate_meal_plan")}
+              text="Generate Meal Plan"
             />
           </CardFooter>
         </form>
@@ -442,13 +446,13 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="text-2xl font-bold font-headline">
-            {t("your_generated_plan")}
+            Your Generated Plan
           </h3>
           {generatedPlan && !isPending && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Flame className="h-4 w-4" />
               <span>
-                {t("total_calories")}: {totalCalories}
+                Total Calories: {totalCalories}
               </span>
             </div>
           )}
@@ -497,8 +501,11 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
             <MealCard mealType="dinner" meal={generatedPlan.days[0].dinner} />
             <Card>
               <CardHeader>
-                <CardTitle>{t("happy_with_plan")}</CardTitle>
-                <CardDescription>{t("happy_with_plan_desc")}</CardDescription>
+                <CardTitle>Happy with this plan?</CardTitle>
+                <CardDescription>
+                  Save it to your calendar or discard it and generate a new
+                  one.
+                </CardDescription>
               </CardHeader>
               <CardFooter className="flex gap-4">
                 <Button onClick={handleSave} disabled={isSaving}>
@@ -507,11 +514,11 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
                   ) : (
                     <Save className="mr-2 h-4 w-4" />
                   )}
-                  {t("save_plan")}
+                  Save Plan
                 </Button>
                 <Button variant="outline" onClick={handleDiscard}>
                   <XCircle className="mr-2 h-4 w-4" />
-                  {t("discard")}
+                  Discard
                 </Button>
               </CardFooter>
             </Card>
@@ -521,10 +528,10 @@ export function DailyPlanForm({ recipes: initialRecipes }: { recipes: Recipe[] }
             <CardContent className="p-6">
               <Sparkles className="mx-auto h-12 w-12 text-muted-foreground" />
               <h4 className="mt-4 text-lg font-semibold">
-                {t("plan_will_appear_here")}
+                Your meal plan will appear here
               </h4>
               <p className="mt-1 text-muted-foreground">
-                {t("fill_form_to_start")}
+                Fill out the form to get started.
               </p>
               {state.message && !state.mealPlan && (
                 <p className="mt-4 text-sm text-destructive">{state.message}</p>

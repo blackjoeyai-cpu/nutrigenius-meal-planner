@@ -2,8 +2,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { usePathname, useRouter, useSearchParams } from "next-intl/navigation";
-import { useTranslations } from "next-intl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -26,7 +25,6 @@ export function RecipeFilter({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const t = useTranslations("RecipesPage");
   const [isPending, startTransition] = useTransition();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get("query") || "");
@@ -83,7 +81,7 @@ export function RecipeFilter({
     <div className="space-y-4">
       <div className="flex flex-col gap-4 md:flex-row">
         <Input
-          placeholder={t("search_recipes_placeholder")}
+          placeholder="Search recipes or ingredients..."
           className="flex-grow"
           value={searchTerm}
           onChange={handleSearchChange}
@@ -95,7 +93,7 @@ export function RecipeFilter({
           disabled={isPending}
         >
           <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder={t("filter_by_cuisine")} />
+            <SelectValue placeholder="Filter by cuisine" />
           </SelectTrigger>
           <SelectContent>
             {CUISINES.map((cuisine) => (

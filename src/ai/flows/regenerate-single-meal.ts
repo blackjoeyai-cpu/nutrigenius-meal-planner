@@ -66,12 +66,6 @@ const RegenerateSingleMealInputSchema = z.object({
   mealToReplace: MealSchema.describe(
     "The meal that the user wants to replace.",
   ),
-  language: z
-    .string()
-    .optional()
-    .describe(
-      "The language for the recipe to be generated in, e.g., 'Malay'.",
-    ),
 });
 
 export type RegenerateSingleMealInput = z.infer<
@@ -103,11 +97,7 @@ const prompt = ai.definePrompt({
   - Ingredients on hand: {{{ingredients}}}
   {{/if}}
 
-  {{#if language}}
-  If you generate any new recipes, the entire recipe output (title, description) MUST be in the following language: {{{language}}}.
-  {{else}}
   Any new recipes you generate MUST be in English.
-  {{/if}}
 
   Context of the current plan:
   The user is keeping the following meals for the day:

@@ -1,9 +1,9 @@
 
 "use client";
 
-import { usePathname, Link } from "next-intl/navigation";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from "lucide-react";
-import { useTranslations } from 'next-intl';
 
 import {
   SidebarProvider,
@@ -23,33 +23,33 @@ import { useIsMobile } from "@/hooks/use-mobile";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
-  const t = useTranslations('Navigation'); 
 
   const menuItems = [
     {
       href: "/recipes",
-      label: t("recipes"),
+      label: "Recipes",
       icon: BookOpen,
     },
     {
       href: "/generate",
-      label: t("generate_plan"),
+      label: "Generate Plan",
       icon: Sparkles,
     },
     {
       href: "/plans",
-      label: t("my_plans"),
+      label: "My Plans",
       icon: CalendarDays,
     },
     {
       href: "/settings",
-      label: t("settings"),
+      label: "Settings",
       icon: Settings,
     },
   ];
 
   const currentLabel =
-    menuItems.find((item) => pathname.includes(item.href))?.label || "NutriGenius";
+    menuItems.find((item) => pathname.includes(item.href))?.label ||
+    "NutriGenius";
 
   if (isMobile === undefined) {
     return null;

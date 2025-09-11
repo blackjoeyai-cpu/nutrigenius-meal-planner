@@ -39,11 +39,9 @@ import { useState, useEffect } from "react";
 import {
   generateRecipeAction,
   updateRecipeAction,
-  addRecipeAction,
-} from "@/app/[locale]/recipes/actions";
+} from "@/app/recipes/actions";
 import { Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useTranslations, useLocale } from "next-intl";
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -89,8 +87,6 @@ export function AddRecipeDialog({
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState("");
   const { toast } = useToast();
-  const t = useTranslations("AddRecipeDialog");
-  const locale = useLocale();
   const isEditMode = !!recipeToEdit;
 
   const form = useForm<RecipeFormValues>({
@@ -142,7 +138,6 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
-        language: locale === "ms" ? "Malay" : undefined,
       });
       if (result) {
         form.reset({
@@ -168,8 +163,8 @@ export function AddRecipeDialog({
     } catch (error) {
       console.error("Failed to generate recipe:", error);
       toast({
-        title: t("error"),
-        description: t("error_generating_recipe"),
+        title: "Error",
+        description: "Failed to generate recipe. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -197,14 +192,14 @@ export function AddRecipeDialog({
         await updateRecipeAction(recipeToEdit.id, recipeData);
         await onRecipeUpdate();
         toast({
-          title: t("success"),
-          description: t("success_recipe_updated"),
+          title: "Success",
+          description: "Recipe updated successfully.",
         });
       } else {
         await onRecipeAdd(recipeData);
         toast({
-          title: t("success"),
-          description: t("success_recipe_added"),
+          title: "Success",
+          description: "Recipe added successfully.",
         });
       }
       setOpen(false);
@@ -212,10 +207,10 @@ export function AddRecipeDialog({
       setGenerationPrompt("");
     } catch (error) {
       toast({
-        title: t("error"),
+        title: "Error",
         description: isEditMode
-          ? t("error_updating_recipe")
-          : t("error_adding_recipe"),
+          ? "Failed to update recipe."
+          : "Failed to add recipe.",
         variant: "destructive",
       });
     }
@@ -231,22 +226,22 @@ export function AddRecipeDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? t("edit_recipe") : t("add_new_recipe")}
+            {isEditMode ? "Edit Recipe" : "Add a New Recipe"}
           </DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? t("edit_recipe_description")
-              : t("add_new_recipe_description")}
+              ? "Update the details for your recipe."
+              : "Fill out the form below or use AI to generate a new recipe."}
           </DialogDescription>
         </DialogHeader>
 
         {!isEditMode && (
           <div className="space-y-4 rounded-md border p-4">
             <div className="space-y-2">
-              <Label htmlFor="generation-prompt">{t("generate_with_ai")}</Label>
+              <Label htmlFor="generation-prompt">Generate with AI</Label>
               <Textarea
                 id="generation-prompt"
-                placeholder={t("generate_with_ai_placeholder")}
+                placeholder="e.g., A healthy and spicy salmon dish with roasted vegetables"
                 value={generationPrompt}
                 onChange={(e) => setGenerationPrompt(e.target.value)}
               />
@@ -259,12 +254,12 @@ export function AddRecipeDialog({
               {isGenerating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("generating")}...
+                  Generating...
                 </>
               ) : (
                 <>
                   <Sparkles className="mr-2 h-4 w-4" />
-                  {t("generate_recipe")}
+                  Generate Recipe
                 </>
               )}
             </Button>
@@ -280,10 +275,10 @@ export function AddRecipeDialog({
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("recipe_name")}</FormLabel>
+                      <FormLabel>Recipe Name</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder={t("recipe_name_placeholder")}
+                          placeholder="e.g., Spicy Chicken Curry"
                           {...field}
                         />
                       </FormControl>
@@ -298,14 +293,14 @@ export function AddRecipeDialog({
                     name="cuisine"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("cuisine")}</FormLabel>
+                        <FormLabel>Cuisine</FormLabel>
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder={t("select_cuisine")} />
+                              <SelectValue placeholder="Select a cuisine" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -325,7 +320,7 @@ export function AddRecipeDialog({
                     name="dietaryTags"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("dietary_tags")}</FormLabel>
+                        <FormLabel>Dietary Tags</FormLabel>
                         <FormControl>
                           <MultiSelect
                             options={DIETARY_PREFERENCES.map((p) => ({
@@ -334,7 +329,7 @@ export function AddRecipeDialog({
                             }))}
                             selected={field.value}
                             onChange={field.onChange}
-                            placeholder={t("select_tags")}
+                            placeholder="Select tags..."
                           />
                         </FormControl>
                         <FormMessage />
@@ -347,7 +342,7 @@ export function AddRecipeDialog({
                   name="mealTypes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("meal_types")}</FormLabel>
+                      <FormLabel>Meal Types</FormLabel>
                       <FormControl>
                         <MultiSelect
                           options={MEAL_TYPES.map((p) => ({
@@ -356,7 +351,7 @@ export function AddRecipeDialog({
                           }))}
                           selected={field.value}
                           onChange={field.onChange}
-                          placeholder={t("select_meal_types")}
+                          placeholder="Select meal types..."
                         />
                       </FormControl>
                       <FormMessage />
@@ -369,10 +364,10 @@ export function AddRecipeDialog({
                   name="ingredients"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("ingredients")}</FormLabel>
+                      <FormLabel>Ingredients</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder={t("ingredients_placeholder")}
+                          placeholder="Enter each ingredient on a new line, e.g., '1 cup flour'"
                           className="min-h-[100px]"
                           {...field}
                         />
@@ -387,10 +382,10 @@ export function AddRecipeDialog({
                   name="instructions"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>{t("instructions")}</FormLabel>
+                      <FormLabel>Instructions</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder={t("instructions_placeholder")}
+                          placeholder="Enter each step on a new line."
                           className="min-h-[150px]"
                           {...field}
                         />
@@ -406,7 +401,7 @@ export function AddRecipeDialog({
                     name="prepTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("prep_time")}</FormLabel>
+                        <FormLabel>Prep Time (min)</FormLabel>
                         <FormControl>
                           <Input type="number" {...field} />
                         </FormControl>
@@ -419,7 +414,7 @@ export function AddRecipeDialog({
                     name="cookTime"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("cook_time")}</FormLabel>
+                        <FormLabel>Cook Time (min)</FormLabel>
                         <FormControl>
                           <Input type="number" {...field} />
                         </FormControl>
@@ -432,7 +427,7 @@ export function AddRecipeDialog({
                     name="servings"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t("servings")}</FormLabel>
+                        <FormLabel>Servings</FormLabel>
                         <FormControl>
                           <Input type="number" {...field} />
                         </FormControl>
@@ -444,7 +439,7 @@ export function AddRecipeDialog({
 
                 <div>
                   <h4 className="mb-4 font-medium">
-                    {t("nutritional_information")}
+                    Nutritional Information (per serving)
                   </h4>
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <FormField
@@ -452,7 +447,7 @@ export function AddRecipeDialog({
                       name="nutrition.calories"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("calories")}</FormLabel>
+                          <FormLabel>Calories</FormLabel>
                           <FormControl>
                             <Input type="number" {...field} />
                           </FormControl>
@@ -465,7 +460,7 @@ export function AddRecipeDialog({
                       name="nutrition.protein"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("protein")}</FormLabel>
+                          <FormLabel>Protein (g)</FormLabel>
                           <FormControl>
                             <Input type="number" {...field} />
                           </FormControl>
@@ -478,7 +473,7 @@ export function AddRecipeDialog({
                       name="nutrition.carbs"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("carbs")}</FormLabel>
+                          <FormLabel>Carbs (g)</FormLabel>
                           <FormControl>
                             <Input type="number" {...field} />
                           </FormControl>
@@ -491,7 +486,7 @@ export function AddRecipeDialog({
                       name="nutrition.fat"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>{t("fat")}</FormLabel>
+                          <FormLabel>Fat (g)</FormLabel>
                           <FormControl>
                             <Input type="number" {...field} />
                           </FormControl>
@@ -509,10 +504,10 @@ export function AddRecipeDialog({
                 variant="ghost"
                 onClick={() => setOpen(false)}
               >
-                {t("cancel")}
+                Cancel
               </Button>
               <Button type="submit">
-                {isEditMode ? t("update_recipe") : t("add_recipe")}
+                {isEditMode ? "Update Recipe" : "Add Recipe"}
               </Button>
             </DialogFooter>
           </form>

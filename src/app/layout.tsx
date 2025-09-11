@@ -3,6 +3,7 @@ import { PT_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import AppShell from "@/components/app-shell";
 
 const ptSans = PT_Sans({
   subsets: ["latin"],
@@ -35,7 +36,7 @@ export default function RootLayout({
           ptSansHeadline.variable,
         )}
       >
-        {children}
+        <AppShell>{children}</AppShell>
         <Toaster />
       </body>
     </html>

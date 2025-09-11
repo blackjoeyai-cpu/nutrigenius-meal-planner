@@ -1,8 +1,7 @@
 
 "use client";
 
-import { Link } from "next-intl/navigation";
-import { useTranslations } from "next-intl";
+import Link from "next/link";
 
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,8 +20,6 @@ export function RecipesList({
   initialCuisine: string;
   initialMealType: string;
 }) {
-  const t = useTranslations("RecipesPage");
-
   const filteredRecipes = recipes.filter((recipe) => {
     const matchesSearch =
       initialQuery === "" ||
@@ -72,8 +69,10 @@ export function RecipesList({
       </div>
       {filteredRecipes.length === 0 && (
         <div className="col-span-full mt-4 flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-24 text-center">
-          <h3 className="text-xl font-semibold">{t("no_recipes_found")}</h3>
-          <p className="text-muted-foreground">{t("no_recipes_found_desc")}</p>
+          <h3 className="text-xl font-semibold">No Recipes Found</h3>
+          <p className="text-muted-foreground">
+            Try adjusting your search or filters.
+          </p>
         </div>
       )}
     </div>
