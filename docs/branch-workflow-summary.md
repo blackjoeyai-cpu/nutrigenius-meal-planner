@@ -11,40 +11,50 @@ feature/* → dev → release → main
 ## Components Implemented
 
 ### 1. GitHub Actions Workflow
+
 **File**: `.github/workflows/branch-protection.yml`
 
 Enforces branch merging rules at the PR level:
+
 - Only allows `release` → `main` merges
 - Only allows `dev` → `release` merges
 - Prevents `main` and `release` from merging into `dev`
 
 ### 2. Git Hooks
-**Files**: 
+
+**Files**:
+
 - `.git/hooks/pre-commit` (installed automatically)
 - `scripts/check-branch-source.sh` (helper script)
 
 Prevents direct commits to protected branches (`main`, `release`, `dev`)
 
 ### 3. Branch Creation Helper
+
 **File**: `scripts/create-feature-branch.sh`
 
 Script to properly create feature branches from `dev`:
+
 ```bash
 ./scripts/create-feature-branch.sh feature-name
 ```
 
 ### 4. Merge Workflow Helper
+
 **File**: `scripts/merge-workflow.sh`
 
 Interactive script to guide developers through the proper merge sequence
 
 ### 5. Documentation
+
 **Files**:
+
 - `docs/branching-strategy.md` - Complete branching strategy documentation
 - `docs/github-branch-protection.md` - Instructions for setting up GitHub branch protection
 - Updated `README.md` with branching strategy information
 
 ### 6. Pull Request Template
+
 **File**: `.github/pull_request_template.md`
 
 Template that reminds developers of the branching strategy when creating PRs
@@ -52,6 +62,7 @@ Template that reminds developers of the branching strategy when creating PRs
 ## Setup Instructions
 
 1. The Git hooks are automatically installed when you run:
+
    ```bash
    ./scripts/setup-branching-rules.sh
    ```
