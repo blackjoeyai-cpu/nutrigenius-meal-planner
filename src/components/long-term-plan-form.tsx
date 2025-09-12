@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useActionState, useEffect, useState, Fragment } from "react";
@@ -262,12 +261,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                             <Card className="transition-shadow group-hover:shadow-md">
                               <CardHeader>
                                 <CardTitle className="text-lg">
-                                  {
-                                    ["Breakfast", "Lunch", "Dinner"][
-                                      mealIndex
-                                    ]
-                                  }
-                                  : {meal.title}
+                                  {["Breakfast", "Lunch", "Dinner"][mealIndex]}:{" "}
+                                  {meal.title}
                                 </CardTitle>
                                 <CardDescription>
                                   {meal.calories} calories
