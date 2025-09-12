@@ -102,7 +102,7 @@ This project uses automated versioning that occurs only when merging from `dev` 
 
 1. **Version Creation**: New versions are created only when merging from `dev` to `release`
 2. **Version Format**: `v{major}.{minor}.{patch}` (e.g., `v1.2.3`)
-3. **Version Bumping**: 
+3. **Version Bumping**:
    - Automatically determined by commit messages:
      - `feat`: Minor version bump
      - `fix`: Patch version bump
@@ -124,9 +124,7 @@ This project uses automated versioning that occurs only when merging from `dev` 
    - Deploy the existing version to production
    - Use the same version that was created during the `dev` to `release` merge
 
-The release process is fully automated through GitHub Actions and requires no manual intervention for version creation or deployment.
-5. Direct commits to `main`, `release`, and `dev` are prohibited
-6. All merges to `release` and `main` must go through pull requests with all checks passing
+The release process is fully automated through GitHub Actions and requires no manual intervention for version creation or deployment. 5. Direct commits to `main`, `release`, and `dev` are prohibited 6. All merges to `release` and `main` must go through pull requests with all checks passing
 
 ### Setup
 
