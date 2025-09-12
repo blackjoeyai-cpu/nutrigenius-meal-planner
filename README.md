@@ -73,7 +73,7 @@ You can find these values in your Firebase project settings.
 
 ## Branching Strategy
 
-This project follows a branching strategy to ensure code quality and proper release management while allowing for flexibility in development.
+This project follows a strict branching strategy to ensure code quality, proper review processes, and controlled releases.
 
 ### Workflow Overview
 
@@ -82,7 +82,7 @@ feature/* → dev → release → main
 ```
 
 1. **Feature branches** are created from `dev`
-2. Feature branches can be merged directly into `dev` (no PR required)
+2. All merges require pull requests with code review and CI checks
 3. `dev` is merged into `release` through a pull request after testing
 4. `release` is merged into `main` through a pull request for production release
 
@@ -91,8 +91,9 @@ feature/* → dev → release → main
 1. All new branches must be created from `dev`
 2. Only `release` branch can be merged into `main` (through PR)
 3. Only `dev` branch can be merged into `release` (through PR)
-4. Feature branches can be merged directly into `dev`
-5. Direct commits to `release` and `main` branches are prohibited
+4. All merges must go through pull requests with code review
+5. Direct commits to any protected branch (`dev`, `release`, `main`) are prohibited
+6. Direct pushes to any protected branch are prohibited
 
 ## Release Process
 
@@ -124,7 +125,18 @@ This project uses automated versioning that occurs only when merging from `dev` 
    - Deploy the existing version to production
    - Use the same version that was created during the `dev` to `release` merge
 
-The release process is fully automated through GitHub Actions and requires no manual intervention for version creation or deployment. 5. Direct commits to `main`, `release`, and `dev` are prohibited 6. All merges to `release` and `main` must go through pull requests with all checks passing
+The release process is fully automated through GitHub Actions and requires no manual intervention for version creation or deployment.
+
+### Commit Message Format
+
+For proper versioning, please follow the conventional commit format:
+- `feat: Add new feature` (minor version bump)
+- `fix: Fix bug` (patch version bump)
+- `docs: Update documentation`
+- `style: Code formatting changes`
+- `refactor: Code refactoring`
+- `test: Add or update tests`
+- `chore: Maintenance tasks`
 
 ### Setup
 
