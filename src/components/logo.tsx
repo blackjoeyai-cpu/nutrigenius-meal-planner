@@ -3,16 +3,11 @@ import { cn } from '@/lib/utils';
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'flex items-center gap-2 text-lg font-bold text-primary',
-        className
-      )}
-    >
-      <div className="rounded-lg bg-primary/20 p-2">
-        <Leaf className="h-5 w-5 text-primary" />
+    <div className={cn('flex items-center gap-2 text-lg font-bold', className)}>
+      <div className="rounded-md bg-primary p-1.5">
+        <Leaf className="h-4 w-4 text-primary-foreground" />
       </div>
-      <span className="font-headline text-primary-foreground hidden group-data-[state=expanded]:sm:inline">
+      <span className="font-headline text-foreground hidden group-data-[state=expanded]:sm:inline">
         NutriGenius
       </span>
     </div>
