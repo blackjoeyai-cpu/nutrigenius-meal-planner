@@ -1,7 +1,7 @@
-"use server";
+'use server';
 
-import { db } from "@/lib/firebase";
-import type { Recipe } from "@/lib/types";
+import { db } from '@/lib/firebase';
+import type { Recipe } from '@/lib/types';
 import {
   collection,
   addDoc,
@@ -9,7 +9,7 @@ import {
   doc,
   getDoc,
   updateDoc,
-} from "firebase/firestore";
+} from 'firebase/firestore';
 
 /**
  * Adds a new recipe to the Firestore database.
@@ -17,17 +17,17 @@ import {
  * @returns The ID of the newly created recipe.
  */
 export async function addRecipe(
-  recipe: Omit<Recipe, "id" | "imageId">,
+  recipe: Omit<Recipe, 'id' | 'imageId'>
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, "recipes"), {
+    const docRef = await addDoc(collection(db, 'recipes'), {
       ...recipe,
       imageId: `recipe-${Math.floor(Math.random() * 9) + 1}`,
     });
     return docRef.id;
   } catch (e) {
-    console.error("Error adding document: ", e);
-    throw new Error("Could not add recipe to the database.");
+    console.error('Error adding document: ', e);
+    throw new Error('Could not add recipe to the database.');
   }
 }
 
@@ -38,14 +38,14 @@ export async function addRecipe(
  */
 export async function updateRecipe(
   id: string,
-  recipe: Omit<Recipe, "id" | "imageId">,
+  recipe: Omit<Recipe, 'id' | 'imageId'>
 ): Promise<void> {
   try {
-    const recipeRef = doc(db, "recipes", id);
+    const recipeRef = doc(db, 'recipes', id);
     await updateDoc(recipeRef, recipe);
   } catch (e) {
-    console.error("Error updating document: ", e);
-    throw new Error("Could not update recipe in the database.");
+    console.error('Error updating document: ', e);
+    throw new Error('Could not update recipe in the database.');
   }
 }
 
@@ -54,9 +54,9 @@ export async function updateRecipe(
  * @returns A promise that resolves to an array of recipes.
  */
 export async function getRecipes(): Promise<Recipe[]> {
-  const querySnapshot = await getDocs(collection(db, "recipes"));
+  const querySnapshot = await getDocs(collection(db, 'recipes'));
   const recipes: Recipe[] = [];
-  querySnapshot.forEach((doc) => {
+  querySnapshot.forEach(doc => {
     recipes.push({ id: doc.id, ...doc.data() } as Recipe);
   });
   return recipes;
@@ -68,7 +68,7 @@ export async function getRecipes(): Promise<Recipe[]> {
  * @returns A promise that resolves to the recipe object, or null if not found.
  */
 export async function getRecipeById(id: string): Promise<Recipe | null> {
-  const docRef = doc(db, "recipes", id);
+  const docRef = doc(db, 'recipes', id);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {

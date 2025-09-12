@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   PlusCircle,
   ChefHat,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   addDays,
   format,
@@ -20,21 +20,21 @@ import {
   subMonths,
   addMonths,
   isToday as checkIsToday,
-} from "date-fns";
+} from 'date-fns';
 
-import { Button } from "@/components/ui/button";
-import { getMealPlans } from "@/services/meal-plan-service";
-import type { MealPlan, DailyPlan } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from '@/components/ui/button';
+import { getMealPlans } from '@/services/meal-plan-service';
+import type { MealPlan, DailyPlan } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { Separator } from "@/components/ui/separator";
+} from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 type PlansByDate = Map<
   string,
@@ -61,18 +61,18 @@ export default function PlansPage() {
     const map: PlansByDate = new Map();
     if (!isLoaded) return map;
 
-    plans.forEach((plan) => {
+    plans.forEach(plan => {
       const startDate = startOfDay(new Date(plan.createdAt));
       plan.days.forEach((day, index) => {
         const date = addDays(startDate, index);
-        const dateKey = format(date, "yyyy-MM-dd");
+        const dateKey = format(date, 'yyyy-MM-dd');
         map.set(dateKey, { plan: day, planId: plan.id, details: plan });
       });
     });
     return map;
   }, [plans, isLoaded]);
 
-  const selectedDateKey = format(selectedDate, "yyyy-MM-dd");
+  const selectedDateKey = format(selectedDate, 'yyyy-MM-dd');
   const selectedDayData = plansByDate.get(selectedDateKey);
   const selectedDayPlan = selectedDayData?.plan;
 
@@ -81,7 +81,7 @@ export default function PlansPage() {
   const startingDayOfWeek = getDay(firstDayOfMonth); // 0 (Sun) to 6 (Sat)
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   const handleRegenerate = () => {
     if (!selectedDayData) return;
@@ -92,7 +92,7 @@ export default function PlansPage() {
       calorieTarget: details.calorieTarget.toString(),
       allergies: details.allergies,
       cuisine: details.cuisine,
-      date: format(selectedDate, "yyyy-MM-dd"),
+      date: format(selectedDate, 'yyyy-MM-dd'),
     }).toString();
     router.push(`/generate?${query}`);
   };
@@ -130,7 +130,7 @@ export default function PlansPage() {
             Select a date to view your meal plan.
           </p>
         </div>
-        <Button onClick={() => router.push("/generate")}>
+        <Button onClick={() => router.push('/generate')}>
           <PlusCircle className="mr-2 h-4 w-4" />
           Generate New Plan
         </Button>
@@ -141,7 +141,7 @@ export default function PlansPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between p-4">
               <h3 className="text-xl font-semibold font-headline">
-                {format(currentDate, "MMMM yyyy")}
+                {format(currentDate, 'MMMM yyyy')}
               </h3>
               <div className="flex items-center gap-2">
                 <Button
@@ -162,23 +162,23 @@ export default function PlansPage() {
             </CardHeader>
             <CardContent className="p-2 md:p-4">
               <div className="grid grid-cols-7 gap-1 text-center text-sm font-medium text-muted-foreground">
-                {weekDays.map((day) => (
+                {weekDays.map(day => (
                   <div key={day} className="py-2">
                     {day}
                   </div>
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
-                {emptyDays.map((d) => (
+                {emptyDays.map(d => (
                   <div key={`empty-${d}`} className="h-16"></div>
                 ))}
-                {days.map((day) => {
+                {days.map(day => {
                   const date = new Date(
                     currentDate.getFullYear(),
                     currentDate.getMonth(),
-                    day,
+                    day
                   );
-                  const dateKey = format(date, "yyyy-MM-dd");
+                  const dateKey = format(date, 'yyyy-MM-dd');
                   const hasPlan = plansByDate.has(dateKey);
                   const isSelected = selectedDateKey === dateKey;
                   const isToday = checkIsToday(date);
@@ -188,19 +188,19 @@ export default function PlansPage() {
                       key={day}
                       onClick={() => setSelectedDate(date)}
                       className={cn(
-                        "relative flex h-16 w-full items-start justify-start p-2 text-sm transition-colors rounded-md",
-                        "hover:bg-accent hover:text-accent-foreground",
+                        'relative flex h-16 w-full items-start justify-start p-2 text-sm transition-colors rounded-md',
+                        'hover:bg-accent hover:text-accent-foreground',
                         isSelected
-                          ? "bg-primary text-primary-foreground hover:bg-primary"
-                          : "bg-transparent",
-                        isToday && !isSelected && "bg-secondary/50",
+                          ? 'bg-primary text-primary-foreground hover:bg-primary'
+                          : 'bg-transparent',
+                        isToday && !isSelected && 'bg-secondary/50'
                       )}
                     >
                       <span
                         className={cn(
-                          "flex items-center justify-center rounded-full h-6 w-6",
+                          'flex items-center justify-center rounded-full h-6 w-6',
                           isSelected &&
-                            "bg-primary-foreground text-primary font-bold",
+                            'bg-primary-foreground text-primary font-bold'
                         )}
                       >
                         {day}
@@ -208,8 +208,8 @@ export default function PlansPage() {
                       {hasPlan && (
                         <span
                           className={cn(
-                            "absolute bottom-2 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full",
-                            isSelected ? "bg-primary-foreground" : "bg-primary",
+                            'absolute bottom-2 left-1/2 -translate-x-1/2 h-2 w-2 rounded-full',
+                            isSelected ? 'bg-primary-foreground' : 'bg-primary'
                           )}
                         />
                       )}
@@ -223,7 +223,7 @@ export default function PlansPage() {
 
         <div className="space-y-4 lg:col-span-1">
           <h3 className="text-2xl font-semibold font-headline">
-            {selectedDate ? format(selectedDate, "PPP") : "Select a date"}
+            {selectedDate ? format(selectedDate, 'PPP') : 'Select a date'}
           </h3>
           {selectedDayPlan ? (
             <div className="space-y-4 animate-in fade-in-0 zoom-in-95">

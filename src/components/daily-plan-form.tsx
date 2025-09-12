@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, Fragment } from "react";
-import { useActionState } from "react";
-import { useFormStatus } from "react-dom";
-import Link from "next/link";
+import { useState, useEffect, Fragment } from 'react';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+import Link from 'next/link';
 import {
   Sparkles,
   Loader2,
@@ -13,8 +13,8 @@ import {
   Save,
   XCircle,
   RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -22,36 +22,36 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import {
   createMealPlan,
   saveDailyPlan,
   regenerateMealAction,
-} from "@/app/(app)/generate/actions";
-import { DIETARY_PREFERENCES, CUISINES } from "@/lib/constants";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { useIngredients } from "@/hooks/use-ingredients";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AddRecipeDialog } from "@/components/add-recipe-dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import type { Recipe, MealPlan, DailyPlan } from "@/lib/types";
-import { useRecipes } from "@/hooks/use-recipes";
-import { useToast } from "@/hooks/use-toast";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Skeleton } from "./ui/skeleton";
+} from '@/app/(app)/generate/actions';
+import { DIETARY_PREFERENCES, CUISINES } from '@/lib/constants';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { useIngredients } from '@/hooks/use-ingredients';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AddRecipeDialog } from '@/components/add-recipe-dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import type { Recipe, MealPlan, DailyPlan } from '@/lib/types';
+import { useRecipes } from '@/hooks/use-recipes';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Skeleton } from './ui/skeleton';
 
 const initialState = {
-  message: "",
+  message: '',
   errors: null,
   mealPlan: null,
 };
@@ -79,16 +79,16 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
+type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
   generationSource: string;
 };
 
-type MealType = "breakfast" | "lunch" | "dinner";
+type MealType = 'breakfast' | 'lunch' | 'dinner';
 
 export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [state, formAction, isPending] = useActionState(
     createMealPlan,
-    initialState,
+    initialState
   );
   const { ingredients } = useIngredients();
   const { addRecipe } = useRecipes();
@@ -102,24 +102,24 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
 
   // Default values
   const [dietaryPreferences, setDietaryPreferences] = useState(
-    searchParams.get("dietaryPreferences") || DIETARY_PREFERENCES[0],
+    searchParams.get('dietaryPreferences') || DIETARY_PREFERENCES[0]
   );
   const [calorieTarget, setCalorieTarget] = useState(
-    searchParams.get("calorieTarget") || "2000",
+    searchParams.get('calorieTarget') || '2000'
   );
   const [allergies, setAllergies] = useState(
-    searchParams.get("allergies") || "",
+    searchParams.get('allergies') || ''
   );
   const [cuisine, setCuisine] = useState(
-    searchParams.get("cuisine") || CUISINES[0],
+    searchParams.get('cuisine') || CUISINES[0]
   );
   const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
-  const [generationSource, setGenerationSource] = useState("catalog");
+  const [generationSource, setGenerationSource] = useState('catalog');
   const [isSaving, setIsSaving] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState<MealType | null>(null);
 
-  const planId = searchParams.get("planId");
-  const date = searchParams.get("date");
+  const planId = searchParams.get('planId');
+  const date = searchParams.get('date');
 
   useEffect(() => {
     if (state.mealPlan) {
@@ -129,7 +129,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
 
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked =
-    generationSource === "catalog" && !hasEnoughRecipesForCatalog;
+    generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
   const totalCalories = generatedPlan
     ? generatedPlan.days[0].breakfast.calories +
@@ -151,15 +151,15 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     setIsSaving(false);
     if (result.success) {
       toast({
-        title: "Success!",
-        description: `Your meal plan has been ${planId ? "updated" : "saved"}.`,
+        title: 'Success!',
+        description: `Your meal plan has been ${planId ? 'updated' : 'saved'}.`,
       });
-      router.push("/plans");
+      router.push('/plans');
     } else {
       toast({
-        title: "Error",
+        title: 'Error',
         description: result.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -167,7 +167,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const handleDiscard = () => {
     setGeneratedPlan(null);
     state.mealPlan = null;
-    state.message = "";
+    state.message = '';
     state.errors = null;
   };
 
@@ -183,11 +183,11 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     const input = {
       dietaryPreferences,
       calorieTarget: parseInt(calorieTarget),
-      allergies: allergies || "none",
+      allergies: allergies || 'none',
       cuisine,
-      ingredients: selectedIngredients.join(","),
+      ingredients: selectedIngredients.join(','),
       availableRecipes: JSON.stringify(recipes),
-      generationSource: generationSource as "catalog" | "new" | "combined",
+      generationSource: generationSource as 'catalog' | 'new' | 'combined',
       mealToRegenerate: mealType,
       currentMeals,
       mealToReplace,
@@ -200,14 +200,14 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       newPlan.days[0][mealType] = result.meal;
       setGeneratedPlan(newPlan as ParsedPlan);
       toast({
-        title: "Meal Regenerated!",
+        title: 'Meal Regenerated!',
         description: `Your ${mealType} has been updated.`,
       });
     } else {
       toast({
-        title: "Error",
-        description: result.message || "Failed to regenerate meal.",
-        variant: "destructive",
+        title: 'Error',
+        description: result.message || 'Failed to regenerate meal.',
+        variant: 'destructive',
       });
     }
 
@@ -221,8 +221,8 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     mealType: MealType;
     meal: DailyPlan[MealType];
   }) => {
-    const isNewRecipe = meal.id.startsWith("new-recipe-");
-    const Wrapper = isNewRecipe ? "div" : Link;
+    const isNewRecipe = meal.id.startsWith('new-recipe-');
+    const Wrapper = isNewRecipe ? 'div' : Link;
     const props = isNewRecipe ? {} : { href: `/recipes/${meal.id}` };
 
     return (
@@ -232,7 +232,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             variant="ghost"
             size="icon"
             className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               e.stopPropagation();
               handleRegenerateMeal(mealType);
@@ -247,7 +247,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
           </Button>
           <CardHeader>
             <CardTitle>
-              {mealType.charAt(0).toUpperCase() + mealType.slice(1)}:{" "}
+              {mealType.charAt(0).toUpperCase() + mealType.slice(1)}:{' '}
               {meal.title}
             </CardTitle>
             <CardDescription>{meal.calories} calories</CardDescription>
@@ -267,17 +267,17 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
           <input
             type="hidden"
             name="ingredients"
-            value={selectedIngredients.join(",")}
+            value={selectedIngredients.join(',')}
           />
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <CardHeader>
             <CardTitle>
-              {planId ? "Regenerate" : "Create"} Your Daily Meal Plan
+              {planId ? 'Regenerate' : 'Create'} Your Daily Meal Plan
             </CardTitle>
             <CardDescription>
               {planId
-                ? "Adjust preferences and generate an updated plan for this day."
-                : "Provide your details and let our AI create a personalized meal plan for you."}
+                ? 'Adjust preferences and generate an updated plan for this day.'
+                : 'Provide your details and let our AI create a personalized meal plan for you.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -294,7 +294,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   <AddRecipeDialog
                     open={isAddDialogOpen}
                     onOpenChange={setIsAddDialogOpen}
-                    onRecipeAdd={(newRecipe) => {
+                    onRecipeAdd={newRecipe => {
                       addRecipe(newRecipe);
                       setIsAddDialogOpen(false);
                     }}
@@ -347,7 +347,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                     <SelectValue placeholder="Select a preference" />
                   </SelectTrigger>
                   <SelectContent>
-                    {DIETARY_PREFERENCES.map((pref) => (
+                    {DIETARY_PREFERENCES.map(pref => (
                       <SelectItem key={pref} value={pref}>
                         {pref}
                       </SelectItem>
@@ -366,7 +366,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                     <SelectValue placeholder="Select a cuisine" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CUISINES.map((c) => (
+                    {CUISINES.map(c => (
                       <SelectItem key={c} value={c}>
                         {c}
                       </SelectItem>
@@ -382,13 +382,13 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   type="number"
                   placeholder="e.g., 2000"
                   value={calorieTarget}
-                  onChange={(e) => setCalorieTarget(e.target.value)}
+                  onChange={e => setCalorieTarget(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ingredients">Ingredients on Hand</Label>
                 <MultiSelect
-                  options={ingredients.map((i) => ({ value: i, label: i }))}
+                  options={ingredients.map(i => ({ value: i, label: i }))}
                   selected={selectedIngredients}
                   onChange={setSelectedIngredients}
                   className="w-full"
@@ -405,7 +405,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   name="allergies"
                   placeholder="e.g., peanuts, shellfish, dairy"
                   value={allergies}
-                  onChange={(e) => setAllergies(e.target.value)}
+                  onChange={e => setAllergies(e.target.value)}
                 />
                 <p className="text-sm text-muted-foreground">
                   Separate items with a comma.

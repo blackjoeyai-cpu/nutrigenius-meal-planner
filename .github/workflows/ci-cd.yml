@@ -149,15 +149,15 @@ jobs:
             # Preview deployment
             DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --confirm)
           fi
-          
+
           # Extract clean URL from output (remove any trailing status text)
           DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[a-zA-Z0-9.-]+\.vercel\.app' | head -1)
-          
+
           # Fallback: if the above doesn't work, try a more general pattern
           if [ -z "$DEPLOYMENT_URL" ]; then
             DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^\s]+' | sed 's/[^a-zA-Z0-9./-].*$//' | head -1)
           fi
-          
+
           echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           echo "Deployment URL: $DEPLOYMENT_URL"
           echo "Full Vercel Output: $DEPLOYMENT_OUTPUT"

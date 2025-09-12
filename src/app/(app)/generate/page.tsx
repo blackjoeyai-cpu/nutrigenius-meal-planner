@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DailyPlanForm } from "@/components/daily-plan-form";
-import { LongTermPlanForm } from "@/components/long-term-plan-form";
-import { useRecipes } from "@/hooks/use-recipes";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DailyPlanForm } from '@/components/daily-plan-form';
+import { LongTermPlanForm } from '@/components/long-term-plan-form';
+import { useRecipes } from '@/hooks/use-recipes';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function GeneratePage() {
   const { recipes, isLoaded: recipesLoaded } = useRecipes();

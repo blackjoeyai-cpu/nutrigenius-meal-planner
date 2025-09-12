@@ -1,23 +1,23 @@
-import type { Metadata } from "next";
-import { PT_Sans } from "next/font/google";
-import { Toaster } from "@/components/ui/toaster";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { PT_Sans } from 'next/font/google';
+import { Toaster } from '@/components/ui/toaster';
+import './globals.css';
 
 const ptSans = PT_Sans({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-sans",
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-sans',
 });
 
 const ptSansHeadline = PT_Sans({
-  subsets: ["latin"],
-  weight: ["700"],
-  variable: "--font-headline",
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-headline',
 });
 
 export const metadata: Metadata = {
-  title: "NutriGenius",
-  description: "AI-powered meal planning and nutrition tracking.",
+  title: 'NutriGenius',
+  description: 'AI-powered meal planning and nutrition tracking.',
 };
 
 export default function RootLayout({

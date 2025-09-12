@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -19,36 +19,36 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from "@/lib/constants";
-import type { Recipe } from "@/lib/types";
-import { MultiSelect } from "./ui/multi-select";
-import { ScrollArea } from "./ui/scroll-area";
-import { useState, useEffect } from "react";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { CUISINES, DIETARY_PREFERENCES, MEAL_TYPES } from '@/lib/constants';
+import type { Recipe } from '@/lib/types';
+import { MultiSelect } from './ui/multi-select';
+import { ScrollArea } from './ui/scroll-area';
+import { useState, useEffect } from 'react';
 import {
   generateRecipeAction,
   updateRecipeAction,
-} from "@/app/(app)/recipes/actions";
-import { Loader2, Sparkles } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+} from '@/app/(app)/recipes/actions';
+import { Loader2, Sparkles } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const recipeFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  cuisine: z.string({ required_error: "Please select a cuisine." }),
-  mealTypes: z.array(z.string()).min(1, "Select at least one meal type."),
-  dietaryTags: z.array(z.string()).min(1, "Select at least one dietary tag."),
-  ingredients: z.string().min(1, "Please list ingredients."),
-  instructions: z.string().min(1, "Please provide instructions."),
+  name: z.string().min(2, 'Name must be at least 2 characters.'),
+  cuisine: z.string({ required_error: 'Please select a cuisine.' }),
+  mealTypes: z.array(z.string()).min(1, 'Select at least one meal type.'),
+  dietaryTags: z.array(z.string()).min(1, 'Select at least one dietary tag.'),
+  ingredients: z.string().min(1, 'Please list ingredients.'),
+  instructions: z.string().min(1, 'Please provide instructions.'),
   prepTime: z.coerce.number().min(0),
   cookTime: z.coerce.number().min(0),
   servings: z.coerce.number().min(1),
@@ -65,7 +65,7 @@ type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 type AddRecipeDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipeAdd: (recipe: Omit<Recipe, "id" | "imageId"> | Recipe) => void;
+  onRecipeAdd: (recipe: Omit<Recipe, 'id' | 'imageId'> | Recipe) => void;
   children: React.ReactNode;
   recipeToEdit?: Recipe;
 };
@@ -78,19 +78,19 @@ export function AddRecipeDialog({
   recipeToEdit,
 }: AddRecipeDialogProps) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationPrompt, setGenerationPrompt] = useState("");
+  const [generationPrompt, setGenerationPrompt] = useState('');
   const { toast } = useToast();
   const isEditMode = !!recipeToEdit;
 
   const form = useForm<RecipeFormValues>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
-      name: "",
-      cuisine: "Any",
+      name: '',
+      cuisine: 'Any',
       mealTypes: [],
       dietaryTags: [],
-      ingredients: "",
-      instructions: "",
+      ingredients: '',
+      instructions: '',
       prepTime: 0,
       cookTime: 0,
       servings: 1,
@@ -106,9 +106,9 @@ export function AddRecipeDialog({
         mealTypes: recipeToEdit.mealTypes,
         dietaryTags: recipeToEdit.dietaryTags,
         ingredients: recipeToEdit.ingredients
-          .map((i) => `${i.quantity} ${i.item}`)
-          .join("\n"),
-        instructions: recipeToEdit.instructions.join("\n"),
+          .map(i => `${i.quantity} ${i.item}`)
+          .join('\n'),
+        instructions: recipeToEdit.instructions.join('\n'),
         prepTime: recipeToEdit.prepTime,
         cookTime: recipeToEdit.cookTime,
         servings: recipeToEdit.servings,
@@ -121,7 +121,7 @@ export function AddRecipeDialog({
       });
     } else if (!open) {
       form.reset();
-      setGenerationPrompt("");
+      setGenerationPrompt('');
     }
   }, [recipeToEdit, open, form]);
 
@@ -131,7 +131,7 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
-        language: "Malay",
+        language: 'Malay',
       });
       if (result) {
         form.reset({
@@ -140,9 +140,9 @@ export function AddRecipeDialog({
           mealTypes: result.mealTypes,
           dietaryTags: result.dietaryTags,
           ingredients: result.ingredients
-            .map((i) => `${i.quantity} ${i.item}`)
-            .join("\n"),
-          instructions: result.instructions.join("\n"),
+            .map(i => `${i.quantity} ${i.item}`)
+            .join('\n'),
+          instructions: result.instructions.join('\n'),
           prepTime: result.prepTime,
           cookTime: result.cookTime,
           servings: result.servings,
@@ -155,11 +155,11 @@ export function AddRecipeDialog({
         });
       }
     } catch (error) {
-      console.error("Failed to generate recipe:", error);
+      console.error('Failed to generate recipe:', error);
       toast({
-        title: "Error",
-        description: "Failed to generate recipe. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to generate recipe. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsGenerating(false);
@@ -167,40 +167,40 @@ export function AddRecipeDialog({
   }
 
   async function onSubmit(data: RecipeFormValues) {
-    const ingredientsArray = data.ingredients.split("\n").map((line) => {
+    const ingredientsArray = data.ingredients.split('\n').map(line => {
       const parts = line.match(/^([^\s]+\s*[^s]*)\s+(.*)$/)?.slice(1) || [
-        "",
+        '',
         line,
       ];
-      return { quantity: parts[0].trim() || "", item: parts[1].trim() };
+      return { quantity: parts[0].trim() || '', item: parts[1].trim() };
     });
 
     const recipeData = {
       ...data,
       ingredients: ingredientsArray,
-      instructions: data.instructions.split("\n"),
+      instructions: data.instructions.split('\n'),
     };
 
     if (isEditMode && recipeToEdit) {
       try {
         await updateRecipeAction(recipeToEdit.id, recipeData);
         toast({
-          title: "Success",
-          description: "Recipe updated successfully.",
+          title: 'Success',
+          description: 'Recipe updated successfully.',
         });
         onRecipeAdd(recipeData);
       } catch {
         toast({
-          title: "Error",
-          description: "Failed to update recipe.",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Failed to update recipe.',
+          variant: 'destructive',
         });
       }
     } else {
       onRecipeAdd(recipeData);
     }
     form.reset();
-    setGenerationPrompt("");
+    setGenerationPrompt('');
   }
 
   return (
@@ -209,12 +209,12 @@ export function AddRecipeDialog({
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Edit Recipe" : "Add a New Recipe"}
+            {isEditMode ? 'Edit Recipe' : 'Add a New Recipe'}
           </DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? "Update the details for your recipe."
-              : "Fill out the form below or use AI to generate a new recipe."}
+              ? 'Update the details for your recipe.'
+              : 'Fill out the form below or use AI to generate a new recipe.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -226,7 +226,7 @@ export function AddRecipeDialog({
                 id="generation-prompt"
                 placeholder="e.g., A healthy and spicy salmon dish with roasted vegetables"
                 value={generationPrompt}
-                onChange={(e) => setGenerationPrompt(e.target.value)}
+                onChange={e => setGenerationPrompt(e.target.value)}
               />
             </div>
             <Button
@@ -287,7 +287,7 @@ export function AddRecipeDialog({
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {CUISINES.map((c) => (
+                            {CUISINES.map(c => (
                               <SelectItem key={c} value={c}>
                                 {c}
                               </SelectItem>
@@ -306,7 +306,7 @@ export function AddRecipeDialog({
                         <FormLabel>Dietary Tags</FormLabel>
                         <FormControl>
                           <MultiSelect
-                            options={DIETARY_PREFERENCES.map((p) => ({
+                            options={DIETARY_PREFERENCES.map(p => ({
                               value: p,
                               label: p,
                             }))}
@@ -328,7 +328,7 @@ export function AddRecipeDialog({
                       <FormLabel>Meal Types</FormLabel>
                       <FormControl>
                         <MultiSelect
-                          options={MEAL_TYPES.map((p) => ({
+                          options={MEAL_TYPES.map(p => ({
                             value: p,
                             label: p,
                           }))}
@@ -490,7 +490,7 @@ export function AddRecipeDialog({
                 Cancel
               </Button>
               <Button type="submit">
-                {isEditMode ? "Update Recipe" : "Add Recipe"}
+                {isEditMode ? 'Update Recipe' : 'Add Recipe'}
               </Button>
             </DialogFooter>
           </form>

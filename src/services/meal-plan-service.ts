@@ -1,6 +1,6 @@
-"use server";
+'use server';
 
-import { db } from "@/lib/firebase";
+import { db } from '@/lib/firebase';
 import {
   collection,
   addDoc,
@@ -8,8 +8,8 @@ import {
   query,
   doc,
   updateDoc,
-} from "firebase/firestore";
-import type { DailyPlan, MealPlan } from "@/lib/types";
+} from 'firebase/firestore';
+import type { DailyPlan, MealPlan } from '@/lib/types';
 
 // Note: userId is no longer used but kept for schema consistency in case auth is re-added.
 type MealPlanForDb = {
@@ -26,30 +26,30 @@ type MealPlanForDb = {
  * Adds a new meal plan to the Firestore database.
  */
 export async function addMealPlan(
-  plan: Omit<MealPlanForDb, "userId">,
+  plan: Omit<MealPlanForDb, 'userId'>
 ): Promise<string> {
   try {
-    const docRef = await addDoc(collection(db, "mealplans"), {
+    const docRef = await addDoc(collection(db, 'mealplans'), {
       ...plan,
-      userId: "anonymous", // Default to anonymous since auth is removed
+      userId: 'anonymous', // Default to anonymous since auth is removed
     });
     return docRef.id;
   } catch (e) {
-    console.error("Error adding meal plan: ", e);
-    throw new Error("Could not add meal plan to the database.");
+    console.error('Error adding meal plan: ', e);
+    throw new Error('Could not add meal plan to the database.');
   }
 }
 
 export async function updateMealPlan(
   planId: string,
-  updatedPlanData: Partial<MealPlanForDb>,
+  updatedPlanData: Partial<MealPlanForDb>
 ): Promise<void> {
   try {
-    const planRef = doc(db, "mealplans", planId);
+    const planRef = doc(db, 'mealplans', planId);
     await updateDoc(planRef, updatedPlanData);
   } catch (e) {
-    console.error("Error updating meal plan: ", e);
-    throw new Error("Could not update meal plan in the database.");
+    console.error('Error updating meal plan: ', e);
+    throw new Error('Could not update meal plan in the database.');
   }
 }
 
@@ -58,14 +58,14 @@ export async function updateMealPlan(
  */
 export async function getMealPlans(): Promise<MealPlan[]> {
   try {
-    const q = query(collection(db, "mealplans"));
+    const q = query(collection(db, 'mealplans'));
     const querySnapshot = await getDocs(q);
     const plans: MealPlan[] = [];
-    querySnapshot.forEach((doc) => {
+    querySnapshot.forEach(doc => {
       const data = doc.data();
       // Ensure createdAt exists and is a timestamp before converting
       const createdAtTimestamp = data.createdAt as
-        | import("firebase/firestore").Timestamp
+        | import('firebase/firestore').Timestamp
         | undefined;
       const createdAt = createdAtTimestamp
         ? createdAtTimestamp.toDate().toISOString()
@@ -87,7 +87,7 @@ export async function getMealPlans(): Promise<MealPlan[]> {
 
     return plans;
   } catch (e) {
-    console.error("Error fetching meal plans: ", e);
-    throw new Error("Could not fetch meal plans.");
+    console.error('Error fetching meal plans: ', e);
+    throw new Error('Could not fetch meal plans.');
   }
 }

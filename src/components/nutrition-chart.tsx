@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import {
   Card,
@@ -8,30 +8,30 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from '@/components/ui/chart';
 
 const chartConfig = {
   calories: {
-    label: "Calories",
-    color: "hsl(var(--chart-1))",
+    label: 'Calories',
+    color: 'hsl(var(--chart-1))',
   },
   protein: {
-    label: "Protein (g)",
-    color: "hsl(var(--chart-2))",
+    label: 'Protein (g)',
+    color: 'hsl(var(--chart-2))',
   },
   carbs: {
-    label: "Carbs (g)",
-    color: "hsl(var(--chart-1))",
+    label: 'Carbs (g)',
+    color: 'hsl(var(--chart-1))',
   },
   fat: {
-    label: "Fat (g)",
-    color: "hsl(var(--chart-2))",
+    label: 'Fat (g)',
+    color: 'hsl(var(--chart-2))',
   },
 } satisfies ChartConfig;
 
@@ -50,7 +50,7 @@ export function NutritionChart({
   }>;
   title: string;
   description: string;
-  type: "macros" | "calories";
+  type: 'macros' | 'calories';
 }) {
   return (
     <Card>
@@ -73,7 +73,7 @@ export function NutritionChart({
               cursor={false}
               content={<ChartTooltipContent indicator="dashed" />}
             />
-            {type === "macros" ? (
+            {type === 'macros' ? (
               <>
                 <Bar dataKey="protein" fill="var(--color-protein)" radius={4} />
                 <Bar dataKey="carbs" fill="var(--color-carbs)" radius={4} />

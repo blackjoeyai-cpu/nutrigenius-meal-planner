@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import type { Recipe } from "@/lib/types";
-import { getRecipes as fetchRecipes } from "@/services/recipe-service";
-import { addRecipeAction } from "@/app/(app)/recipes/actions";
+import { useState, useEffect, useCallback } from 'react';
+import type { Recipe } from '@/lib/types';
+import { getRecipes as fetchRecipes } from '@/services/recipe-service';
+import { addRecipeAction } from '@/app/(app)/recipes/actions';
 
 export const useRecipes = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -14,7 +14,7 @@ export const useRecipes = () => {
       const fetchedRecipes = await fetchRecipes();
       setRecipes(fetchedRecipes);
     } catch (error) {
-      console.error("Error fetching recipes:", error);
+      console.error('Error fetching recipes:', error);
     } finally {
       setIsLoaded(true);
     }
@@ -25,16 +25,16 @@ export const useRecipes = () => {
   }, [loadRecipes]);
 
   const addRecipe = useCallback(
-    async (newRecipe: Omit<Recipe, "id" | "imageId">) => {
+    async (newRecipe: Omit<Recipe, 'id' | 'imageId'>) => {
       try {
         await addRecipeAction(newRecipe);
         // Refresh recipes after adding a new one
         await loadRecipes();
       } catch (error) {
-        console.error("Error adding recipe:", error);
+        console.error('Error adding recipe:', error);
       }
     },
-    [loadRecipes],
+    [loadRecipes]
   );
 
   return { recipes, addRecipe, isLoaded, refreshRecipes: loadRecipes };

@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 /**
  * @fileOverview Generates a multi-day meal plan based on user preferences.
@@ -8,42 +8,42 @@
  * - GenerateLongTermMealPlanOutput - The return type for the function.
  */
 
-import { ai } from "@/ai/genkit";
-import { z } from "genkit";
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const GenerateLongTermMealPlanInputSchema = z.object({
   dietaryPreferences: z
     .string()
-    .describe("The user’s dietary preferences (e.g., vegetarian, vegan)."),
-  calorieTarget: z.number().describe("The user’s daily calorie target."),
+    .describe('The user’s dietary preferences (e.g., vegetarian, vegan).'),
+  calorieTarget: z.number().describe('The user’s daily calorie target.'),
   allergies: z
     .string()
-    .describe("A comma-separated list of ingredients the user is allergic to."),
+    .describe('A comma-separated list of ingredients the user is allergic to.'),
   cuisine: z
     .string()
     .describe(
-      "The desired cuisine for the meal plan (e.g., Italian, Mexican).",
+      'The desired cuisine for the meal plan (e.g., Italian, Mexican).'
     ),
   ingredients: z
     .string()
     .optional()
     .describe(
-      "A comma-separated list of ingredients the user has on hand and would like to use.",
+      'A comma-separated list of ingredients the user has on hand and would like to use.'
     ),
   availableRecipes: z
     .string()
     .optional()
-    .describe("A JSON string of available recipes for the AI to choose from."),
+    .describe('A JSON string of available recipes for the AI to choose from.'),
   numberOfDays: z
     .number()
     .int()
     .min(1)
     .max(30)
-    .describe("The number of days to generate the meal plan for."),
+    .describe('The number of days to generate the meal plan for.'),
   generationSource: z
-    .enum(["catalog", "new", "combined"])
+    .enum(['catalog', 'new', 'combined'])
     .describe(
-      "The source for recipe generation. 'catalog' uses only available recipes. 'new' generates all new recipes. 'combined' uses available recipes first, then generates new ones if necessary.",
+      "The source for recipe generation. 'catalog' uses only available recipes. 'new' generates all new recipes. 'combined' uses available recipes first, then generates new ones if necessary."
     ),
   language: z
     .string()
@@ -58,11 +58,11 @@ const MealSchema = z.object({
   id: z
     .string()
     .describe(
-      'The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-day-1-breakfast".',
+      'The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-day-1-breakfast".'
     ),
-  title: z.string().describe("The name of the meal."),
-  description: z.string().describe("A short description of the meal."),
-  calories: z.number().describe("The estimated calorie count for the meal."),
+  title: z.string().describe('The name of the meal.'),
+  description: z.string().describe('A short description of the meal.'),
+  calories: z.number().describe('The estimated calorie count for the meal.'),
 });
 
 const DailyPlanSchema = z.object({
@@ -72,20 +72,20 @@ const DailyPlanSchema = z.object({
 });
 
 const GenerateLongTermMealPlanOutputSchema = z.object({
-  days: z.array(DailyPlanSchema).describe("An array of daily meal plans."),
+  days: z.array(DailyPlanSchema).describe('An array of daily meal plans.'),
 });
 export type GenerateLongTermMealPlanOutput = z.infer<
   typeof GenerateLongTermMealPlanOutputSchema
 >;
 
 export async function generateLongTermMealPlan(
-  input: GenerateLongTermMealPlanInput,
+  input: GenerateLongTermMealPlanInput
 ): Promise<GenerateLongTermMealPlanOutput> {
   return generateLongTermMealPlanFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: "generateLongTermMealPlanPrompt",
+  name: 'generateLongTermMealPlanPrompt',
   input: { schema: GenerateLongTermMealPlanInputSchema },
   output: { schema: GenerateLongTermMealPlanOutputSchema },
   prompt: `You are a nutritionist creating a long-term meal plan for a user.
@@ -127,12 +127,12 @@ const prompt = ai.definePrompt({
 
 const generateLongTermMealPlanFlow = ai.defineFlow(
   {
-    name: "generateLongTermMealPlanFlow",
+    name: 'generateLongTermMealPlanFlow',
     inputSchema: GenerateLongTermMealPlanInputSchema,
     outputSchema: GenerateLongTermMealPlanOutputSchema,
   },
-  async (input) => {
+  async input => {
     const { output } = await prompt(input);
     return output!;
-  },
+  }
 );

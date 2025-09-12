@@ -1,51 +1,51 @@
-"use client";
-import { useState, useMemo } from "react";
-import Link from "next/link";
-import { PlusCircle } from "lucide-react";
+'use client';
+import { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { PlusCircle } from 'lucide-react';
 
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { AddRecipeDialog } from "@/components/add-recipe-dialog";
-import { useRecipes } from "@/hooks/use-recipes";
-import { CUISINES } from "@/lib/constants";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { AddRecipeDialog } from '@/components/add-recipe-dialog';
+import { useRecipes } from '@/hooks/use-recipes';
+import { CUISINES } from '@/lib/constants';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RecipesPage() {
   const { recipes, addRecipe, isLoaded } = useRecipes();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [cuisineFilter, setCuisineFilter] = useState("Any");
-  const [activeTab, setActiveTab] = useState("All");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [cuisineFilter, setCuisineFilter] = useState('Any');
+  const [activeTab, setActiveTab] = useState('All');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const filteredRecipes = useMemo(() => {
     if (!isLoaded) return [];
-    return recipes.filter((recipe) => {
+    return recipes.filter(recipe => {
       const matchesSearch =
         recipe.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (recipe.ingredients &&
-          recipe.ingredients.some((ing) =>
-            ing.item.toLowerCase().includes(searchTerm.toLowerCase()),
+          recipe.ingredients.some(ing =>
+            ing.item.toLowerCase().includes(searchTerm.toLowerCase())
           ));
       const matchesCuisine =
-        cuisineFilter === "Any" || recipe.cuisine === cuisineFilter;
+        cuisineFilter === 'Any' || recipe.cuisine === cuisineFilter;
       const matchesMealType =
-        activeTab === "All" ||
+        activeTab === 'All' ||
         (recipe.mealTypes && recipe.mealTypes.includes(activeTab));
       return matchesSearch && matchesCuisine && matchesMealType;
     });
   }, [searchTerm, cuisineFilter, recipes, isLoaded, activeTab]);
 
-  const mealTypes = ["All", "Breakfast", "Lunch", "Dinner"];
+  const mealTypes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
   return (
     <div className="space-y-6">
@@ -61,7 +61,7 @@ export default function RecipesPage() {
         <AddRecipeDialog
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
-          onRecipeAdd={(newRecipe) => {
+          onRecipeAdd={newRecipe => {
             addRecipe(newRecipe);
             setIsAddDialogOpen(false);
           }}
@@ -78,14 +78,14 @@ export default function RecipesPage() {
           placeholder="Search recipes or ingredients..."
           className="flex-grow"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={e => setSearchTerm(e.target.value)}
         />
         <Select value={cuisineFilter} onValueChange={setCuisineFilter}>
           <SelectTrigger className="w-full md:w-[180px]">
             <SelectValue placeholder="Filter by cuisine" />
           </SelectTrigger>
           <SelectContent>
-            {CUISINES.map((cuisine) => (
+            {CUISINES.map(cuisine => (
               <SelectItem key={cuisine} value={cuisine}>
                 {cuisine}
               </SelectItem>
@@ -96,7 +96,7 @@ export default function RecipesPage() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
-          {mealTypes.map((type) => (
+          {mealTypes.map(type => (
             <TabsTrigger key={type} value={type}>
               {type}
             </TabsTrigger>
@@ -116,7 +116,7 @@ export default function RecipesPage() {
                     </CardContent>
                   </Card>
                 ))
-              : filteredRecipes.map((recipe) => {
+              : filteredRecipes.map(recipe => {
                   return (
                     <Link
                       key={recipe.id}
@@ -130,7 +130,7 @@ export default function RecipesPage() {
                           </CardTitle>
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="secondary">{recipe.cuisine}</Badge>
-                            {recipe.dietaryTags.map((tag) => (
+                            {recipe.dietaryTags.map(tag => (
                               <Badge key={tag} variant="outline">
                                 {tag}
                               </Badge>

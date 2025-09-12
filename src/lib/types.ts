@@ -18,7 +18,7 @@ export type Recipe = {
   imageId: string;
 };
 
-export type RecipeDetails = Omit<Recipe, "id" | "imageId">;
+export type RecipeDetails = Omit<Recipe, 'id' | 'imageId'>;
 
 export type UserProfile = {
   name: string;

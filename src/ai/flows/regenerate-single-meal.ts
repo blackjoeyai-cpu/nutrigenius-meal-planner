@@ -1,4 +1,4 @@
-"use server";
+'use server';
 /**
  * @fileOverview Regenerates a single meal within a daily meal plan.
  *
@@ -7,53 +7,53 @@
  * - RegenerateSingleMealOutput - The return type for the function.
  */
 
-import { ai } from "@/ai/genkit";
-import { z } from "genkit";
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const MealSchema = z.object({
   id: z
     .string()
     .describe(
-      'The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-1".',
+      'The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-1".'
     ),
-  title: z.string().describe("The name of the meal."),
-  description: z.string().describe("A short description of the meal."),
-  calories: z.number().describe("The estimated calorie count for the meal."),
+  title: z.string().describe('The name of the meal.'),
+  description: z.string().describe('A short description of the meal.'),
+  calories: z.number().describe('The estimated calorie count for the meal.'),
 });
 
 const RegenerateSingleMealInputSchema = z.object({
   dietaryPreferences: z
     .string()
     .describe(
-      "The user’s dietary preferences (e.g., vegetarian, vegan, paleo).",
+      'The user’s dietary preferences (e.g., vegetarian, vegan, paleo).'
     ),
-  calorieTarget: z.number().describe("The user’s daily calorie target."),
+  calorieTarget: z.number().describe('The user’s daily calorie target.'),
   allergies: z
     .string()
     .describe(
-      "A comma-separated list of ingredients the user is allergic to. Example: peanuts, shellfish, dairy.",
+      'A comma-separated list of ingredients the user is allergic to. Example: peanuts, shellfish, dairy.'
     ),
   cuisine: z
     .string()
     .describe(
-      "The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).",
+      'The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).'
     ),
   ingredients: z
     .string()
     .optional()
     .describe(
-      "A comma-separated list of ingredients the user has on hand and would like to use.",
+      'A comma-separated list of ingredients the user has on hand and would like to use.'
     ),
   availableRecipes: z
     .string()
     .optional()
-    .describe("A JSON string of available recipes for the AI to choose from."),
+    .describe('A JSON string of available recipes for the AI to choose from.'),
   generationSource: z
-    .enum(["catalog", "new", "combined"])
-    .describe("The source for recipe generation."),
+    .enum(['catalog', 'new', 'combined'])
+    .describe('The source for recipe generation.'),
   mealToRegenerate: z
-    .enum(["breakfast", "lunch", "dinner"])
-    .describe("The specific meal to regenerate."),
+    .enum(['breakfast', 'lunch', 'dinner'])
+    .describe('The specific meal to regenerate.'),
   currentMeals: z
     .object({
       breakfast: MealSchema.optional(),
@@ -61,10 +61,10 @@ const RegenerateSingleMealInputSchema = z.object({
       dinner: MealSchema.optional(),
     })
     .describe(
-      "The other meals in the day that are not being regenerated, to provide context.",
+      'The other meals in the day that are not being regenerated, to provide context.'
     ),
   mealToReplace: MealSchema.describe(
-    "The meal that the user wants to replace.",
+    'The meal that the user wants to replace.'
   ),
   language: z
     .string()
@@ -78,13 +78,13 @@ export type RegenerateSingleMealInput = z.infer<
 export type RegenerateSingleMealOutput = z.infer<typeof MealSchema>;
 
 export async function regenerateSingleMeal(
-  input: RegenerateSingleMealInput,
+  input: RegenerateSingleMealInput
 ): Promise<RegenerateSingleMealOutput> {
   return regenerateSingleMealFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: "regenerateSingleMealPrompt",
+  name: 'regenerateSingleMealPrompt',
   input: { schema: RegenerateSingleMealInputSchema },
   output: { schema: MealSchema },
   prompt: `You are a nutritionist tasked with revising a daily meal plan for a user.
@@ -143,12 +143,12 @@ const prompt = ai.definePrompt({
 
 const regenerateSingleMealFlow = ai.defineFlow(
   {
-    name: "regenerateSingleMealFlow",
+    name: 'regenerateSingleMealFlow',
     inputSchema: RegenerateSingleMealInputSchema,
     outputSchema: MealSchema,
   },
-  async (input) => {
+  async input => {
     const { output } = await prompt(input);
     return output!;
-  },
+  }
 );

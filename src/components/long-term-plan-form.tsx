@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useActionState, useEffect, useState, Fragment } from "react";
-import { useFormStatus } from "react-dom";
+import { useActionState, useEffect, useState, Fragment } from 'react';
+import { useFormStatus } from 'react-dom';
 import {
   Card,
   CardContent,
@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -18,18 +18,18 @@ import {
   FormLabel,
   FormMessage,
   FormField,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { CUISINES, DIETARY_PREFERENCES } from "@/lib/constants";
-import type { Recipe, MealPlan } from "@/lib/types";
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { CUISINES, DIETARY_PREFERENCES } from '@/lib/constants';
+import type { Recipe, MealPlan } from '@/lib/types';
 import {
   AlertTriangle,
   Loader2,
@@ -37,42 +37,42 @@ import {
   Sparkles,
   Save,
   XCircle,
-} from "lucide-react";
-import { generatePlanAction, saveMealPlan } from "@/app/(app)/plans/actions";
-import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
-import { MultiSelect } from "./ui/multi-select";
-import { useIngredients } from "@/hooks/use-ingredients";
-import { useRecipes } from "@/hooks/use-recipes";
-import { AddRecipeDialog } from "./add-recipe-dialog";
-import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
+} from 'lucide-react';
+import { generatePlanAction, saveMealPlan } from '@/app/(app)/plans/actions';
+import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { MultiSelect } from './ui/multi-select';
+import { useIngredients } from '@/hooks/use-ingredients';
+import { useRecipes } from '@/hooks/use-recipes';
+import { AddRecipeDialog } from './add-recipe-dialog';
+import { Alert, AlertTitle, AlertDescription } from './ui/alert';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "./ui/accordion";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Skeleton } from "./ui/skeleton";
+} from './ui/accordion';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Skeleton } from './ui/skeleton';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
     .number()
-    .min(1, "Must be at least 1 day.")
-    .max(30, "Cannot generate for more than 30 days."),
+    .min(1, 'Must be at least 1 day.')
+    .max(30, 'Cannot generate for more than 30 days.'),
   dietaryPreferences: z.string({
-    required_error: "Please select a preference.",
+    required_error: 'Please select a preference.',
   }),
   calorieTarget: z.coerce
     .number()
-    .min(100, "Calorie target must be at least 100."),
+    .min(100, 'Calorie target must be at least 100.'),
   allergies: z.string(),
-  cuisine: z.string({ required_error: "Please select a cuisine." }),
-  generationSource: z.enum(["catalog", "new", "combined"]),
+  cuisine: z.string({ required_error: 'Please select a cuisine.' }),
+  generationSource: z.enum(['catalog', 'new', 'combined']),
   ingredients: z.array(z.string()),
 });
 
@@ -83,7 +83,7 @@ type LongTermPlanFormProps = {
 };
 
 const initialState = {
-  message: "",
+  message: '',
   errors: null,
   isSuccess: false,
   mealPlan: null,
@@ -108,14 +108,14 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-type ParsedPlan = Omit<MealPlan, "id" | "userId" | "createdAt"> & {
+type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
   generationSource: string;
 };
 
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [state, formAction, isPending] = useActionState(
     generatePlanAction,
-    initialState,
+    initialState
   );
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients();
@@ -133,8 +133,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       dietaryPreferences: DIETARY_PREFERENCES[0],
       cuisine: CUISINES[0],
       calorieTarget: 2000,
-      allergies: "",
-      generationSource: "catalog",
+      allergies: '',
+      generationSource: 'catalog',
       ingredients: [],
     },
   });
@@ -145,11 +145,11 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     }
   }, [state.isSuccess, state.mealPlan]);
 
-  const generationSource = form.watch("generationSource");
-  const numberOfDays = form.watch("numberOfDays");
+  const generationSource = form.watch('generationSource');
+  const numberOfDays = form.watch('numberOfDays');
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked =
-    generationSource === "catalog" && !hasEnoughRecipesForCatalog;
+    generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
   const handleSave = async () => {
     if (!generatedPlan) return;
@@ -159,15 +159,15 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
     if (result.success) {
       toast({
-        title: "Success!",
-        description: "Your long-term meal plan has been generated and saved.",
+        title: 'Success!',
+        description: 'Your long-term meal plan has been generated and saved.',
       });
-      router.push("/plans");
+      router.push('/plans');
     } else {
       toast({
-        title: "Error",
+        title: 'Error',
         description: result.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -175,7 +175,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const handleDiscard = () => {
     setGeneratedPlan(null);
     state.mealPlan = null;
-    state.message = "";
+    state.message = '';
     state.errors = null;
     state.isSuccess = false;
   };
@@ -185,16 +185,16 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       const errorValues = Object.values(state.errors).flat();
       if (errorValues.length > 0) {
         toast({
-          title: "Error",
-          description: errorValues.join(" "),
-          variant: "destructive",
+          title: 'Error',
+          description: errorValues.join(' '),
+          variant: 'destructive',
         });
       }
     } else if (state.message && !state.isSuccess && !state.errors) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: state.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   }, [state, toast]);
@@ -205,7 +205,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
         <CardHeader>
           <CardTitle>Generating Your Plan...</CardTitle>
           <CardDescription>
-            Please wait while the AI creates your custom meal plan for{" "}
+            Please wait while the AI creates your custom meal plan for{' '}
             {numberOfDays} days.
           </CardDescription>
         </CardHeader>
@@ -214,7 +214,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             {Array.from({ length: Math.min(numberOfDays, 3) }).map(
               (_, index) => (
                 <Skeleton key={index} className="h-12 w-full" />
-              ),
+              )
             )}
             {numberOfDays > 3 && (
               <div className="text-center text-muted-foreground py-4">
@@ -246,8 +246,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   <div className="space-y-4 pl-2">
                     {[day.breakfast, day.lunch, day.dinner].map(
                       (meal, mealIndex) => {
-                        const isNewRecipe = meal.id.startsWith("new-recipe-");
-                        const Wrapper = isNewRecipe ? "div" : Link;
+                        const isNewRecipe = meal.id.startsWith('new-recipe-');
+                        const Wrapper = isNewRecipe ? 'div' : Link;
                         const props = isNewRecipe
                           ? {}
                           : { href: `/recipes/${meal.id}` };
@@ -261,7 +261,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                             <Card className="transition-shadow group-hover:shadow-md">
                               <CardHeader>
                                 <CardTitle className="text-lg">
-                                  {["Breakfast", "Lunch", "Dinner"][mealIndex]}:{" "}
+                                  {['Breakfast', 'Lunch', 'Dinner'][mealIndex]}:{' '}
                                   {meal.title}
                                 </CardTitle>
                                 <CardDescription>
@@ -271,7 +271,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                             </Card>
                           </Wrapper>
                         );
-                      },
+                      }
                     )}
                   </div>
                 </AccordionContent>
@@ -309,18 +309,18 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
             // Append all fields from the form to the FormData object
             (Object.keys(formValues) as Array<keyof PlanFormValues>).forEach(
-              (key) => {
+              key => {
                 const value = formValues[key];
-                if (key === "ingredients" && Array.isArray(value)) {
-                  combinedData.append(key, value.join(","));
+                if (key === 'ingredients' && Array.isArray(value)) {
+                  combinedData.append(key, value.join(','));
                 } else if (value !== undefined) {
                   combinedData.append(key, String(value));
                 }
-              },
+              }
             );
 
             // Add recipes to form data
-            combinedData.append("recipes", JSON.stringify(recipes));
+            combinedData.append('recipes', JSON.stringify(recipes));
 
             form.handleSubmit(() => formAction(combinedData))();
           }}
@@ -346,7 +346,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     <AddRecipeDialog
                       open={isAddDialogOpen}
                       onOpenChange={setIsAddDialogOpen}
-                      onRecipeAdd={(newRecipe) => {
+                      onRecipeAdd={newRecipe => {
                         addRecipe(newRecipe);
                         setIsAddDialogOpen(false);
                       }}
@@ -443,7 +443,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {DIETARY_PREFERENCES.map((pref) => (
+                        {DIETARY_PREFERENCES.map(pref => (
                           <SelectItem key={pref} value={pref}>
                             {pref}
                           </SelectItem>
@@ -472,7 +472,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CUISINES.map((c) => (
+                        {CUISINES.map(c => (
                           <SelectItem key={c} value={c}>
                             {c}
                           </SelectItem>
@@ -511,7 +511,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     <FormLabel>Ingredients on Hand</FormLabel>
                     <FormControl>
                       <MultiSelect
-                        options={allIngredients.map((i) => ({
+                        options={allIngredients.map(i => ({
                           value: i,
                           label: i,
                         }))}

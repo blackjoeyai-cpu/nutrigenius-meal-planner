@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams } from 'next/navigation';
 import {
   Clock,
   Users,
@@ -10,17 +10,17 @@ import {
   Wheat,
   Droplets,
   Edit,
-} from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+} from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getRecipeById } from "@/services/recipe-service";
-import type { Recipe } from "@/lib/types";
-import { Button } from "@/components/ui/button";
-import { AddRecipeDialog } from "@/components/add-recipe-dialog";
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getRecipeById } from '@/services/recipe-service';
+import type { Recipe } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { AddRecipeDialog } from '@/components/add-recipe-dialog';
 
 export default function RecipeDetailPage() {
   const params = useParams();
@@ -116,7 +116,7 @@ export default function RecipeDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary">{recipe.cuisine}</Badge>
-          {recipe.dietaryTags.map((tag) => (
+          {recipe.dietaryTags.map(tag => (
             <Badge key={tag} variant="outline">
               {tag}
             </Badge>

@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 /**
  * @fileOverview Generates meal plans while avoiding recipes with ingredients that the user is allergic to.
@@ -8,40 +8,40 @@
  * - GenerateSafeMealPlanOutput - The return type for the generateSafeMealPlan function.
  */
 
-import { ai } from "@/ai/genkit";
-import { z } from "genkit";
+import { ai } from '@/ai/genkit';
+import { z } from 'genkit';
 
 const GenerateSafeMealPlanInputSchema = z.object({
   dietaryPreferences: z
     .string()
     .describe(
-      "The user’s dietary preferences (e.g., vegetarian, vegan, paleo).",
+      'The user’s dietary preferences (e.g., vegetarian, vegan, paleo).'
     ),
-  calorieTarget: z.number().describe("The user’s daily calorie target."),
+  calorieTarget: z.number().describe('The user’s daily calorie target.'),
   allergies: z
     .string()
     .describe(
-      "A comma-separated list of ingredients the user is allergic to. Example: peanuts, shellfish, dairy.",
+      'A comma-separated list of ingredients the user is allergic to. Example: peanuts, shellfish, dairy.'
     ),
   cuisine: z
     .string()
     .describe(
-      "The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).",
+      'The desired cuisine for the meal plan (e.g., Italian, Mexican, Asian).'
     ),
   ingredients: z
     .string()
     .optional()
     .describe(
-      "A comma-separated list of ingredients the user has on hand and would like to use.",
+      'A comma-separated list of ingredients the user has on hand and would like to use.'
     ),
   availableRecipes: z
     .string()
     .optional()
-    .describe("A JSON string of available recipes for the AI to choose from."),
+    .describe('A JSON string of available recipes for the AI to choose from.'),
   generationSource: z
-    .enum(["catalog", "new", "combined"])
+    .enum(['catalog', 'new', 'combined'])
     .describe(
-      "The source for recipe generation. 'catalog' uses only available recipes. 'new' generates all new recipes. 'combined' uses available recipes first, then generates new ones if necessary.",
+      "The source for recipe generation. 'catalog' uses only available recipes. 'new' generates all new recipes. 'combined' uses available recipes first, then generates new ones if necessary."
     ),
   language: z
     .string()
@@ -56,11 +56,11 @@ const MealSchema = z.object({
   id: z
     .string()
     .describe(
-      'The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-1".',
+      'The ID of the recipe. If from the available list, use the original ID. If newly generated, use a placeholder like "new-recipe-1".'
     ),
-  title: z.string().describe("The name of the meal."),
-  description: z.string().describe("A short description of the meal."),
-  calories: z.number().describe("The estimated calorie count for the meal."),
+  title: z.string().describe('The name of the meal.'),
+  description: z.string().describe('A short description of the meal.'),
+  calories: z.number().describe('The estimated calorie count for the meal.'),
 });
 
 const GenerateSafeMealPlanOutputSchema = z.object({
@@ -73,13 +73,13 @@ export type GenerateSafeMealPlanOutput = z.infer<
 >;
 
 export async function generateSafeMealPlan(
-  input: GenerateSafeMealPlanInput,
+  input: GenerateSafeMealPlanInput
 ): Promise<GenerateSafeMealPlanOutput> {
   return generateSafeMealPlanFlow(input);
 }
 
 const prompt = ai.definePrompt({
-  name: "generateSafeMealPlanPrompt",
+  name: 'generateSafeMealPlanPrompt',
   input: { schema: GenerateSafeMealPlanInputSchema },
   output: { schema: GenerateSafeMealPlanOutputSchema },
   prompt: `You are a nutritionist creating a meal plan for a user.
@@ -117,12 +117,12 @@ const prompt = ai.definePrompt({
 
 const generateSafeMealPlanFlow = ai.defineFlow(
   {
-    name: "generateSafeMealPlanFlow",
+    name: 'generateSafeMealPlanFlow',
     inputSchema: GenerateSafeMealPlanInputSchema,
     outputSchema: GenerateSafeMealPlanOutputSchema,
   },
-  async (input) => {
+  async input => {
     const { output } = await prompt(input);
     return output!;
-  },
+  }
 );

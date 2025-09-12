@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRecipes } from "./use-recipes";
+import { useState, useEffect } from 'react';
+import { useRecipes } from './use-recipes';
 
 export const useIngredients = () => {
   const { recipes, isLoaded: recipesLoaded } = useRecipes();
@@ -10,8 +10,8 @@ export const useIngredients = () => {
 
   useEffect(() => {
     if (recipesLoaded) {
-      const allIngredients = recipes.flatMap((recipe) =>
-        recipe.ingredients.map((ing) => ing.item),
+      const allIngredients = recipes.flatMap(recipe =>
+        recipe.ingredients.map(ing => ing.item)
       );
       const uniqueIngredients = [...new Set(allIngredients)].sort();
       setIngredients(uniqueIngredients);
