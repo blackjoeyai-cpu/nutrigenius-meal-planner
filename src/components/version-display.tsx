@@ -48,4 +48,3 @@ export default function VersionDisplay({ className }: { className?: string }) {
     </div>
   );
 }
-\n// Test line for commit
