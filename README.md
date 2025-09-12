@@ -73,7 +73,7 @@ You can find these values in your Firebase project settings.
 
 ## Branching Strategy
 
-This project follows a strict branching strategy to ensure code quality and proper release management.
+This project follows a strict branching strategy to ensure code quality, proper review processes, and controlled releases.
 
 ### Workflow Overview
 
@@ -82,17 +82,61 @@ feature/* → dev → release → main
 ```
 
 1. **Feature branches** are created from `dev`
-2. Feature branches are merged into `dev` after review
-3. `dev` is merged into `release` after testing
-4. `release` is merged into `main` for production release
+2. All merges require pull requests with code review and CI checks
+3. `dev` is merged into `release` through a pull request after testing
+4. `release` is merged into `main` through a pull request for production release
 
 ### Rules
 
 1. All new branches must be created from `dev`
-2. Only `release` branch can be merged into `main`
-3. Only `dev` branch can be merged into `release`
-4. Feature branches can only be merged into `dev`
-5. Direct commits to `main`, `release`, and `dev` are prohibited
+2. Only `release` branch can be merged into `main` (through PR)
+3. Only `dev` branch can be merged into `release` (through PR)
+4. All merges must go through pull requests with code review
+5. Direct commits to any protected branch (`dev`, `release`, `main`) are prohibited
+6. Direct pushes to any protected branch are prohibited
+
+## Release Process
+
+This project uses automated versioning that occurs only when merging from `dev` to `release`. When merging from `release` to `main`, the same version is used.
+
+### Versioning Workflow
+
+1. **Version Creation**: New versions are created only when merging from `dev` to `release`
+2. **Version Format**: `v{major}.{minor}.{patch}` (e.g., `v1.2.3`)
+3. **Version Bumping**:
+   - Automatically determined by commit messages:
+     - `feat`: Minor version bump
+     - `fix`: Patch version bump
+     - Default: Patch version bump
+4. **Production Deployment**: When merging from `release` to `main`, the existing version is deployed
+
+### Release Process
+
+1. **Create a Pull Request** from `dev` to `release`
+2. **Merge the Pull Request** - This will automatically:
+   - Create a new version based on commit messages
+   - Update `package.json` with the new version
+   - Generate version information in `src/version.json`
+   - Create a new Git tag
+   - Create a GitHub release
+
+3. **Create a Pull Request** from `release` to `main`
+4. **Merge the Pull Request** - This will automatically:
+   - Deploy the existing version to production
+   - Use the same version that was created during the `dev` to `release` merge
+
+The release process is fully automated through GitHub Actions and requires no manual intervention for version creation or deployment.
+
+### Commit Message Format
+
+For proper versioning, please follow the conventional commit format:
+- `feat: Add new feature` (minor version bump)
+- `fix: Fix bug` (patch version bump)
+- `docs: Update documentation`
+- `style: Code formatting changes`
+- `refactor: Code refactoring`
+- `test: Add or update tests`
+- `chore: Maintenance tasks`
 
 ### Setup
 
