@@ -71,6 +71,37 @@ You can find these values in your Firebase project settings.
 
     The Genkit UI will be available at [http://localhost:4000](http://localhost:4000) to inspect and run your flows.
 
+## Branching Strategy
+
+This project follows a strict branching strategy to ensure code quality and proper release management.
+
+### Workflow Overview
+
+```
+feature/* → dev → release → main
+```
+
+1. **Feature branches** are created from `dev`
+2. Feature branches are merged into `dev` after review
+3. `dev` is merged into `release` after testing
+4. `release` is merged into `main` for production release
+
+### Rules
+
+1. All new branches must be created from `dev`
+2. Only `release` branch can be merged into `main`
+3. Only `dev` branch can be merged into `release`
+4. Feature branches can only be merged into `dev`
+5. Direct commits to `main`, `release`, and `dev` are prohibited
+
+### Setup
+
+Run the setup script to install the Git hooks that enforce these rules:
+
+```bash
+./scripts/setup-branching-rules.sh
+```
+
 ## Deployment to Vercel
 
 This project is configured for deployment to [Vercel](https://vercel.com/). The included CI/CD workflow will automatically deploy your application.
