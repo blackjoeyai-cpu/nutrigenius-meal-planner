@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "version": "tsx scripts/version.ts",
+    "release": "bash scripts/create-release.sh",
     "postinstall": "npm run version"
   },
   "dependencies": {

@@ -7,6 +7,11 @@ on:
       - main
       - release
       - dev
+  push:
+    branches:
+      - main
+      - release
+      - dev
 
 jobs:
   validate-branch-source:
@@ -33,8 +38,15 @@ jobs:
       - name: Check branch source for PR to dev
         if: github.base_ref == 'dev'
         run: |
-          if [ "${{ github.head_ref }}" == "main" ] || [ "${{ github.head_ref }}" == "release" ]; then
+          if [[ "${{ github.head_ref }}" == "main" ]] || [[ "${{ github.head_ref }}" == "release" ]]; then
             echo "ERROR: Cannot merge 'main' or 'release' into 'dev'"
             exit 1
           fi
           echo "✓ PR to 'dev' is from a feature branch"
+
+      - name: Prevent direct pushes to protected branches
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release' || github.ref == 'refs/heads/dev')
+        run: |
+          echo "ERROR: Direct pushes to 'main', 'release', and 'dev' branches are not allowed."
+          echo "All changes must go through pull requests with required checks."
+          exit 1
