@@ -5,6 +5,7 @@ To ensure sensitive information is not committed to the repository, we use envir
 ## Setup Instructions
 
 1. Copy the `.env.example` file to create your own `.env` file:
+
    ```bash
    cp .env.example .env
    ```
