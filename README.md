@@ -96,31 +96,35 @@ feature/* → dev → release → main
 
 ## Release Process
 
-This project uses automated versioning through GitHub Actions and semantic versioning:
+This project uses automated versioning that occurs only when merging from `dev` to `release`. When merging from `release` to `main`, the same version is used.
 
-1. **Version Format**: `v{major}.{minor}.{patch}` (e.g., `v1.2.3`)
-2. **Release Triggers**:
-   - Manual trigger through GitHub Actions (recommended)
-   - Automatic trigger on pushes to `release` or `main` branches
-3. **Version Bumping**:
-   - `patch`: Backward-compatible bug fixes (default for `release` branch)
-   - `minor`: Backward-compatible new features (default for `main` branch)
-   - `major`: Breaking changes (manual only)
+### Versioning Workflow
 
-### Creating a Release
+1. **Version Creation**: New versions are created only when merging from `dev` to `release`
+2. **Version Format**: `v{major}.{minor}.{patch}` (e.g., `v1.2.3`)
+3. **Version Bumping**: 
+   - Automatically determined by commit messages:
+     - `feat`: Minor version bump
+     - `fix`: Patch version bump
+     - Default: Patch version bump
+4. **Production Deployment**: When merging from `release` to `main`, the existing version is deployed
 
-1. Navigate to the GitHub Actions tab
-2. Select the "Release" workflow
-3. Click "Run workflow"
-4. Choose the version bump type (major/minor/patch) or specify a custom tag
-5. Optionally add release notes
-6. Click "Run workflow"
+### Release Process
 
-The release process will:
-- Update the version in `package.json`
-- Generate version information in `src/version.json`
-- Create a new Git tag
-- Create a GitHub release with release notes
+1. **Create a Pull Request** from `dev` to `release`
+2. **Merge the Pull Request** - This will automatically:
+   - Create a new version based on commit messages
+   - Update `package.json` with the new version
+   - Generate version information in `src/version.json`
+   - Create a new Git tag
+   - Create a GitHub release
+
+3. **Create a Pull Request** from `release` to `main`
+4. **Merge the Pull Request** - This will automatically:
+   - Deploy the existing version to production
+   - Use the same version that was created during the `dev` to `release` merge
+
+The release process is fully automated through GitHub Actions and requires no manual intervention for version creation or deployment.
 5. Direct commits to `main`, `release`, and `dev` are prohibited
 6. All merges to `release` and `main` must go through pull requests with all checks passing
 

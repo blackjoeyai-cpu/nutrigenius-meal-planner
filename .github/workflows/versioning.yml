@@ -88,3 +88,44 @@ jobs:
           else
             echo "Status: ❌ Failed to generate version information" >> $GITHUB_STEP_SUMMARY
           fi
+
+  release_check:
+    name: 🔍 Release Check
+    if: github.event_name == 'pull_request' && (github.base_ref == 'release' || github.base_ref == 'main')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check Release Type
+        id: release_type
+        run: |
+          if [[ "${{ github.base_ref }}" == "release" ]]; then
+            echo "release_type=dev_to_release" >> $GITHUB_OUTPUT
+            echo "This PR merges dev into release - will create new version"
+          elif [[ "${{ github.base_ref }}" == "main" ]]; then
+            echo "release_type=release_to_main" >> $GITHUB_OUTPUT
+            echo "This PR merges release into main - will deploy existing version"
+          fi
+
+      - name: Get Current Version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0")
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update PR with Release Info
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: release-info
+          message: |
+            ## 🚀 Release Information
+
+            ${{ github.base_ref == 'release' && '🚨 This PR will create a NEW version when merged!' || '✅ This PR will DEPLOY the existing version to production when merged!' }}
+
+            - **Release Type**: ${{ github.base_ref == 'release' && 'New Version Creation (dev → release)' || 'Production Deployment (release → main)' }}
+            - **Current Version**: `${{ steps.current_version.outputs.current_version }}`
+
+            ${{ github.base_ref == 'release' && 'When this PR is merged, a new version will be automatically created based on the commit messages.' || 'When this PR is merged, the existing version will be deployed to production.' }}
