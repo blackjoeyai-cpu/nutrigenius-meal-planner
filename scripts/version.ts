@@ -51,7 +51,11 @@ try {
     buildTime: new Date().toISOString(),
   };
 
-  // Write version info to a JSON file\n  const versionFilePath = join(rootDir, 'src', 'version.json');\n  writeFileSync(versionFilePath, JSON.stringify(versionInfo, null, 2) + '\n');\n\n  console.log(`Version info generated: ${version}${isDirty} (${commitHash})`);
+  // Write version info to a JSON file
+  const versionFilePath = join(rootDir, 'src', 'version.json');
+  writeFileSync(versionFilePath, JSON.stringify(versionInfo, null, 2) + '\n');
+
+  console.log(`Version info generated: ${version}${isDirty} (${commitHash})`);
 } catch (error) {
   console.error('Error generating version info:', (error as Error).message);
   process.exit(1);
