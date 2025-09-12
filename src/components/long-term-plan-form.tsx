@@ -58,6 +58,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
+import { useLanguageStore } from '@/hooks/use-language-store';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -110,6 +111,7 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
 
 type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
   generationSource: string;
+  language?: string;
 };
 
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
@@ -123,6 +125,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
+  const { language } = useLanguageStore();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
@@ -319,8 +322,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               }
             );
 
-            // Add recipes to form data
+            // Add recipes and language to form data
             combinedData.append('recipes', JSON.stringify(recipes));
+            combinedData.append('language', language);
 
             form.handleSubmit(() => formAction(combinedData))();
           }}

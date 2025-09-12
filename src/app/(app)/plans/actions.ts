@@ -22,6 +22,7 @@ const GeneratePlanSchema = z.object({
     .min(1, 'Number of days must be at least 1.')
     .max(30, 'Cannot generate more than 30 days.'),
   generationSource: z.enum(['catalog', 'new', 'combined']),
+  language: z.string().optional(),
 });
 
 export async function generatePlanAction(
@@ -37,6 +38,7 @@ export async function generatePlanAction(
     recipes: formData.get('recipes'),
     numberOfDays: formData.get('numberOfDays'),
     generationSource: formData.get('generationSource'),
+    language: formData.get('language'),
   });
 
   if (!validatedFields.success) {
@@ -58,9 +60,9 @@ export async function generatePlanAction(
       recipes,
       numberOfDays,
       generationSource,
+      language,
     } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
-    const language = 'Malay';
 
     const result = await generateLongTermMealPlan({
       dietaryPreferences,
@@ -85,6 +87,7 @@ export async function generatePlanAction(
         allergies,
         cuisine,
         generationSource,
+        language,
       }),
     };
   } catch (error) {
@@ -101,9 +104,9 @@ export async function generatePlanAction(
 export async function saveMealPlan(
   plan: Omit<MealPlan, 'id' | 'createdAt'> & {
     generationSource: string;
+    language?: string;
   }
 ) {
-  const language = 'Malay';
   const resolvedDays: DailyPlan[] = [];
 
   for (const day of plan.days) {
@@ -118,7 +121,7 @@ export async function saveMealPlan(
       if (meal.id.startsWith('new-recipe-')) {
         const recipeDetails: RecipeDetails = await generateRecipeDetails({
           prompt: `A ${plan.cuisine} ${meal.title} that is ${plan.dietaryPreferences} and fits a ${plan.calorieTarget} calorie diet.`,
-          language: language,
+          language: plan.language,
         });
 
         const newRecipeId = await addRecipe(recipeDetails);

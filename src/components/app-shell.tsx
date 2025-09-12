@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { BookOpen, Menu, Sparkles, CalendarDays } from 'lucide-react';
+import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -36,13 +36,18 @@ const menuItems = [
     label: 'My Plans',
     icon: CalendarDays,
   },
+  {
+    href: '/settings',
+    label: 'Settings',
+    icon: Settings,
+  },
 ];
 
 function BottomNavigation() {
   const pathname = usePathname();
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-t-lg md:hidden">
-      <div className="grid h-16 grid-cols-3">
+      <div className="grid h-16 grid-cols-4">
         {menuItems.map(item => (
           <Link
             key={item.href}
@@ -65,13 +70,23 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
 
+  const getPageTitle = () => {
+    const currentItem = menuItems.find(item => pathname.startsWith(item.href));
+    if (currentItem) {
+      return currentItem.label;
+    }
+    if (pathname.includes('/recipes/')) {
+      return 'Recipe Details';
+    }
+    return 'NutriGenius';
+  };
+
   if (isMobile) {
     return (
       <>
         <div className="flex h-14 items-center border-b bg-background px-4 lg:h-[60px] lg:px-6">
           <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
-            {menuItems.find(item => item.href === pathname)?.label ||
-              'NutriGenius'}
+            {getPageTitle()}
           </h1>
         </div>
         <main className="flex-1 p-4 pb-20">{children}</main>
@@ -92,7 +107,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href)}
                   tooltip={{ children: item.label }}
                 >
                   <a href={item.href}>
@@ -115,8 +130,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="sr-only">Toggle navigation menu</span>
           </SidebarTrigger>
           <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
-            {menuItems.find(item => item.href === pathname)?.label ||
-              'NutriGenius'}
+            {getPageTitle()}
           </h1>
         </header>
         <main className="flex-1 p-4 lg:p-6">{children}</main>

@@ -19,6 +19,7 @@ const MealPlanSchema = z.object({
   ingredients: z.string().optional(),
   recipes: z.string().optional(),
   generationSource: z.enum(['catalog', 'new', 'combined']),
+  language: z.string().optional(),
 });
 
 export async function createMealPlan(prevState: unknown, formData: FormData) {
@@ -30,6 +31,7 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
     ingredients: formData.get('ingredients'),
     recipes: formData.get('recipes'),
     generationSource: formData.get('generationSource'),
+    language: formData.get('language'),
   });
 
   if (!validatedFields.success) {
@@ -49,9 +51,9 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
       ingredients,
       recipes,
       generationSource,
+      language,
     } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
-    const language = 'Malay';
 
     const result = await generateSafeMealPlan({
       dietaryPreferences,
@@ -110,13 +112,13 @@ const RegenerateMealSchema = z.object({
     dinner: MealSchema.optional(),
   }),
   mealToReplace: MealSchema,
+  language: z.string().optional(),
 });
 
 export async function regenerateMealAction(
   input: z.infer<typeof RegenerateMealSchema>
 ) {
   const validatedFields = RegenerateMealSchema.safeParse(input);
-  const language = 'Malay';
 
   if (!validatedFields.success) {
     console.error(
@@ -127,10 +129,7 @@ export async function regenerateMealAction(
   }
 
   try {
-    const newMeal = await regenerateSingleMeal({
-      ...validatedFields.data,
-      language: language,
-    });
+    const newMeal = await regenerateSingleMeal(validatedFields.data);
 
     // We do not save the recipe here, just return the placeholder
     return { success: true, meal: newMeal };
@@ -170,13 +169,13 @@ const DailyMealPlanSaveSchema = z.object({
   generationSource: z.string(),
   planId: z.string().optional(),
   date: z.string().optional(),
+  language: z.string().optional(),
 });
 
 export async function saveDailyPlan(
   plan: z.infer<typeof DailyMealPlanSaveSchema>
 ) {
   const validatedFields = DailyMealPlanSaveSchema.safeParse(plan);
-  const language = 'Malay';
 
   if (!validatedFields.success) {
     return {
@@ -186,7 +185,7 @@ export async function saveDailyPlan(
   }
 
   try {
-    const { planId, date, ...planData } = validatedFields.data;
+    const { planId, date, language, ...planData } = validatedFields.data;
     const resolvedDays: DailyPlan[] = [];
 
     for (const day of planData.days) {

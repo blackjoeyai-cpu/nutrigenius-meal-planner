@@ -42,6 +42,7 @@ import {
 } from '@/app/(app)/recipes/actions';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguageStore } from '@/hooks/use-language-store';
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -80,7 +81,7 @@ export function AddRecipeDialog({
 }: AddRecipeDialogProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState('');
-  const [language, setLanguage] = useState('English');
+  const { language } = useLanguageStore();
   const { toast } = useToast();
   const isEditMode = !!recipeToEdit;
 
@@ -244,19 +245,11 @@ export function AddRecipeDialog({
                 value={generationPrompt}
                 onChange={e => setGenerationPrompt(e.target.value)}
               />
+               <p className="text-sm text-muted-foreground">
+                Recipe will be generated in your chosen language: <strong>{language}</strong>. Change this in the Settings page.
+              </p>
             </div>
-            <div className="flex justify-between items-center">
-              <div className="w-1/3">
-                <Select value={language} onValueChange={setLanguage}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select language" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="English">English</SelectItem>
-                    <SelectItem value="Malay">Bahasa Melayu</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex justify-end">
               <Button
                 onClick={handleGenerateRecipe}
                 disabled={isGenerating || !generationPrompt}

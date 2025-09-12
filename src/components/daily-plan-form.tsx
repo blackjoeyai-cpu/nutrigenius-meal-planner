@@ -49,6 +49,7 @@ import { useRecipes } from '@/hooks/use-recipes';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
+import { useLanguageStore } from '@/hooks/use-language-store';
 
 const initialState = {
   message: '',
@@ -96,6 +97,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { language } = useLanguageStore();
 
   // Local state to hold the generated plan
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
@@ -145,6 +147,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       ...generatedPlan,
       planId: planId || undefined,
       date: date || undefined,
+      language: language,
     };
 
     const result = await saveDailyPlan(planToSave);
@@ -191,6 +194,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       mealToRegenerate: mealType,
       currentMeals,
       mealToReplace,
+      language,
     };
 
     const result = await regenerateMealAction(input);
@@ -270,6 +274,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
             value={selectedIngredients.join(',')}
           />
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
+          <input type="hidden" name="language" value={language} />
           <CardHeader>
             <CardTitle>
               {planId ? 'Regenerate' : 'Create'} Your Daily Meal Plan
