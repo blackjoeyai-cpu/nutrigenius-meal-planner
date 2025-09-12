@@ -22,8 +22,8 @@ if [[ "$current_branch" == "dev" ]] || [[ "$current_branch" == "release" ]] || [
     echo "Please create a feature branch from 'dev' and merge through the proper workflow:"
     echo "1. Create feature branch from 'dev'"
     echo "2. Merge feature branch into 'dev'"
-    echo "3. Merge 'dev' into 'release'"
-    echo "4. Merge 'release' into 'main'"
+    echo "3. Create PR from 'dev' to 'release'"
+    echo "4. Create PR from 'release' to 'main'"
     exit 1
 fi
 
@@ -61,12 +61,32 @@ EOF
 # Make the hook executable
 chmod +x "$HOOKS_DIR/pre-commit"
 
+# Create pre-push hook to prevent direct pushes to protected branches
+cat > "$HOOKS_DIR/pre-push" << 'EOF'
+#!/bin/bash
+
+# Prevent direct pushes to protected branches
+protected_branches="main release"
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+
+for protected in $protected_branches; do
+    if [[ "$current_branch" == "$protected" ]]; then
+        echo "ERROR: Direct pushes to '$protected' branch are not allowed."
+        echo "All changes must go through pull requests with required checks."
+        exit 1
+    fi
+done
+EOF
+
+# Make the pre-push hook executable
+chmod +x "$HOOKS_DIR/pre-push"
+
 echo "Branching rules setup complete!"
 echo ""
 echo "Workflow rules:"
 echo "1. All feature branches must be created from 'dev'"
 echo "2. Feature branches merge into 'dev' first"
-echo "3. 'dev' merges into 'release' after testing"
-echo "4. 'release' merges into 'main' for production"
+echo "3. Create PR from 'dev' to 'release' after testing"
+echo "4. Create PR from 'release' to 'main' for production"
 echo ""
-echo "Direct commits to 'dev', 'release', and 'main' are now prevented."
+echo "Direct commits and pushes to 'dev', 'release', and 'main' are now prevented."
