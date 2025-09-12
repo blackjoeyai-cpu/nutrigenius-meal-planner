@@ -17,7 +17,7 @@ try {
   // Check if we're in a git repository
   try {
     execSync('git rev-parse --git-dir', { cwd: rootDir, stdio: 'ignore' });
-    
+
     // We're in a git repository, so get the actual git info
     try {
       version = execSync('git describe --tags --always --dirty', {
@@ -43,9 +43,12 @@ try {
 
     // Check if there are uncommitted changes
     try {
-      const dirtyOutput = execSync('git diff-index --quiet HEAD -- || echo "-dirty"', {
-        cwd: rootDir,
-      })
+      const dirtyOutput = execSync(
+        'git diff-index --quiet HEAD -- || echo "-dirty"',
+        {
+          cwd: rootDir,
+        }
+      )
         .toString()
         .trim();
       isDirty = dirtyOutput !== '';
@@ -67,7 +70,9 @@ try {
     // Not in a git repository, use default values
     console.warn('Not in a git repository, using default version info');
     version = process.env.npm_package_version || '0.0.0';
-    commitHash = process.env.VERCEL_GIT_COMMIT_SHA ? process.env.VERCEL_GIT_COMMIT_SHA.substring(0, 7) : 'unknown';
+    commitHash = process.env.VERCEL_GIT_COMMIT_SHA
+      ? process.env.VERCEL_GIT_COMMIT_SHA.substring(0, 7)
+      : 'unknown';
     branch = process.env.VERCEL_GIT_COMMIT_REF || 'unknown';
     isDirty = false;
   }
@@ -85,10 +90,12 @@ try {
   const versionFilePath = join(rootDir, 'src', 'version.json');
   writeFileSync(versionFilePath, JSON.stringify(versionInfo, null, 2) + '\n');
 
-  console.log(`Version info generated: ${version}${isDirty ? '-dirty' : ''} (${commitHash})`);
+  console.log(
+    `Version info generated: ${version}${isDirty ? '-dirty' : ''} (${commitHash})`
+  );
 } catch (error) {
   console.error('Error generating version info:', (error as Error).message);
-  
+
   // Even if we fail, write a default version file to prevent build failure
   try {
     const versionInfo = {
@@ -98,13 +105,16 @@ try {
       isDirty: false,
       buildTime: new Date().toISOString(),
     };
-    
+
     const versionFilePath = join(rootDir, 'src', 'version.json');
     writeFileSync(versionFilePath, JSON.stringify(versionInfo, null, 2) + '\n');
-    
+
     console.log('Generated default version info due to error');
   } catch (writeError) {
-    console.error('Failed to write default version info:', (writeError as Error).message);
+    console.error(
+      'Failed to write default version info:',
+      (writeError as Error).message
+    );
     process.exit(1);
   }
 }
