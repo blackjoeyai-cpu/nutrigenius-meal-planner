@@ -2,10 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Recipe } from "@/lib/types";
-import {
-  getRecipes as fetchRecipes,
-  addRecipe as saveRecipe,
-} from "@/services/recipe-service";
+import { getRecipes as fetchRecipes } from "@/services/recipe-service";
 import { addRecipeAction } from "@/app/(app)/recipes/actions";
 
 export const useRecipes = () => {
