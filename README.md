@@ -73,7 +73,7 @@ You can find these values in your Firebase project settings.
 
 ## Branching Strategy
 
-This project follows a strict branching strategy to ensure code quality and proper release management.
+This project follows a branching strategy to ensure code quality and proper release management while allowing for flexibility in development.
 
 ### Workflow Overview
 
@@ -82,7 +82,7 @@ feature/* → dev → release → main
 ```
 
 1. **Feature branches** are created from `dev`
-2. Feature branches are merged into `dev` after review
+2. Feature branches can be merged directly into `dev` (no PR required)
 3. `dev` is merged into `release` through a pull request after testing
 4. `release` is merged into `main` through a pull request for production release
 
@@ -91,7 +91,8 @@ feature/* → dev → release → main
 1. All new branches must be created from `dev`
 2. Only `release` branch can be merged into `main` (through PR)
 3. Only `dev` branch can be merged into `release` (through PR)
-4. Feature branches can only be merged into `dev`
+4. Feature branches can be merged directly into `dev`
+5. Direct commits to `release` and `main` branches are prohibited
 5. Direct commits to `main`, `release`, and `dev` are prohibited
 6. All merges to `release` and `main` must go through pull requests with all checks passing
 
