@@ -1,7 +1,7 @@
 {
-  "version": "v0.1.0-8-gb22d837-dirty",
-  "commitHash": "b22d837",
-  "branch": "dev",
+  "version": "v0.1.0-17-g5e96858-dirty",
+  "commitHash": "5e96858",
+  "branch": "fix/ci-cd-workflow",
   "isDirty": true,
-  "buildTime": "2025-09-12T07:21:35.415Z"
+  "buildTime": "2025-09-12T08:18:28.771Z"
 }

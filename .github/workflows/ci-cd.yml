@@ -163,10 +163,10 @@ jobs:
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
             # Production deployment
-            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --confirm)
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
           else
             # Preview deployment
-            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --confirm)
+            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
           fi
 
           # Extract clean URL from output (remove any trailing status text)
