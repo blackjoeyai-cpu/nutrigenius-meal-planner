@@ -75,6 +75,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Show working directory
+        run: |
+          echo "Working directory: $(pwd)"
+          echo "HOME: $HOME"
+
       - name: Use Node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
@@ -98,11 +103,17 @@ jobs:
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
 
-      - name: Upload Build Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifact
-          path: .next
+      - name: List directory contents for debugging
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
+          echo ".next directory contents:"
+          if [ -d ".next" ]; then
+            ls -la .next
+          else
+            echo ".next directory does not exist"
+          fi
 
       - name: 📝 Write Build Summary
         if: always()
@@ -128,11 +139,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Download Build Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: build-artifact
-          path: .next
+      - name: Show working directory
+        run: |
+          echo "Working directory: $(pwd)"
+          echo "HOME: $HOME"
 
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
@@ -144,13 +154,19 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
             # Production deployment
-            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --confirm)
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
           else
             # Preview deployment
-            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --confirm)
+            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
           fi
 
           # Extract clean URL from output (remove any trailing status text)
