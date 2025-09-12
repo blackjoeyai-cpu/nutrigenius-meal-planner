@@ -27,11 +27,11 @@ jobs:
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
         run: |
-          if [ "${{ github.head_ref }}" != "dev" ]; then
-            echo "ERROR: Only branches from 'dev' can be merged into 'release'"
+          if [ "${{ github.head_ref }}" != "dev" ] && [[ ! "${{ github.head_ref }}" =~ ^temp/ ]]; then
+            echo "ERROR: Only branches from 'dev' or temporary branches (temp/*) can be merged into 'release'"
             exit 1
           fi
-          echo "✓ PR from 'dev' to 'release' is allowed"
+          echo "✓ PR from 'dev' or temporary branch to 'release' is allowed"
 
       - name: Prevent direct pushes to protected branches
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
