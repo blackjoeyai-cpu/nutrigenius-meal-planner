@@ -13,15 +13,15 @@ mkdir -p "$SCRIPTS_DIR"
 cat > "$SCRIPTS_DIR/check-branch-source.sh" << 'EOF'
 #!/bin/bash
 
-# Check if current branch is release or main
+# Check if current branch is release, main, or dev
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-# If we're on release or main, prevent direct commits
-if [[ "$current_branch" == "release" ]] || [[ "$current_branch" == "main" ]]; then
+# If we're on release, main, or dev, prevent direct commits
+if [[ "$current_branch" == "release" ]] || [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "dev" ]]; then
     echo "ERROR: Direct commits to '$current_branch' are not allowed."
-    echo "Please create a feature branch from 'dev' and merge through the proper workflow:"
+    echo "Please create a feature branch and merge through a pull request:"
     echo "1. Create feature branch from 'dev'"
-    echo "2. Merge feature branch into 'dev' (direct merge allowed)"
+    echo "2. Create PR to merge feature branch into 'dev'"
     echo "3. Create PR from 'dev' to 'release'"
     echo "4. Create PR from 'release' to 'main'"
     exit 1
@@ -66,7 +66,7 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/bin/bash
 
 # Prevent direct pushes to protected branches
-protected_branches="main release"
+protected_branches="main release dev"
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
 for protected in $protected_branches; do
@@ -85,9 +85,8 @@ echo "Branching rules setup complete!"
 echo ""
 echo "Workflow rules:"
 echo "1. All feature branches must be created from 'dev'"
-echo "2. Feature branches can be merged directly into 'dev'"
+echo "2. All merges must go through pull requests"
 echo "3. Create PR from 'dev' to 'release' after testing"
 echo "4. Create PR from 'release' to 'main' for production"
 echo ""
-echo "Direct commits and pushes to 'release' and 'main' are now prevented."
-echo "Direct merges to 'dev' are now allowed."
+echo "Direct commits and pushes to all protected branches are now prevented."

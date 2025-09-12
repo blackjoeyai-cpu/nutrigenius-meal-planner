@@ -6,10 +6,12 @@ on:
     branches:
       - main
       - release
+      - dev
   push:
     branches:
       - main
       - release
+      - dev
 
 jobs:
   validate-branch-source:
@@ -27,15 +29,24 @@ jobs:
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
         run: |
-          if [ "${{ github.head_ref }}" != "dev" ] && [[ ! "${{ github.head_ref }}" =~ ^temp/ ]]; then
-            echo "ERROR: Only branches from 'dev' or temporary branches (temp/*) can be merged into 'release'"
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "ERROR: Only branches from 'dev' can be merged into 'release'"
             exit 1
           fi
-          echo "✓ PR from 'dev' or temporary branch to 'release' is allowed"
+          echo "✓ PR from 'dev' to 'release' is allowed"
+
+      - name: Check branch source for PR to dev
+        if: github.base_ref == 'dev'
+        run: |
+          if [[ "${{ github.head_ref }}" == "main" ]] || [[ "${{ github.head_ref }}" == "release" ]]; then
+            echo "ERROR: Cannot merge 'main' or 'release' into 'dev'"
+            exit 1
+          fi
+          echo "✓ PR to 'dev' is from a feature branch"
 
       - name: Prevent direct pushes to protected branches
-        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release' || github.ref == 'refs/heads/dev')
         run: |
-          echo "ERROR: Direct pushes to 'main' and 'release' branches are not allowed."
+          echo "ERROR: Direct pushes to 'main', 'release', and 'dev' branches are not allowed."
           echo "All changes must go through pull requests with required checks."
           exit 1
