@@ -125,6 +125,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+          path: .next
+
       - name: Install Vercel CLI
         run: npm install -g vercel@latest
 
@@ -137,16 +143,41 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
         run: |
           if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
-            vercel --prod --token $VERCEL_TOKEN --confirm
+            # Production deployment
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --confirm)
           else
-            vercel --token $VERCEL_TOKEN --confirm
+            # Preview deployment
+            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --confirm)
           fi
+          
+          # Extract clean URL from output (remove any trailing status text)
+          DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[a-zA-Z0-9.-]+\.vercel\.app' | head -1)
+          
+          # Fallback: if the above doesn't work, try a more general pattern
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^\s]+' | sed 's/[^a-zA-Z0-9./-].*$//' | head -1)
+          fi
+          
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "Deployment URL: $DEPLOYMENT_URL"
+          echo "Full Vercel Output: $DEPLOYMENT_OUTPUT"
+
       - name: 📝 Write Deployment Summary
         if: always()
         run: |
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "- Status: ✅ Deployed successfully to Vercel" >> $GITHUB_STEP_SUMMARY
+            if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
+              echo "- Environment: 🌟 Production" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- Environment: 🧪 Preview" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -n "${{ steps.vercel-deploy.outputs.deployment-url }}" ]; then
+              echo "- 🌐 **Live Application**: [${{ steps.vercel-deploy.outputs.deployment-url }}](${{ steps.vercel-deploy.outputs.deployment-url }})" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- 🌐 **Web App**: Deployment completed - Check Vercel dashboard for URL" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "- Status: ❌ Deployment failed" >> $GITHUB_STEP_SUMMARY
           fi
