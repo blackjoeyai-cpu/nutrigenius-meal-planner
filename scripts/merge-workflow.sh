@@ -8,7 +8,7 @@ echo "===================="
 echo "This script helps you follow the correct merging sequence."
 echo ""
 echo "Current workflow options:"
-echo "1. Merge feature branch into dev"
+echo "1. Merge feature branch into dev (direct merge allowed)"
 echo "2. Create PR from dev to release"
 echo "3. Create PR from release to main"
 echo ""
@@ -19,13 +19,18 @@ case $option in
   1)
     echo "Merging feature branch into dev..."
     echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
-    echo "This will merge your feature branch into dev."
-    echo "Please ensure you've created a PR and it has been approved."
+    echo "This will merge your feature branch directly into dev (no PR required)."
     read -p "Continue? (y/N): " confirm
     if [[ $confirm == [yY] ]]; then
+      current_branch=$(git rev-parse --abbrev-ref HEAD)
+      echo "Switching to dev branch..."
       git checkout dev
       git pull origin dev
-      echo "Now create your PR on GitHub to merge your feature branch into dev"
+      echo "Merging ${current_branch} into dev..."
+      git merge "$current_branch"
+      echo "Pushing changes to dev..."
+      git push origin dev
+      echo "✓ Feature branch merged directly into dev"
     fi
     ;;
   2)
