@@ -15,6 +15,7 @@
 *.pem
 
 # Local env files
+.env
 .env*.local
 
 # Vercel
@@ -27,3 +28,6 @@
 *.tsbuildinfo
 next-env.d.ts
 
+# Qwen
+.qwen
+QWEN.md
