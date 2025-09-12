@@ -245,8 +245,9 @@ export function AddRecipeDialog({
                 value={generationPrompt}
                 onChange={e => setGenerationPrompt(e.target.value)}
               />
-               <p className="text-sm text-muted-foreground">
-                Recipe will be generated in your chosen language: <strong>{language}</strong>. Change this in the Settings page.
+              <p className="text-sm text-muted-foreground">
+                Recipe will be generated in your chosen language:{' '}
+                <strong>{language}</strong>. Change this in the Settings page.
               </p>
             </div>
             <div className="flex justify-end">

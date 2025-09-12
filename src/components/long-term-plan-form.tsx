@@ -250,29 +250,51 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     {[day.breakfast, day.lunch, day.dinner].map(
                       (meal, mealIndex) => {
                         const isNewRecipe = meal.id.startsWith('new-recipe-');
-                        const Wrapper = isNewRecipe ? 'div' : Link;
-                        const props = isNewRecipe
-                          ? {}
-                          : { href: `/recipes/${meal.id}` };
 
                         return (
-                          <Wrapper
-                            key={mealIndex}
-                            {...props}
-                            className="group block"
-                          >
-                            <Card className="transition-shadow group-hover:shadow-md">
-                              <CardHeader>
-                                <CardTitle className="text-lg">
-                                  {['Breakfast', 'Lunch', 'Dinner'][mealIndex]}:{' '}
-                                  {meal.title}
-                                </CardTitle>
-                                <CardDescription>
-                                  {meal.calories} calories
-                                </CardDescription>
-                              </CardHeader>
-                            </Card>
-                          </Wrapper>
+                          <>
+                            {isNewRecipe ? (
+                              <div className="group block">
+                                <Card className="transition-shadow group-hover:shadow-md">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg">
+                                      {
+                                        ['Breakfast', 'Lunch', 'Dinner'][
+                                          mealIndex
+                                        ]
+                                      }
+                                      : {meal.title}
+                                    </CardTitle>
+                                    <CardDescription>
+                                      {meal.calories} calories
+                                    </CardDescription>
+                                  </CardHeader>
+                                </Card>
+                              </div>
+                            ) : (
+                              <Link
+                                href={`/recipes/${meal.id}`}
+                                className="group block"
+                                key={mealIndex}
+                              >
+                                <Card className="transition-shadow group-hover:shadow-md">
+                                  <CardHeader>
+                                    <CardTitle className="text-lg">
+                                      {
+                                        ['Breakfast', 'Lunch', 'Dinner'][
+                                          mealIndex
+                                        ]
+                                      }
+                                      : {meal.title}
+                                    </CardTitle>
+                                    <CardDescription>
+                                      {meal.calories} calories
+                                    </CardDescription>
+                                  </CardHeader>
+                                </Card>
+                              </Link>
+                            )}
+                          </>
                         );
                       }
                     )}
