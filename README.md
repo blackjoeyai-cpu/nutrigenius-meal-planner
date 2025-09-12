@@ -83,16 +83,17 @@ feature/* → dev → release → main
 
 1. **Feature branches** are created from `dev`
 2. Feature branches are merged into `dev` after review
-3. `dev` is merged into `release` after testing
-4. `release` is merged into `main` for production release
+3. `dev` is merged into `release` through a pull request after testing
+4. `release` is merged into `main` through a pull request for production release
 
 ### Rules
 
 1. All new branches must be created from `dev`
-2. Only `release` branch can be merged into `main`
-3. Only `dev` branch can be merged into `release`
+2. Only `release` branch can be merged into `main` (through PR)
+3. Only `dev` branch can be merged into `release` (through PR)
 4. Feature branches can only be merged into `dev`
 5. Direct commits to `main`, `release`, and `dev` are prohibited
+6. All merges to `release` and `main` must go through pull requests with all checks passing
 
 ### Setup
 

@@ -8,7 +8,9 @@ on:
       - dev
   pull_request:
     branches:
-      - "**"
+      - main
+      - release
+      - dev
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -133,7 +135,8 @@ jobs:
       github.event_name == 'pull_request' ||
       (github.event_name == 'push' && (
         github.ref == 'refs/heads/main' ||
-        github.ref == 'refs/heads/release'
+        github.ref == 'refs/heads/release' ||
+        github.ref == 'refs/heads/dev'
       ))
     steps:
       - name: Checkout code
@@ -161,11 +164,14 @@ jobs:
           NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
           NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
-            # Production deployment
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            # Production deployment for main
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
+          elif [[ "${{ github.ref }}" == "refs/heads/release" ]]; then
+            # Production deployment for release
             DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
           else
-            # Preview deployment
+            # Preview deployment for all other branches including PRs
             DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
           fi
 
@@ -187,8 +193,10 @@ jobs:
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "- Status: ✅ Deployed successfully to Vercel" >> $GITHUB_STEP_SUMMARY
-            if [[ "${{ github.ref }}" == "refs/heads/main" || "${{ github.ref }}" == "refs/heads/release" ]]; then
+            if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.ref }}" == "refs/heads/release" ]]; then
               echo "- Environment: 🌟 Production" >> $GITHUB_STEP_SUMMARY
+            elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+              echo "- Environment: 🧪 Preview (PR)" >> $GITHUB_STEP_SUMMARY
             else
               echo "- Environment: 🧪 Preview" >> $GITHUB_STEP_SUMMARY
             fi

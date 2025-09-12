@@ -9,8 +9,8 @@ if [[ "$current_branch" == "dev" ]] || [[ "$current_branch" == "release" ]] || [
     echo "Please create a feature branch from 'dev' and merge through the proper workflow:"
     echo "1. Create feature branch from 'dev'"
     echo "2. Merge feature branch into 'dev'"
-    echo "3. Merge 'dev' into 'release'"
-    echo "4. Merge 'release' into 'main'"
+    echo "3. Create PR from 'dev' to 'release'"
+    echo "4. Create PR from 'release' to 'main'"
     exit 1
 fi
 

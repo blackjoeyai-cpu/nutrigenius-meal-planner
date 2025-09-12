@@ -7,6 +7,11 @@ on:
       - main
       - release
       - dev
+  push:
+    branches:
+      - main
+      - release
+      - dev
 
 jobs:
   validate-branch-source:
@@ -29,6 +34,13 @@ jobs:
             exit 1
           fi
           echo "✓ PR from 'dev' to 'release' is allowed"
+
+      - name: Prevent direct pushes to protected branches
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release')
+        run: |
+          echo "ERROR: Direct pushes to 'main' and 'release' branches are not allowed."
+          echo "All changes must go through pull requests with required checks."
+          exit 1
 
       - name: Check branch source for PR to dev
         if: github.base_ref == 'dev'
