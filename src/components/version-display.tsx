@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from 'react';
 
-export default function VersionDisplay({ className }) {
-  const [versionInfo, setVersionInfo] = useState(null);
-  const [error, setError] = useState(null);
+interface VersionInfo {
+  version: string;
+  commitHash: string;
+  branch: string;
+  isDirty: boolean;
+  buildTime: string;
+}
+
+export default function VersionDisplay({ className }: { className?: string }) {
+  const [versionInfo, setVersionInfo] = useState<VersionInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -13,10 +21,10 @@ export default function VersionDisplay({ className }) {
         if (!response.ok) {
           throw new Error('Failed to fetch version info');
         }
-        const data = await response.json();
+        const data: VersionInfo = await response.json();
         setVersionInfo(data);
       } catch (err) {
-        setError(err.message);
+        setError((err as Error).message);
       }
     };
 
@@ -40,3 +48,4 @@ export default function VersionDisplay({ className }) {
     </div>
   );
 }
+\n// Test line for commit

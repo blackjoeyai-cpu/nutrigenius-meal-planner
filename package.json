@@ -10,7 +10,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "version": "node scripts/version.js",
+    "version": "tsx scripts/version.ts",
     "postinstall": "npm run version"
   },
   "dependencies": {

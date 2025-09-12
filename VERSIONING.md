@@ -16,6 +16,7 @@ This project uses git-based versioning to automatically generate version informa
 ## Version Information
 
 The generated version includes:
+
 - `version`: The current version (from git tags or commit hash)
 - `commitHash`: The current commit hash
 - `branch`: The current git branch
@@ -30,9 +31,7 @@ Import and use the `VersionDisplay` component:
 import VersionDisplay from '@/components/version-display';
 
 export default function MyComponent() {
-  return (
-    <VersionDisplay className="text-sm" />
-  );
+  return <VersionDisplay className="text-sm" />;
 }
 ```
 
