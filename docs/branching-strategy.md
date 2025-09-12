@@ -18,7 +18,7 @@ feature/* → dev → release → main
 - **main**: Production-ready code
 - **release**: Release candidate code (stabilization branch)
 - **dev**: Development branch (integration of features)
-- **feature/***: Individual feature branches
+- **feature/\***: Individual feature branches
 
 ## Rules
 
@@ -39,6 +39,7 @@ Run the setup script to install the Git hooks that enforce these rules:
 ## GitHub Actions
 
 The repository uses GitHub Actions to enforce merging rules:
+
 - PRs to `main` are only allowed from `release`
 - PRs to `release` are only allowed from `dev`
 - PRs to `dev` cannot come from `main` or `release`
@@ -46,12 +47,14 @@ The repository uses GitHub Actions to enforce merging rules:
 ## Creating a New Feature
 
 1. Ensure you're on the latest `dev`:
+
    ```bash
    git checkout dev
    git pull origin dev
    ```
 
 2. Create a new feature branch:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```

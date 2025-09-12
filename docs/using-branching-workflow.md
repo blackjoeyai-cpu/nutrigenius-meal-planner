@@ -24,6 +24,7 @@ To create a new feature, use the helper script:
 ```
 
 This script will:
+
 1. Switch to the `dev` branch
 2. Pull the latest changes from `origin/dev`
 3. Create a new branch named `feature/my-feature-name`
@@ -47,6 +48,7 @@ Use the merge workflow helper script to guide you through the proper merge seque
 ```
 
 Select the appropriate option:
+
 1. Merge feature branch into `dev`
 2. Merge `dev` into `release`
 3. Merge `release` into `main`
@@ -54,6 +56,7 @@ Select the appropriate option:
 ## Protected Branches
 
 The following branches are protected and cannot be committed to directly:
+
 - `main` - Production code
 - `release` - Release candidate code
 - `dev` - Development integration branch
@@ -63,6 +66,7 @@ Attempting to commit directly to these branches will be blocked by the pre-commi
 ## GitHub Actions Enforcement
 
 The GitHub Actions workflow in `.github/workflows/branch-protection.yml` enforces merge rules at the PR level:
+
 - Only `release` can be merged into `main`
 - Only `dev` can be merged into `release`
 - `main` and `release` cannot be merged into `dev`
