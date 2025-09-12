@@ -1,6 +1,6 @@
 'use server';
 
-import { generateRecipe } from '@/ai/flows/generate-recipe';
+import { generateRecipeDetails } from '@/ai/flows/generate-recipe';
 import { addRecipe, updateRecipe } from '@/services/recipe-service';
 import { z } from 'zod';
 import type { Recipe } from '@/lib/types';
@@ -20,7 +20,7 @@ export async function generateRecipeAction(input: {
     throw new Error('Invalid input for recipe generation.');
   }
 
-  const recipeDetails = await generateRecipe(validatedFields.data);
+  const recipeDetails = await generateRecipeDetails(validatedFields.data);
 
   return recipeDetails;
 }

@@ -37,6 +37,7 @@ import { ScrollArea } from './ui/scroll-area';
 import { useState, useEffect } from 'react';
 import {
   generateRecipeAction,
+  addRecipeAction,
   updateRecipeAction,
 } from '@/app/(app)/recipes/actions';
 import { Loader2, Sparkles } from 'lucide-react';
@@ -79,6 +80,7 @@ export function AddRecipeDialog({
 }: AddRecipeDialogProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPrompt, setGenerationPrompt] = useState('');
+  const [language, setLanguage] = useState('English');
   const { toast } = useToast();
   const isEditMode = !!recipeToEdit;
 
@@ -131,7 +133,7 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
-        language: 'Malay',
+        language: language,
       });
       if (result) {
         form.reset({
@@ -188,7 +190,7 @@ export function AddRecipeDialog({
           title: 'Success',
           description: 'Recipe updated successfully.',
         });
-        onRecipeAdd(recipeData);
+        onRecipeAdd({ ...recipeToEdit, ...recipeData });
       } catch {
         toast({
           title: 'Error',
@@ -197,10 +199,24 @@ export function AddRecipeDialog({
         });
       }
     } else {
-      onRecipeAdd(recipeData);
+      try {
+        const newRecipeId = await addRecipeAction(recipeData);
+        toast({
+          title: 'Success',
+          description: 'Recipe added successfully.',
+        });
+        onRecipeAdd({ ...recipeData, id: newRecipeId, imageId: '' }); // Pass full recipe object back
+      } catch {
+        toast({
+          title: 'Error',
+          description: 'Failed to add recipe.',
+          variant: 'destructive',
+        });
+      }
     }
     form.reset();
     setGenerationPrompt('');
+    onOpenChange(false);
   }
 
   return (
@@ -229,23 +245,36 @@ export function AddRecipeDialog({
                 onChange={e => setGenerationPrompt(e.target.value)}
               />
             </div>
-            <Button
-              onClick={handleGenerateRecipe}
-              disabled={isGenerating || !generationPrompt}
-              className="w-full sm:w-auto"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate Recipe
-                </>
-              )}
-            </Button>
+            <div className="flex justify-between items-center">
+              <div className="w-1/3">
+                <Select value={language} onValueChange={setLanguage}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="English">English</SelectItem>
+                    <SelectItem value="Malay">Bahasa Melayu</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                onClick={handleGenerateRecipe}
+                disabled={isGenerating || !generationPrompt}
+                className="sm:w-auto"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate Recipe
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         )}
 
