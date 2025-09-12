@@ -130,6 +130,7 @@ The release process is fully automated through GitHub Actions and requires no ma
 ### Commit Message Format
 
 For proper versioning, please follow the conventional commit format:
+
 - `feat: Add new feature` (minor version bump)
 - `fix: Fix bug` (patch version bump)
 - `docs: Update documentation`
