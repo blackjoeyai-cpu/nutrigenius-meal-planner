@@ -93,6 +93,34 @@ feature/* → dev → release → main
 3. Only `dev` branch can be merged into `release` (through PR)
 4. Feature branches can be merged directly into `dev`
 5. Direct commits to `release` and `main` branches are prohibited
+
+## Release Process
+
+This project uses automated versioning through GitHub Actions and semantic versioning:
+
+1. **Version Format**: `v{major}.{minor}.{patch}` (e.g., `v1.2.3`)
+2. **Release Triggers**:
+   - Manual trigger through GitHub Actions (recommended)
+   - Automatic trigger on pushes to `release` or `main` branches
+3. **Version Bumping**:
+   - `patch`: Backward-compatible bug fixes (default for `release` branch)
+   - `minor`: Backward-compatible new features (default for `main` branch)
+   - `major`: Breaking changes (manual only)
+
+### Creating a Release
+
+1. Navigate to the GitHub Actions tab
+2. Select the "Release" workflow
+3. Click "Run workflow"
+4. Choose the version bump type (major/minor/patch) or specify a custom tag
+5. Optionally add release notes
+6. Click "Run workflow"
+
+The release process will:
+- Update the version in `package.json`
+- Generate version information in `src/version.json`
+- Create a new Git tag
+- Create a GitHub release with release notes
 5. Direct commits to `main`, `release`, and `dev` are prohibited
 6. All merges to `release` and `main` must go through pull requests with all checks passing
 
