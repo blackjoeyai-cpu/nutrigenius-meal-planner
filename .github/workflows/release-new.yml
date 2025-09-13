@@ -1,0 +1,175 @@
+name: Release New
+
+on:
+  pull_request:
+    branches:
+      - release
+      - main
+    types: [closed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: "20.18.1"
+
+jobs:
+  release:
+    name: 🚀 Create Release
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Debug - Check versions
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Prettier version: $(npx prettier --version)"
+
+      - name: Check formatting
+        run: |
+          echo "Checking formatting with Prettier..."
+          npx prettier@3.6.2 --check .github/workflows/release-new.yml || echo "Format check completed"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current_version
+        run: |
+          # Get the latest tag or default to 0.0.0
+          CURRENT_VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0")
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $CURRENT_VERSION"
+
+      - name: Determine version action
+        id: version_action
+        run: |
+          # Check which branch we're merging into
+          if [[ "${GITHUB_BASE_REF}" == "release" ]]; then
+            echo "action=create_new_version" >> $GITHUB_OUTPUT
+            echo "Branch: dev -> release, will create new version"
+          elif [[ "${GITHUB_BASE_REF}" == "main" ]]; then
+            echo "action=use_existing_version" >> $GITHUB_OUTPUT
+            echo "Branch: release -> main, will use existing version"
+          else
+            echo "action=none" >> $GITHUB_OUTPUT
+            echo "No version action needed for this merge"
+          fi
+
+      - name: Create new version (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        id: new_version
+        run: |
+          # Determine version bump based on commit messages or default to patch
+          COMMITS=$(git log --oneline ${GITHUB_BASE_SHA}..${GITHUB_HEAD_SHA})
+
+          # Clean the version string to remove -dirty suffix for semver parsing
+          CLEAN_VERSION=$(echo "${{ steps.current_version.outputs.current_version }}" | sed 's/-dirty$//' | sed 's/-[0-9]*-g[0-9a-f]*$//')
+
+          # Determine version bump type based on commit messages
+          if echo "$COMMITS" | grep -qE "(feat|feature)"; then
+            # Minor version bump for features
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i minor)
+          elif echo "$COMMITS" | grep -qE "(fix|bugfix)"; then
+            # Patch version bump for fixes
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i patch)
+          else
+            # Default to patch bump
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i patch)
+          fi
+
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+          echo "Creating new version: $NEXT_VERSION"
+
+      - name: Update version in package.json (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          npm version ${{ steps.new_version.outputs.next_version }} --no-git-tag-version
+          git add package.json
+
+      - name: Generate version info
+        run: |
+          npm run version
+          git add src/version.json
+
+      - name: Commit version updates (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          git commit -m "chore(release): update version to ${{ steps.new_version.outputs.next_version }}"
+
+      - name: Create and push tag (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          git tag -a "v${{ steps.new_version.outputs.next_version }}" -m "Release version ${{ steps.new_version.outputs.next_version }}"
+          git push origin "v${{ steps.new_version.outputs.next_version }}"
+
+      - name: Push version updates (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          git push
+
+      - name: Create GitHub Release (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.new_version.outputs.next_version }}
+          release_name: Release v${{ steps.new_version.outputs.next_version }}
+          body: |
+            ## Release v${{ steps.new_version.outputs.next_version }}
+
+            Automated release generated by GitHub Actions for merge from dev to release.
+
+            ### 🔧 Changes
+            - Version updated to ${{ steps.new_version.outputs.next_version }}
+
+            ### 📦 Version Information
+            ```json
+            $(cat src/version.json)
+            ```
+          draft: false
+          prerelease: false
+
+      - name: Deploy to Production (release → main)
+        if: steps.version_action.outputs.action == 'use_existing_version'
+        run: |
+          echo "Deploying release ${{ steps.current_version.outputs.current_version }} to production"
+          echo "Using existing version: ${{ steps.current_version.outputs.current_version }}"
+
+      - name: 📝 Write Release Summary
+        if: always()
+        run: |
+          echo "## 🚀 Release Summary" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "- Status: ✅ Release process completed successfully" >> $GITHUB_STEP_SUMMARY
+            if [[ "${{ steps.version_action.outputs.action }}" == "create_new_version" ]]; then
+              echo "- New version created: \`v${{ steps.new_version.outputs.next_version }}\`" >> $GITHUB_STEP_SUMMARY
+              echo "- Release notes: [View Release](https://github.com/${{ github.repository }}/releases/tag/v${{ steps.new_version.outputs.next_version }})" >> $GITHUB_STEP_SUMMARY
+            elif [[ "${{ steps.version_action.outputs.action }}" == "use_existing_version" ]]; then
+              echo "- Deployed existing version: \`${{ steps.current_version.outputs.current_version }}\` to production" >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- No version action needed for this merge" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "- Status: ❌ Release process failed" >> $GITHUB_STEP_SUMMARY
+          fi
