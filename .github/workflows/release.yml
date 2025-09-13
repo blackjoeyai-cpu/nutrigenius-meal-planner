@@ -26,6 +26,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Clear GitHub Actions Cache
+        uses: TheRealRyGuy/clear-cache-action@master
+        env:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
