@@ -6,7 +6,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     reviewers:
-      - "your-github-username"
+      - "blackjoeyai-cpu"
     labels:
       - "dependencies"
       - "npm"
@@ -19,7 +19,7 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 5
     reviewers:
-      - "your-github-username"
+      - "blackjoeyai-cpu"
     labels:
       - "dependencies"
       - "github-actions"
