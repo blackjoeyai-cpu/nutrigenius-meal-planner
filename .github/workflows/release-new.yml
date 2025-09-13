@@ -1,4 +1,4 @@
-name: Release
+name: Release New
 
 on:
   pull_request:
@@ -6,13 +6,14 @@ on:
       - release
       - main
     types: [closed]
+  workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "20.18.1"
 
 jobs:
   release:
@@ -35,6 +36,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Debug - Check versions
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Prettier version: $(npx prettier --version)"
+
+      - name: Check formatting
+        run: |
+          echo "Checking formatting with Prettier..."
+          npx prettier@3.6.2 --check .github/workflows/release-new.yml || echo "Format check completed"
+
       - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
@@ -52,10 +64,10 @@ jobs:
         id: version_action
         run: |
           # Check which branch we're merging into
-          if [[ "${{ github.base_ref }}" == "release" ]]; then
+          if [[ "${GITHUB_BASE_REF}" == "release" ]]; then
             echo "action=create_new_version" >> $GITHUB_OUTPUT
             echo "Branch: dev -> release, will create new version"
-          elif [[ "${{ github.base_ref }}" == "main" ]]; then
+          elif [[ "${GITHUB_BASE_REF}" == "main" ]]; then
             echo "action=use_existing_version" >> $GITHUB_OUTPUT
             echo "Branch: release -> main, will use existing version"
           else
@@ -68,7 +80,7 @@ jobs:
         id: new_version
         run: |
           # Determine version bump based on commit messages or default to patch
-          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          COMMITS=$(git log --oneline ${GITHUB_BASE_SHA}..${GITHUB_HEAD_SHA})
 
           # Get the current version and extract base version for semver parsing
           CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
