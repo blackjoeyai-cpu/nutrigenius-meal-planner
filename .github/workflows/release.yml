@@ -166,5 +166,3 @@ jobs:
           else
             echo "- Status: ❌ Release process failed" >> $GITHUB_STEP_SUMMARY
           fi
-
-# Formatted with Prettier to resolve CI issues
