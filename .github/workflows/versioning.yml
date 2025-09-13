@@ -15,9 +15,10 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  actions: write
 
 env:
-  NODE_VERSION: "20"
+  NODE_VERSION: "20.18.1"
 
 jobs:
   version:
@@ -29,6 +30,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clear GitHub Actions Cache
+        uses: TheRealRyGuy/clear-cache-action@master
+        env:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -37,6 +43,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Debug - Check Node.js and npm versions
+        run: |
+          echo "Node.js version: $(node --version)"
+          echo "npm version: $(npm --version)"
+          echo "Prettier version: $(npx prettier --version)"
 
       - name: Get current version
         id: current_version
@@ -47,12 +59,10 @@ jobs:
           echo "Current version: $CURRENT_VERSION"
 
       - name: Generate version info
-        run: |
-          # Run our version generation script
-          npm run version
+        run: npm run version
 
-          # Show generated version info
-          cat src/version.json
+      - name: Check formatting (debug)
+        run: npx prettier@3.6.2 --check .github/workflows/versioning.yml
 
       - name: Read version info
         id: version_info

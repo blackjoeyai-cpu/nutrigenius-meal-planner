@@ -1,7 +1,7 @@
 {
-  "version": "v0.1.0-42-gcd2a01d",
-  "commitHash": "cd2a01d",
-  "branch": "main",
-  "isDirty": false,
-  "buildTime": "2025-09-12T14:54:17.924Z"
+  "version": "v0.1.0-12-gffdf226-dirty",
+  "commitHash": "ffdf226",
+  "branch": "release",
+  "isDirty": true,
+  "buildTime": "2025-09-13T11:05:12.768Z"
 }

@@ -50,11 +50,9 @@ export default function RecipesPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div className="space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight font-headline">
-            Browse Recipes
-          </h2>
-          <p className="text-muted-foreground">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold font-headline">Browse Recipes</h1>
+          <p className="text-sm text-muted-foreground">
             Find or create your next favorite meal from our collection.
           </p>
         </div>
@@ -66,7 +64,7 @@ export default function RecipesPage() {
             setIsAddDialogOpen(false);
           }}
         >
-          <Button onClick={() => setIsAddDialogOpen(true)}>
+          <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
             <PlusCircle className="mr-2 h-4 w-4" />
             Add Recipe
           </Button>
