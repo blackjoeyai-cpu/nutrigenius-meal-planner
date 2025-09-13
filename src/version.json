@@ -1,7 +1,7 @@
 {
-  "version": "v0.1.0-44-g5efb4e0-dirty",
-  "commitHash": "5efb4e0",
-  "branch": "HEAD",
+  "version": "b18160b-dirty",
+  "commitHash": "b18160b",
+  "branch": "release",
   "isDirty": true,
-  "buildTime": "2025-09-13T00:17:25.653Z"
+  "buildTime": "2025-09-13T02:25:09.609Z"
 }
