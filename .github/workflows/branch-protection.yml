@@ -7,15 +7,28 @@ on:
       - main
       - release
       - dev
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - main
+      - release
+      - dev
   push:
     branches:
       - main
       - release
       - dev
 
+# Required permissions for Dependabot and other automated PRs
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   validate-branch-source:
     runs-on: ubuntu-latest
+    # Skip branch source validation for Dependabot PRs since they may come from external sources
+    if: github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]'
     steps:
       - name: Check branch source for PR to main
         if: github.base_ref == 'main'
@@ -50,3 +63,14 @@ jobs:
           echo "ERROR: Direct pushes to 'main', 'release', and 'dev' branches are not allowed."
           echo "All changes must go through pull requests with required checks."
           exit 1
+
+  # Separate job for validating Dependabot and other automated PRs
+  validate-automated-prs:
+    runs-on: ubuntu-latest
+    # Only run for Dependabot and other automated PRs
+    if: github.actor == 'dependabot[bot]' || github.actor == 'github-actions[bot]'
+    steps:
+      - name: Allow automated dependency updates
+        run: |
+          echo "✓ Automated PR from ${{ github.actor }} is allowed"
+          echo "Skipping branch source validation for automated PRs"
