@@ -1,4 +1,4 @@
-name: Release
+name: Release New
 
 on:
   pull_request:
@@ -6,6 +6,7 @@ on:
       - release
       - main
     types: [closed]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -70,33 +71,19 @@ jobs:
           # Determine version bump based on commit messages or default to patch
           COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
 
-          # Get the current version and extract base version for semver parsing
-          CURRENT_VERSION="${{ steps.current_version.outputs.current_version }}"
-          echo "Raw version: $CURRENT_VERSION"
-          
-          # Extract a valid semver base from the current version
-          # Try to extract version in format v1.2.3 or 1.2.3
-          BASE_VERSION=$(echo "$CURRENT_VERSION" | grep -oE 'v?[0-9]+\.[0-9]+\.[0-9]+' | head -1 | sed 's/v//')
-          
-          # If we couldn't extract a valid version, default to package.json version or 0.0.0
-          if [ -z "$BASE_VERSION" ]; then
-            # Try to get version from package.json
-            PACKAGE_VERSION=$(node -p "require('./package.json').version" 2>/dev/null || echo "0.0.0")
-            BASE_VERSION="$PACKAGE_VERSION"
-          fi
-          
-          echo "Base version: $BASE_VERSION"
+          # Clean the version string to remove -dirty suffix for semver parsing
+          CLEAN_VERSION=$(echo "${{ steps.current_version.outputs.current_version }}" | sed 's/-dirty$//' | sed 's/-[0-9]*-g[0-9a-f]*$//')
 
           # Determine version bump type based on commit messages
           if echo "$COMMITS" | grep -qE "(feat|feature)"; then
             # Minor version bump for features
-            NEXT_VERSION=$(npx semver $BASE_VERSION -i minor)
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i minor)
           elif echo "$COMMITS" | grep -qE "(fix|bugfix)"; then
             # Patch version bump for fixes
-            NEXT_VERSION=$(npx semver $BASE_VERSION -i patch)
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i patch)
           else
             # Default to patch bump
-            NEXT_VERSION=$(npx semver $BASE_VERSION -i patch)
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i patch)
           fi
 
           echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
