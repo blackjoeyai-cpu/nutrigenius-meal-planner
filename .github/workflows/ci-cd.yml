@@ -11,14 +11,19 @@ on:
       - main
       - release
       - dev
+    # Ensure CI runs on Dependabot PRs
+    types: [opened, synchronize, reopened]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Permissions needed for Dependabot PRs and CodeQL
 permissions:
   actions: write
   contents: read
+  # Required for CodeQL
+  security-events: write
 
 env:
   NODE_VERSION: "20.18.1"
