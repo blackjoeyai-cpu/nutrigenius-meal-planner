@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { BookOpen, Menu, Sparkles, CalendarDays, Settings } from 'lucide-react';
+import { Home, LogOut } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -21,6 +22,11 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 const menuItems = [
+  {
+    href: '/dashboard',
+    label: 'Dashboard',
+    icon: Home,
+  },
   {
     href: '/recipes',
     label: 'Recipes',
@@ -46,15 +52,17 @@ const menuItems = [
 function BottomNavigation() {
   const pathname = usePathname();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background shadow-t-lg md:hidden">
-      <div className="grid h-16 grid-cols-4">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background md:hidden">
+      <div className="grid h-16 grid-cols-5">
         {menuItems.map(item => (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              'flex flex-col items-center justify-center gap-1 text-sm font-medium',
-              pathname === item.href ? 'text-primary' : 'text-muted-foreground'
+              'flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors',
+              pathname === item.href
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
             )}
           >
             <item.icon className="h-5 w-5" />
@@ -84,8 +92,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (isMobile) {
     return (
       <>
-        <div className="flex h-14 items-center border-b bg-background px-4 lg:h-[60px] lg:px-6">
-          <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
+        <div className="flex h-14 items-center border-b bg-background px-4">
+          <h1 className="flex-1 text-xl font-semibold font-headline">
             {getPageTitle()}
           </h1>
         </div>
@@ -98,7 +106,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader>
+        <SidebarHeader className="border-b">
           <Logo />
         </SidebarHeader>
         <SidebarContent>
@@ -107,33 +115,47 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname.startsWith(item.href)}
+                  isActive={pathname === item.href}
                   tooltip={{ children: item.label }}
+                  className="transition-colors"
                 >
-                  <a href={item.href}>
-                    <item.icon />
+                  <Link href={item.href}>
+                    <item.icon className="h-4 w-4" />
                     <span>{item.label}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter>
-          {/* Can add footer items here if needed */}
+        <SidebarFooter className="border-t p-4">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => {
+                  // Add your logout logic here
+                  console.log('Logout clicked');
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Log out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
       <SidebarInset>
-        <header className="flex h-14 items-center gap-4 border-b bg-background px-4 lg:h-[60px] lg:px-6">
-          <SidebarTrigger variant="outline" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
+        <header className="flex h-14 items-center gap-4 border-b bg-background px-6">
+          <SidebarTrigger variant="outline" size="icon" className="h-8 w-8">
+            <Menu className="h-4 w-4" />
             <span className="sr-only">Toggle navigation menu</span>
           </SidebarTrigger>
-          <h1 className="flex-1 text-xl font-semibold md:text-2xl font-headline">
+          <h1 className="flex-1 text-xl font-semibold font-headline">
             {getPageTitle()}
           </h1>
         </header>
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );
