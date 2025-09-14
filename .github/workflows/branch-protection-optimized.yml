@@ -42,11 +42,10 @@ jobs:
             exit 1
           fi
           echo "✓ PR from 'release' to 'main' is allowed"
-
-        env:
-          HEAD_REF: ${{ github.head_ref }}
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           # Safely escape GitHub context variables to prevent code injection
           # HEAD_REF is set as an environment variable by the workflow
@@ -55,8 +54,6 @@ jobs:
             echo "ERROR: Only branches from 'dev' can be merged into 'release'"
             exit 1
           fi
-        env:
-          HEAD_REF: ${{ github.head_ref }}
           echo "✓ PR from 'dev' to 'release' is allowed"
 
       - name: Check branch source for PR to dev
