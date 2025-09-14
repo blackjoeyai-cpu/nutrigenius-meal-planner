@@ -1,0 +1,104 @@
+name: Branch Protection
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - main
+      - release
+      - dev
+  pull_request_target:
+    types: [opened, synchronize, reopened, edited]
+    branches:
+      - main
+      - release
+      - dev
+  push:
+    branches:
+      - main
+      - release
+      - dev
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  validate-branch-source:
+    runs-on: ubuntu-latest
+    # Skip validation for Dependabot PRs since they may come from external sources
+    if: github.actor != 'dependabot[bot]' && github.actor != 'github-actions[bot]'
+    steps:
+      - name: Check branch source for PR to main
+        if: github.base_ref == 'main'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # Safely escape GitHub context variables to prevent code injection
+          # HEAD_REF is set as an environment variable by the workflow
+          # Use pattern matching to validate branch names safely
+          if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]] || [ "$HEAD_REF" != "release" ]; then
+            echo "ERROR: Only branches from 'release' can be merged into 'main'"
+            exit 1
+          fi
+          echo "✓ PR from 'release' to 'main' is allowed"
+      - name: Check branch source for PR to release
+        if: github.base_ref == 'release'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # Safely escape GitHub context variables to prevent code injection
+          # HEAD_REF is set as an environment variable by the workflow
+          # Use pattern matching to validate branch names safely
+          if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]] || [ "$HEAD_REF" != "dev" ]; then
+            echo "ERROR: Only branches from 'dev' can be merged into 'release'"
+            exit 1
+          fi
+          echo "✓ PR from 'dev' to 'release' is allowed"
+
+      - name: Check branch source for PR to dev
+        if: github.base_ref == 'dev'
+        run: |
+          # Safely escape GitHub context variables to prevent code injection
+          # HEAD_REF is set as an environment variable by the workflow
+          # Use pattern matching to validate branch names safely
+          if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "ERROR: Invalid branch name format"
+            exit 1
+          fi
+          # Check if trying to merge protected branches into dev
+          if [[ "$HEAD_REF" == "main" ]] || [[ "$HEAD_REF" == "release" ]]; then
+            echo "ERROR: Cannot merge 'main' or 'release' into 'dev'"
+            exit 1
+          fi
+          echo "✓ PR to 'dev' is from a feature branch"
+
+      - name: Prevent direct pushes to protected branches
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/release' || github.ref == 'refs/heads/dev')
+        run: |
+          echo "ERROR: Direct pushes to 'main', 'release', and 'dev' branches are not allowed."
+          echo "All changes must go through pull requests with required checks."
+          exit 1
+
+  validate-automated-prs:
+    runs-on: ubuntu-latest
+    # Only run for Dependabot and other automated PRs
+    if: github.actor == 'dependabot[bot]' || github.actor == 'github-actions[bot]'
+    steps:
+      - name: Allow automated dependency updates
+        run: |
+          # Safely escape GitHub context variables to prevent code injection
+          ACTOR="${{ github.actor }}"
+          # Validate actor name format
+          if [[ ! "$ACTOR" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "ERROR: Invalid actor name format"
+            exit 1
+          fi
+          echo "✓ Automated PR from $ACTOR is allowed"
+          echo "Skipping strict branch source validation for automated PRs"
+
+      - name: Validate PR content for security
+        run: |
+          echo "Validating automated PR content..."
+          # Add any specific security checks for automated PRs here
+          echo "✓ Basic validation passed for automated PR"

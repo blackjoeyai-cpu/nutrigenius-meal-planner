@@ -118,7 +118,8 @@ This project uses automated versioning that occurs only when merging from `dev` 
    - Update `package.json` with the new version
    - Generate version information in `src/version.json`
    - Create a new Git tag
-   - Create a GitHub release
+   - Generate a detailed changelog from commit history
+   - Create a GitHub release with the changelog
 
 3. **Create a Pull Request** from `release` to `main`
 4. **Merge the Pull Request** - This will automatically:
@@ -170,8 +171,13 @@ For the deployment to succeed and connect to your Google Cloud backend, you must
 
 ## CI/CD Workflow
 
-The `.github/workflows/ci-cd.yml` file contains the GitHub Actions workflow that automates testing and deployment. It includes jobs for:
+The project now uses optimized GitHub Actions workflows that automate testing and deployment. These workflows include:
 
-- **Validation:** Linting, formatting checks, and conventional commit message validation.
+- **Validation:** Linting, formatting checks, type checking, and conventional commit message validation.
 - **Building:** Creating a production build of the Next.js application.
+- **Security Scanning:** CodeQL analysis for vulnerability detection.
 - **Deploying:** Pushing the build to Vercel for preview or production environments.
+- **Automated Versioning:** Automatic version management during releases.
+- **Dependency Management:** Automated approval and merging of Dependabot PRs.
+
+See `.github/workflows/README.md` for details on the optimized workflow structure.

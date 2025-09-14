@@ -1,0 +1,566 @@
+name: CI/CD Pipeline
+run-name: >-
+  ${{
+    github.event_name == 'pull_request' &&
+    format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) ||
+    (github.event_name == 'push' &&
+    format('Push to {0}', github.ref)) ||
+    'CI/CD Workflow'
+  }}
+
+on:
+  push:
+    branches:
+      - main
+      - release
+      - dev
+  pull_request:
+    branches:
+      - main
+      - release
+      - dev
+    types: [opened, synchronize, reopened]
+  pull_request_target:
+    branches:
+      - main
+      - release
+      - dev
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  pull-requests: write
+  security-events: write
+  actions: read
+
+env:
+  NODE_VERSION: "20.18.1"
+
+jobs:
+  # Code validation and testing
+  validate:
+    name: 🧪 Validate & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
+      # Verify the checkout for pull_request_target events
+      - name: Verify checkout for external PRs
+        if: github.event_name == 'pull_request_target'
+        run: |
+          # For pull_request_target, we should be more cautious
+          echo "Verifying checkout for external PR..."
+          git log --oneline -1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate commit messages
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # Validate ref format to prevent injection
+          if [[ ! "$BASE_REF" =~ ^[a-zA-Z0-9._/-]+$ ]] || [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._/-]+$ ]]; then
+            echo "ERROR: Invalid ref format"
+            exit 1
+          fi
+
+          git log --format="%s" "$BASE_REF".."$HEAD_REF" | \
+          while read commit_msg; do
+            if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+"; then
+              echo "Invalid commit message: $commit_msg"
+              echo "Please follow conventional commit format: type(scope): description"
+              exit 1
+            fi
+          done
+          echo "✅ All commit messages follow conventional format"
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Check code formatting
+        run: npx prettier --check .
+
+      - name: Type checking
+        run: npm run typecheck
+
+  # Build job
+  build:
+    name: 🏗️ Build Application
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Restore cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate version info
+        run: npm run version
+
+      - name: Build application
+        run: npm run build
+        env:
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            .next
+            src/version.json
+
+  # Security scanning
+  codeql:
+    name: 🔍 CodeQL Analysis
+    runs-on: ubuntu-latest
+    needs: validate
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          build-mode: none
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:javascript-typescript"
+
+  # Deployment
+  deploy:
+    name: 🚀 Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: build
+    # Only deploy for pushes to main/release/dev or PRs
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && (
+        github.ref == 'refs/heads/main' ||
+        github.ref == 'refs/heads/release' ||
+        github.ref == 'refs/heads/dev'
+      ))
+    outputs:
+      deployment-url: ${{ steps.vercel-deploy.outputs.deployment-url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create artifact temp directory
+        run: mkdir -p ${{ runner.temp }}/build-artifacts
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+          path: ${{ runner.temp }}/build-artifacts
+
+      - name: Install Vercel CLI
+        run: |
+          # Install specific version of Vercel CLI to prevent artifact poisoning
+          npm install -g vercel@latest
+          # Verify the installation
+          vercel --version
+
+      - name: Deploy to Vercel
+        id: vercel-deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]] || [[ "${{ github.ref }}" == "refs/heads/release" ]]; then
+            # Production deployment for main/release
+            DEPLOYMENT_OUTPUT=$(vercel --prod --token $VERCEL_TOKEN --yes)
+          else
+            # Preview deployment for all other branches including PRs
+            DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
+          fi
+
+          # Extract clean URL from output (remove any trailing status text)
+          DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[a-zA-Z0-9.-]+\.vercel\.app' | head -1)
+          # Fallback: if the above doesn't work, try a more general pattern
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^\s]+' | sed 's/[^a-zA-Z0-9./-].*$//' | head -1)
+          fi
+          # Final fallback: try to extract any URL and clean it
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^[:space:]]+' | head -1 | sed 's/[[:space:]]*$//' | sed 's/[>?;].*$//')
+          fi
+
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "Deployment URL: $DEPLOYMENT_URL"
+
+      - name: Comment PR with deployment URL
+        if: github.event_name == 'pull_request' && steps.vercel-deploy.outputs.deployment-url != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: deployment-url
+          message: |
+            ## 🚀 Deployment Successful
+
+            Your changes have been deployed to a preview environment:
+
+            🔗 **Preview URL**: [${{ steps.vercel-deploy.outputs.deployment-url }}](${{ steps.vercel-deploy.outputs.deployment-url }})
+
+            _This URL will be updated automatically with new changes._
+
+  # Versioning information
+  version-info:
+    name: 🏷️ Version Information
+    runs-on: ubuntu-latest
+    needs: validate
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0")
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate version info
+        run: npm run version
+
+      - name: Read version info
+        id: version_info
+        run: |
+          VERSION_INFO=$(cat src/version.json | tr -d '\n')
+          echo "version_info=$VERSION_INFO" >> $GITHUB_OUTPUT
+
+      - name: Update PR with version info
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: version-info
+          message: |
+            ## 🏷️ Version Information
+
+            Current version: `${{ steps.current_version.outputs.current_version }}`
+
+            <details>
+            <summary>Version Details</summary>
+
+            ```json
+            ${{ steps.version_info.outputs.version_info }}
+            ```
+
+            </details>
+
+  # Release management
+  release:
+    name: 📦 Release Management
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get current version
+        id: current_version
+        run: |
+          CURRENT_VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0")
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Determine version action
+        id: version_action
+        run: |
+          if [[ "${{ github.base_ref }}" == "release" ]]; then
+            echo "action=create_new_version" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.base_ref }}" == "main" ]]; then
+            echo "action=use_existing_version" >> $GITHUB_OUTPUT
+          else
+            echo "action=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create new version (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        id: new_version
+        run: |
+          # Get clean version without git metadata
+          CLEAN_VERSION=$(echo "${{ steps.current_version.outputs.current_version }}" | sed 's/-dirty$//' | sed 's/-[0-9]*-g[0-9a-f]*$//')
+
+          # Determine version bump based on commit messages
+          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+
+          if echo "$COMMITS" | grep -qE "(feat|feature)"; then
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i minor)
+          elif echo "$COMMITS" | grep -qE "(fix|bugfix)"; then
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i patch)
+          else
+            NEXT_VERSION=$(npx semver $CLEAN_VERSION -i patch)
+          fi
+
+          echo "next_version=$NEXT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update version in package.json (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          npm version ${{ steps.new_version.outputs.next_version }} --no-git-tag-version
+          git add package.json
+
+      - name: Generate version info
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          npm run version
+          git add src/version.json
+
+      - name: Commit version updates (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          git commit -m "chore(release): update version to ${{ steps.new_version.outputs.next_version }}"
+
+      - name: Create and push tag (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          git tag -a "v${{ steps.new_version.outputs.next_version }}" -m "Release version ${{ steps.new_version.outputs.next_version }}"
+          git push origin "v${{ steps.new_version.outputs.next_version }}"
+
+      - name: Push version updates (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          git push
+
+      - name: Generate Changelog
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          npm run changelog
+
+      - name: Create GitHub Release (dev → release)
+        if: steps.version_action.outputs.action == 'create_new_version'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.new_version.outputs.next_version }}
+          release_name: Release v${{ steps.new_version.outputs.next_version }}
+          body: |
+            ## Release v${{ steps.new_version.outputs.next_version }}
+
+            Automated release generated by GitHub Actions for merge from dev to release.
+
+            ### 📝 Changelog
+
+            $(cat TEMP_CHANGELOG.md)
+
+            ### 📦 Version Information
+            ```json
+            $(cat src/version.json)
+            ```
+          draft: false
+          prerelease: false
+
+      - name: Clean up temporary files
+        if: steps.version_action.outputs.action == 'create_new_version'
+        run: |
+          rm -f TEMP_CHANGELOG.md
+
+      - name: Deploy to Production (release → main)
+        if: steps.version_action.outputs.action == 'use_existing_version'
+        run: |
+          echo "Deploying release ${{ steps.current_version.outputs.current_version }} to production"
+
+  # Dependabot auto-approval
+  dependabot-auto-approve:
+    name: 🤖 Dependabot Auto-Approve
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]' && github.event_name == 'pull_request'
+    steps:
+      - name: Dependabot metadata
+        id: dependabot-metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Approve Dependabot PR
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable auto-merge for patch and minor updates
+        if: |
+          steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' ||
+          steps.dependabot-metadata.outputs.update-type == 'version-update:semver-minor'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Workflow Summary
+  workflow-summary:
+    name: 📊 Workflow Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        validate,
+        build,
+        codeql,
+        deploy,
+        version-info,
+        release,
+        dependabot-auto-approve,
+      ]
+    if: always()
+    steps:
+      - name: Generate Workflow Summary
+        run: |
+          echo "## 🚀 NutriGenius CI/CD Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Validation Results
+          if [[ "${{ needs.validate.result }}" == "success" ]]; then
+            echo "✅ **Validation** - Code quality checks passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Validation** - Code quality checks failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Build Results
+          if [[ "${{ needs.build.result }}" == "success" ]]; then
+            echo "✅ **Build** - Application built successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Build** - Application build failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # CodeQL Results
+          if [[ "${{ needs.codeql.result }}" == "success" ]]; then
+            echo "✅ **CodeQL** - Security scan completed with no critical issues" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **CodeQL** - Security scan failed or found critical issues" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Deploy Results
+          if [[ "${{ needs.deploy.result }}" == "success" ]]; then
+            echo "✅ **Deploy** - Application deployed successfully" >> $GITHUB_STEP_SUMMARY
+            # Check if deployment URL is available
+            if [[ -n "${{ needs.deploy.outputs.deployment-url }}" ]]; then
+              echo "🔗 **Deployment URL**: [${{ needs.deploy.outputs.deployment-url }}](${{ needs.deploy.outputs.deployment-url }})" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "❌ **Deploy** - Application deployment failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Version Info Results
+          if [[ "${{ needs.version-info.result }}" == "success" ]]; then
+            echo "✅ **Version Info** - Version information generated" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Version Info** - Failed to generate version information" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Release Results
+          if [[ "${{ needs.release.result }}" == "success" ]]; then
+            echo "✅ **Release** - Release process completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Release** - Release process failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Dependabot Results
+          if [[ "${{ needs.dependabot-auto-approve.result }}" == "success" ]]; then
+            echo "✅ **Dependabot** - Dependabot automation completed" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.dependabot-auto-approve.result }}" == "skipped" ]]; then
+            echo "⏭️ **Dependabot** - Not applicable for this workflow" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Dependabot** - Dependabot automation failed" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 Detailed Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Validation | ${{ needs.validate.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL | ${{ needs.codeql.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Deploy | ${{ needs.deploy.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Version Info | ${{ needs.version-info.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Release | ${{ needs.release.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependabot | ${{ needs.dependabot-auto-approve.result }} |" >> $GITHUB_STEP_SUMMARY

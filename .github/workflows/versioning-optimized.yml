@@ -15,7 +15,6 @@ on:
 permissions:
   contents: read
   pull-requests: write
-  actions: write
 
 env:
   NODE_VERSION: "20.18.1"
@@ -30,39 +29,31 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clear GitHub Actions Cache
-        uses: TheRealRyGuy/clear-cache-action@master
-        env:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: npm ci
-
-      - name: Debug - Check Node.js and npm versions
-        run: |
-          echo "Node.js version: $(node --version)"
-          echo "npm version: $(npm --version)"
-          echo "Prettier version: $(npx prettier --version)"
 
       - name: Get current version
         id: current_version
         run: |
-          # Get the latest tag or default to 0.0.0
           CURRENT_VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "0.0.0")
           echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-          echo "Current version: $CURRENT_VERSION"
 
       - name: Generate version info
         run: npm run version
-
-      - name: Check formatting (debug)
-        run: npx prettier@3.6.2 --check .github/workflows/versioning.yml
 
       - name: Read version info
         id: version_info
@@ -89,18 +80,7 @@ jobs:
 
             </details>
 
-      - name: 📝 Write Version Summary
-        if: always()
-        run: |
-          echo "## 🏷️ Version Information Summary" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "Status: ✅ Version information generated" >> $GITHUB_STEP_SUMMARY
-            echo "Current version: \`${{ steps.current_version.outputs.current_version }}\`" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "Status: ❌ Failed to generate version information" >> $GITHUB_STEP_SUMMARY
-          fi
-
-  release_check:
+  release-check:
     name: 🔍 Release Check
     if: github.event_name == 'pull_request' && (github.base_ref == 'release' || github.base_ref == 'main')
     runs-on: ubuntu-latest
@@ -115,10 +95,8 @@ jobs:
         run: |
           if [[ "${{ github.base_ref }}" == "release" ]]; then
             echo "release_type=dev_to_release" >> $GITHUB_OUTPUT
-            echo "This PR merges dev into release - will create new version"
           elif [[ "${{ github.base_ref }}" == "main" ]]; then
             echo "release_type=release_to_main" >> $GITHUB_OUTPUT
-            echo "This PR merges release into main - will deploy existing version"
           fi
 
       - name: Get Current Version
