@@ -180,6 +180,8 @@ jobs:
         github.ref == 'refs/heads/release' ||
         github.ref == 'refs/heads/dev'
       ))
+    outputs:
+      deployment-url: ${{ steps.vercel-deploy.outputs.deployment-url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -207,12 +209,15 @@ jobs:
             DEPLOYMENT_OUTPUT=$(vercel --token $VERCEL_TOKEN --yes)
           fi
 
-          # Extract clean URL from output
+          # Extract clean URL from output (remove any trailing status text)
           DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[a-zA-Z0-9.-]+\.vercel\.app' | head -1)
-
-          # Fallback if extraction fails
+          # Fallback: if the above doesn't work, try a more general pattern
           if [ -z "$DEPLOYMENT_URL" ]; then
-            DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^[:space:]]+' | head -1)
+            DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^\s]+' | sed 's/[^a-zA-Z0-9./-].*$//' | head -1)
+          fi
+          # Final fallback: try to extract any URL and clean it
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            DEPLOYMENT_URL=$(echo "$DEPLOYMENT_OUTPUT" | grep -oE 'https://[^[:space:]]+' | head -1 | sed 's/[[:space:]]*$//' | sed 's/[>?;].*$//')
           fi
 
           echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
@@ -489,6 +494,10 @@ jobs:
           # Deploy Results
           if [[ "${{ needs.deploy.result }}" == "success" ]]; then
             echo "✅ **Deploy** - Application deployed successfully" >> $GITHUB_STEP_SUMMARY
+            # Check if deployment URL is available
+            if [[ -n "${{ needs.deploy.outputs.deployment-url }}" ]]; then
+              echo "🔗 **Deployment URL**: [${{ needs.deploy.outputs.deployment-url }}](${{ needs.deploy.outputs.deployment-url }})" >> $GITHUB_STEP_SUMMARY
+            fi
           else
             echo "❌ **Deploy** - Application deployment failed" >> $GITHUB_STEP_SUMMARY
           fi
