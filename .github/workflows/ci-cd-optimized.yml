@@ -79,11 +79,10 @@ jobs:
 
       - name: Validate commit messages
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}
         run: |
-          # Safely escape GitHub context variables to prevent code injection
-          BASE_REF="${{ github.base_ref }}"
-          HEAD_REF="${{ github.head_ref }}"
-
           # Validate ref format to prevent injection
           if [[ ! "$BASE_REF" =~ ^[a-zA-Z0-9._/-]+$ ]] || [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._/-]+$ ]]; then
             echo "ERROR: Invalid ref format"
