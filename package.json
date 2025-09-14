@@ -1,6 +1,6 @@
 {
   "name": "nextn",
-  "version": "0.2.0",
+  "version": "0.3.2",
   "private": true,
   "scripts": {
     "dev": "npm run version && next dev --turbopack",
@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "version": "tsx scripts/version.ts",
+    "changelog": "tsx scripts/generate-changelog.ts",
     "release": "bash scripts/create-release.sh",
     "postinstall": "npm run version"
   },

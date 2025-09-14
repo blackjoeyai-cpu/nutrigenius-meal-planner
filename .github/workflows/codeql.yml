@@ -13,11 +13,19 @@ name: "CodeQL Advanced"
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "release", "dev"]
   pull_request:
-    branches: ["main"]
+    branches: ["main", "release", "dev"]
+    # Ensure CodeQL runs on Dependabot PRs
+    types: [opened, synchronize, reopened]
   schedule:
     - cron: "31 21 * * 0"
+
+# Ensure that Dependabot PRs can access secrets for private dependencies
+permissions:
+  actions: read
+  contents: read
+  security-events: write
 
 jobs:
   analyze:
