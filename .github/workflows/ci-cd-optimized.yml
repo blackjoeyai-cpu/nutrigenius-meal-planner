@@ -1,85 +1,12 @@
-# =============================================================================
-# 🚀 NUTRIGENIUS CI/CD PIPELINE OVERVIEW
-# =============================================================================
-#
-# This CI/CD pipeline provides comprehensive automation for the NutriGenius project.
-#
-# WORKFLOW TRIGGERS:
-# - Push to main, release, or dev branches
-# - Pull requests to main, release, or dev branches
-# - Pull request targets for Dependabot PRs
-#
-# KEY FEATURES:
-# ✅ Code Quality Assurance:
-#    - Linting with ESLint
-#    - Code formatting with Prettier
-#    - TypeScript type checking
-#    - Conventional commit message validation
-#
-# 🛠️ Build Process:
-#    - Node.js setup with caching
-#    - Dependency installation with npm ci
-#    - Next.js application build
-#    - Artifact storage for downstream jobs
-#
-# 🔒 Security Scanning:
-#    - CodeQL analysis for vulnerability detection
-#    - Runs on all PRs and pushes to protected branches
-#
-# ☁️ Deployment:
-#    - Preview deployments for all PRs
-#    - Production deployments for main/release branches
-#    - Automatic PR comments with deployment URLs
-#
-# 📦 Release Management:
-#    - Automated versioning based on commit messages
-#    - GitHub release creation with changelogs
-#    - Tag management for version tracking
-#
-# 🤖 Automation:
-#    - Dependabot PR auto-approval and merging
-#    - Concurrent run management to save resources
-#
-# For issues with this workflow, check the GitHub Actions logs or
-# consult the project documentation.
-#
-# =============================================================================
 name: CI/CD Pipeline
-run-name: ${{ github.event_name == 'pull_request' && format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) || github.event_name == 'push' && format('Push to {0}', github.ref_name) || 'CI/CD Workflow' }}
-
-# =============================================================================
-# 🚀 CI/CD Pipeline for NutriGenius (Detailed)
-#
-# This workflow handles the complete CI/CD process including:
-# - Code validation (linting, formatting, type checking)
-# - Building the Next.js application
-# - Security scanning with CodeQL
-# - Deployment to Vercel (preview and production)
-# - Automated versioning and release management
-# - Dependabot auto-approval for dependency updates
-#
-# Workflow Triggers:
-# - Push to main, release, or dev branches
-# - Pull requests to main, release, or dev branches
-# - Pull request targets for Dependabot PRs
-#
-# Jobs Overview:
-# 1. validate     - Code quality checks and testing
-# 2. build        - Application build and artifact creation
-# 3. codeql       - Security scanning
-# 4. deploy       - Vercel deployment (preview/production)
-# 5. version-info - Version information generation
-# 6. release      - Release management and GitHub releases
-# 7. dependabot   - Auto-approval for Dependabot PRs
-#
-# Concurrency:
-# - Cancels in-progress runs for PRs to save resources
-# - Allows concurrent runs for different branches/PRs
-#
-# Permissions:
-# - Read contents and write PR comments
-# - Security events for CodeQL scanning
-# =============================================================================
+run-name: >-
+  ${{
+    github.event_name == 'pull_request' &&
+    format('PR #{0}: {1}', github.event.pull_request.number, github.event.pull_request.title) ||
+    (github.event_name == 'push' &&
+    format('Push to {0}', github.ref)) ||
+    'CI/CD Workflow'
+  }}
 
 on:
   push:
