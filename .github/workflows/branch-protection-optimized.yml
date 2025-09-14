@@ -31,9 +31,11 @@ jobs:
     steps:
       - name: Check branch source for PR to main
         if: github.base_ref == 'main'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
         run: |
           # Safely escape GitHub context variables to prevent code injection
-          HEAD_REF="${{ github.head_ref }}"
+          # HEAD_REF is set as an environment variable by the workflow
           # Use pattern matching to validate branch names safely
           if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]] || [ "$HEAD_REF" != "release" ]; then
             echo "ERROR: Only branches from 'release' can be merged into 'main'"
@@ -41,23 +43,27 @@ jobs:
           fi
           echo "✓ PR from 'release' to 'main' is allowed"
 
+        env:
+          HEAD_REF: ${{ github.head_ref }}
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
         run: |
           # Safely escape GitHub context variables to prevent code injection
-          HEAD_REF="${{ github.head_ref }}"
+          # HEAD_REF is set as an environment variable by the workflow
           # Use pattern matching to validate branch names safely
           if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]] || [ "$HEAD_REF" != "dev" ]; then
             echo "ERROR: Only branches from 'dev' can be merged into 'release'"
             exit 1
           fi
+        env:
+          HEAD_REF: ${{ github.head_ref }}
           echo "✓ PR from 'dev' to 'release' is allowed"
 
       - name: Check branch source for PR to dev
         if: github.base_ref == 'dev'
         run: |
           # Safely escape GitHub context variables to prevent code injection
-          HEAD_REF="${{ github.head_ref }}"
+          # HEAD_REF is set as an environment variable by the workflow
           # Use pattern matching to validate branch names safely
           if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]]; then
             echo "ERROR: Invalid branch name format"
