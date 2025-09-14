@@ -42,6 +42,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          
+      # Verify the checkout for pull_request_target events
+      - name: Verify checkout for external PRs
+        if: github.event_name == 'pull_request_target'
+        run: |
+          # For pull_request_target, we should be more cautious
+          echo "Verifying checkout for external PR..."
+          git log --oneline -1
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

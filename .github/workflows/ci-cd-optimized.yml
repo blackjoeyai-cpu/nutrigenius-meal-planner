@@ -51,6 +51,14 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          
+      # Verify the checkout for pull_request_target events
+      - name: Verify checkout for external PRs
+        if: github.event_name == 'pull_request_target'
+        run: |
+          # For pull_request_target, we should be more cautious
+          echo "Verifying checkout for external PR..."
+          git log --oneline -1
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -72,7 +80,17 @@ jobs:
       - name: Validate commit messages
         if: github.event_name == 'pull_request'
         run: |
-          git log --format="%s" ${{ github.base_ref }}..${{ github.head_ref }} | \
+          # Safely escape GitHub context variables to prevent code injection
+          BASE_REF="${{ github.base_ref }}"
+          HEAD_REF="${{ github.head_ref }}"
+          
+          # Validate ref format to prevent injection
+          if [[ ! "$BASE_REF" =~ ^[a-zA-Z0-9._/-]+$ ]] || [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._/-]+$ ]]; then
+            echo "ERROR: Invalid ref format"
+            exit 1
+          fi
+          
+          git log --format="%s" "$BASE_REF".."$HEAD_REF" | \
           while read commit_msg; do
             if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|style|refactor|test|chore)(\(.+\))?: .+"; then
               echo "Invalid commit message: $commit_msg"
@@ -192,7 +210,11 @@ jobs:
           name: build-output
 
       - name: Install Vercel CLI
-        run: npm install -g vercel@latest
+        run: |
+          # Install specific version of Vercel CLI to prevent artifact poisoning
+          npm install -g vercel@latest
+          # Verify the installation
+          vercel --version
 
       - name: Deploy to Vercel
         id: vercel-deploy

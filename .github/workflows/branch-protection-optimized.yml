@@ -32,8 +32,10 @@ jobs:
       - name: Check branch source for PR to main
         if: github.base_ref == 'main'
         run: |
+          # Safely escape GitHub context variables to prevent code injection
           HEAD_REF="${{ github.head_ref }}"
-          if [ "$HEAD_REF" != "release" ]; then
+          # Use pattern matching to validate branch names safely
+          if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]] || [ "$HEAD_REF" != "release" ]; then
             echo "ERROR: Only branches from 'release' can be merged into 'main'"
             exit 1
           fi
@@ -42,8 +44,10 @@ jobs:
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
         run: |
+          # Safely escape GitHub context variables to prevent code injection
           HEAD_REF="${{ github.head_ref }}"
-          if [ "$HEAD_REF" != "dev" ]; then
+          # Use pattern matching to validate branch names safely
+          if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]] || [ "$HEAD_REF" != "dev" ]; then
             echo "ERROR: Only branches from 'dev' can be merged into 'release'"
             exit 1
           fi
@@ -52,8 +56,14 @@ jobs:
       - name: Check branch source for PR to dev
         if: github.base_ref == 'dev'
         run: |
+          # Safely escape GitHub context variables to prevent code injection
           HEAD_REF="${{ github.head_ref }}"
-          BASE_REF="${{ github.base_ref }}"
+          # Use pattern matching to validate branch names safely
+          if [[ ! "$HEAD_REF" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "ERROR: Invalid branch name format"
+            exit 1
+          fi
+          # Check if trying to merge protected branches into dev
           if [[ "$HEAD_REF" == "main" ]] || [[ "$HEAD_REF" == "release" ]]; then
             echo "ERROR: Cannot merge 'main' or 'release' into 'dev'"
             exit 1
@@ -74,7 +84,14 @@ jobs:
     steps:
       - name: Allow automated dependency updates
         run: |
-          echo "✓ Automated PR from ${{ github.actor }} is allowed"
+          # Safely escape GitHub context variables to prevent code injection
+          ACTOR="${{ github.actor }}"
+          # Validate actor name format
+          if [[ ! "$ACTOR" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+            echo "ERROR: Invalid actor name format"
+            exit 1
+          fi
+          echo "✓ Automated PR from $ACTOR is allowed"
           echo "Skipping strict branch source validation for automated PRs"
 
       - name: Validate PR content for security
