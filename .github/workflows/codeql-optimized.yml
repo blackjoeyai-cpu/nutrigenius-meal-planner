@@ -1,9 +1,16 @@
-name: "CodeQL for Dependabot PRs"
+name: CodeQL Advanced
 
 on:
-  pull_request_target:
-    branches: ["main", "release", "dev"]
+  push:
+    branches: [main, release, dev]
+  pull_request:
+    branches: [main, release, dev]
     types: [opened, synchronize, reopened]
+  pull_request_target:
+    branches: [main, release, dev]
+    types: [opened, synchronize, reopened]
+  schedule:
+    - cron: "31 21 * * 0"
 
 permissions:
   actions: read
@@ -34,7 +41,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3

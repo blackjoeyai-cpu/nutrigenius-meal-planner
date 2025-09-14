@@ -171,8 +171,13 @@ For the deployment to succeed and connect to your Google Cloud backend, you must
 
 ## CI/CD Workflow
 
-The `.github/workflows/ci-cd.yml` file contains the GitHub Actions workflow that automates testing and deployment. It includes jobs for:
+The project now uses optimized GitHub Actions workflows that automate testing and deployment. These workflows include:
 
-- **Validation:** Linting, formatting checks, and conventional commit message validation.
+- **Validation:** Linting, formatting checks, type checking, and conventional commit message validation.
 - **Building:** Creating a production build of the Next.js application.
+- **Security Scanning:** CodeQL analysis for vulnerability detection.
 - **Deploying:** Pushing the build to Vercel for preview or production environments.
+- **Automated Versioning:** Automatic version management during releases.
+- **Dependency Management:** Automated approval and merging of Dependabot PRs.
+
+See `.github/workflows/README.md` for details on the optimized workflow structure.

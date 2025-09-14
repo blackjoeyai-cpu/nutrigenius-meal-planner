@@ -13,6 +13,7 @@
     "version": "tsx scripts/version.ts",
     "changelog": "tsx scripts/generate-changelog.ts",
     "release": "bash scripts/create-release.sh",
+    "cleanup-workflows": "bash scripts/cleanup-workflows.sh",
     "postinstall": "npm run version"
   },
   "dependencies": {

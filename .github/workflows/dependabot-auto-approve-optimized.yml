@@ -11,8 +11,7 @@ permissions:
 jobs:
   dependabot-auto-approve:
     runs-on: ubuntu-latest
-    # Only run this workflow for Dependabot PRs
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: github.actor == 'dependabot[bot]'
     steps:
       - name: Dependabot metadata
         id: dependabot-metadata
@@ -28,7 +27,9 @@ jobs:
 
       # Enable auto-merge for patch and minor updates
       - name: Enable auto-merge for patch and minor updates
-        if: ${{ steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || steps.dependabot-metadata.outputs.update-type == 'version-update:semver-minor' }}
+        if: |
+          steps.dependabot-metadata.outputs.update-type == 'version-update:semver-patch' || 
+          steps.dependabot-metadata.outputs.update-type == 'version-update:semver-minor'
         run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
