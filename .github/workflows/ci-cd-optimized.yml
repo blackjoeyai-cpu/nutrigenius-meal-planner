@@ -207,7 +207,7 @@ jobs:
         run: mkdir -p ${{ runner.temp }}/build-artifacts
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: build-output
           path: ${{ runner.temp }}/build-artifacts
