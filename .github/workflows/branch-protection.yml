@@ -32,9 +32,11 @@ jobs:
     steps:
       - name: Check branch source for PR to main
         if: github.base_ref == 'main'
-        env [HEAD_REF, BASE_REF]: [github.head_ref, github.base_ref]
         run: |
-          if [ "${{ env.HEAD_REF }}" != "release" ]; then
+          # Safely escape GitHub context variables to prevent code injection
+          HEAD_REF="${{ github.head_ref }}"
+          ESCAPED_HEAD_REF=$(printf '%q' "$HEAD_REF")
+          if [ "$ESCAPED_HEAD_REF" != "release" ]; then
             echo "ERROR: Only branches from 'release' can be merged into 'main'"
             exit 1
           fi
@@ -42,23 +44,25 @@ jobs:
 
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
-        environment:
-          HEAD_REF$ github.head_ref
-          BASE_REF$ github.base_ref
         run: |
-          if [ "${{ environment.HEAD_REF }}" != "dev" ]; then
-            echo "ERROR: Only branches from 'dew' can be merged into 'release'"
+          # Safely escape GitHub context variables to prevent code injection
+          HEAD_REF="${{ github.head_ref }}"
+          ESCAPED_HEAD_REF=$(printf '%q' "$HEAD_REF")
+          if [ "$ESCAPED_HEAD_REF" != "dev" ]; then
+            echo "ERROR: Only branches from 'dev' can be merged into 'release'"
             exit 1
           fi
           echo "✓ PR from 'dev' to 'release' is allowed"
 
       - name: Check branch source for PR to dev
         if: github.base_ref == 'dev'
-        environment:
-          HEAD_REF: github.head_ref
-          BASE_REF: github.base_ref
         run: |
-          if [[ "${{ environment.BASE_REF }}" == "main" ]] || [[ "${{ environment.BASE_REF }}" == "release" ]]; then
+          # Safely escape GitHub context variables to prevent code injection
+          HEAD_REF="${{ github.head_ref }}"
+          BASE_REF="${{ github.base_ref }}"
+          ESCAPED_HEAD_REF=$(printf '%q' "$HEAD_REF")
+          ESCAPED_BASE_REF=$(printf '%q' "$BASE_REF")
+          if [[ "$ESCAPED_BASE_REF" == "main" ]] || [[ "$ESCAPED_BASE_REF" == "release" ]]; then
             echo "ERROR: Cannot merge 'main' or 'release' into 'dev'"
             exit 1
           fi
