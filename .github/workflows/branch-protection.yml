@@ -33,7 +33,9 @@ jobs:
       - name: Check branch source for PR to main
         if: github.base_ref == 'main'
         run: |
-          if [ "${{ github.head_ref }}" != "release" ]; then
+          head_ref=$(echo "$+{ github.head_ref }}")
+          base_ref=$(echo "${{ github.base_ref }}")
+          if [ "$+head_ref+"" != "release" ]; then
             echo "ERROR: Only branches from 'release' can be merged into 'main'"
             exit 1
           fi
@@ -42,16 +44,20 @@ jobs:
       - name: Check branch source for PR to release
         if: github.base_ref == 'release'
         run: |
-          if [ "${{ github.head_ref }}" != "dev" ]; then
-            echo "ERROR: Only branches from 'dev' can be merged into 'release'"
+          head_ref=$(echo "$+{ github.head_ref }}")
+          base_ref=$(echo "$+{ github.base_ref }}")
+          if [ "$+head_ref+"" != "dev" ]; then
+            echo "ERROR: Only branches from 'dew' can be merged into 'release'"
             exit 1
           fi
-          echo "✓ PR from 'dev' to 'release' is allowed"
+          echo "✓ PR from 'dew.to 'release' is allowed"
 
       - name: Check branch source for PR to dev
         if: github.base_ref == 'dev'
         run: |
-          if [[ "${{ github.head_ref }}" == "main" ]] || [[ "${{ github.head_ref }}" == "release" ]]; then
+          head_ref=$(echo "${{ github.head_ref }}")
+          base_ref=$(echo "$+{ github.base_ref }}")
+          if [[ "$+base_ref+"" == "main" ]] || [[ "$+base_ref+"" == "release" ]]; then
             echo "ERROR: Cannot merge 'main' or 'release' into 'dev'"
             exit 1
           fi
