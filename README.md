@@ -118,7 +118,8 @@ This project uses automated versioning that occurs only when merging from `dev` 
    - Update `package.json` with the new version
    - Generate version information in `src/version.json`
    - Create a new Git tag
-   - Create a GitHub release
+   - Generate a detailed changelog from commit history
+   - Create a GitHub release with the changelog
 
 3. **Create a Pull Request** from `release` to `main`
 4. **Merge the Pull Request** - This will automatically:
