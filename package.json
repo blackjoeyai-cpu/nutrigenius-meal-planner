@@ -17,7 +17,7 @@
     "postinstall": "npm run version"
   },
   "dependencies": {
-    "@genkit-ai/googleai": "^1.14.1",
+    "@genkit-ai/googleai": "^1.19.2",
     "@genkit-ai/next": "^1.14.1",
     "@hookform/resolvers": "^4.1.3",
     "@radix-ui/react-accordion": "^1.2.3",
