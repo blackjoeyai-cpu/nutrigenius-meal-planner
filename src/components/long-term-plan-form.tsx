@@ -331,8 +331,22 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
       <Form {...form}>
         <form
-          action={formAction}
-          onSubmit={form.handleSubmit(() => {})}
+          onSubmit={form.handleSubmit(data => {
+            const formData = new FormData();
+            Object.entries(data).forEach(([key, value]) => {
+              if (Array.isArray(value)) {
+                formData.append(key, value.join(','));
+              } else {
+                formData.append(key, String(value));
+              }
+            });
+            formData.append('recipes', JSON.stringify(recipes));
+            formData.append('language', language);
+            if (user) {
+              formData.append('userId', user.uid);
+            }
+            formAction(formData);
+          })}
           id="long-term-plan-form"
         >
           <CardHeader>
@@ -342,13 +356,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <input
-              type="hidden"
-              name="recipes"
-              value={JSON.stringify(recipes)}
-            />
-            <input type="hidden" name="language" value={language} />
-            {user && <input type="hidden" name="userId" value={user.uid} />}
             <>
               {isCatalogGenerationBlocked ? (
                 <Alert variant="destructive">
@@ -486,7 +493,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                       <FormControl>
                         <SelectTrigger ref={field.ref}>
                           <SelectValue placeholder="Select a cuisine" />
-                        </SelectTrigger>
+                        </Trigger>
                       </FormControl>
                       <SelectContent>
                         {CUISINES.map(c => (
@@ -538,11 +545,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                       />
                     </FormControl>
                     <FormMessage />
-                    <input
-                      type="hidden"
-                      name={field.name}
-                      value={field.value.join(',')}
-                    />
                   </FormItem>
                 )}
               />
