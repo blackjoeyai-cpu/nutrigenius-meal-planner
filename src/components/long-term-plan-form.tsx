@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   Card,
@@ -61,6 +61,7 @@ import { useRouter } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 import { useLanguageStore } from '@/hooks/use-language-store';
 import { useAuth } from '@/hooks/use-auth';
+import React from 'react';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -256,7 +257,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         const isNewRecipe = meal.id.startsWith('new-recipe-');
 
                         return (
-                          <React.Fragment key={mealIndex}>
+                          <React.Fragment key={`${index}-${mealIndex}`}>
                             {isNewRecipe ? (
                               <div className="group block">
                                 <Card className="transition-shadow group-hover:shadow-md">
@@ -533,6 +534,11 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         placeholder="Select ingredients you have..."
                       />
                     </FormControl>
+                    <input
+                      type="hidden"
+                      name="ingredients"
+                      value={field.value.join(',')}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
