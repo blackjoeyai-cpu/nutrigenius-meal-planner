@@ -1,3 +1,4 @@
+
 'use server';
 
 import { z } from 'zod';
@@ -14,8 +15,8 @@ const GeneratePlanSchema = z.object({
     .number()
     .min(100, 'Calorie target must be at least 100.'),
   allergies: z.string(),
-  cuisine: z.string(),
-  ingredients: z.string().optional(),
+  cuisine: z.string().min(1, 'Cuisine is required.'),
+  ingredients: z.array(z.string()),
   recipes: z.string().optional(),
   numberOfDays: z.coerce
     .number()
@@ -30,12 +31,18 @@ export async function generatePlanAction(
   prevState: unknown,
   formData: FormData
 ) {
+  const ingredientsValue = formData.get('ingredients');
+  const ingredients =
+    typeof ingredientsValue === 'string' && ingredientsValue
+      ? ingredientsValue.split(',')
+      : [];
+
   const validatedFields = GeneratePlanSchema.safeParse({
     dietaryPreferences: formData.get('dietaryPreferences'),
     calorieTarget: formData.get('calorieTarget'),
     allergies: formData.get('allergies'),
     cuisine: formData.get('cuisine'),
-    ingredients: formData.get('ingredients'),
+    ingredients: ingredients,
     recipes: formData.get('recipes'),
     numberOfDays: formData.get('numberOfDays'),
     generationSource: formData.get('generationSource'),
@@ -71,7 +78,7 @@ export async function generatePlanAction(
       calorieTarget,
       allergies: allergies || 'none',
       cuisine,
-      ingredients: ingredients || 'none',
+      ingredients: ingredients.join(', ') || 'none',
       availableRecipes: JSON.stringify(availableRecipes, null, 2),
       numberOfDays,
       generationSource,
