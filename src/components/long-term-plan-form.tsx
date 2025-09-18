@@ -332,12 +332,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       <Form {...form}>
         <form
           action={formAction}
-          onSubmit={form.handleSubmit(() => {
-            const formData = new FormData(
-              document.getElementById('long-term-plan-form') as HTMLFormElement
-            );
-            formAction(formData);
-          })}
+          onSubmit={form.handleSubmit(() => {})}
           id="long-term-plan-form"
         >
           <CardHeader>
@@ -347,7 +342,11 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
+            <input
+              type="hidden"
+              name="recipes"
+              value={JSON.stringify(recipes)}
+            />
             <input type="hidden" name="language" value={language} />
             {user && <input type="hidden" name="userId" value={user.uid} />}
             <>
