@@ -1,4 +1,4 @@
-'use server';
+'use client';
 
 import { auth } from '@/lib/firebase';
 import {
