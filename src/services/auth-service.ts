@@ -8,6 +8,7 @@ import {
   signOut as firebaseSignOut,
   setPersistence,
   browserLocalPersistence,
+  type AuthError,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -19,11 +20,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 
-// Set persistence to local storage
 setPersistence(auth, browserLocalPersistence);
 
 const provider = new GoogleAuthProvider();
@@ -31,11 +30,21 @@ const provider = new GoogleAuthProvider();
 export async function signInWithGoogle() {
   try {
     const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    return { user };
+    return { user: result.user };
   } catch (error) {
-    console.error('An error occurred during sign-in:', error);
-    throw error;
+    const authError = error as AuthError;
+    if (authError.code === 'auth/unauthorized-domain') {
+      console.error(
+        'FIREBASE AUTH ERROR: The domain of this application is not authorized to perform this operation. Please go to your Firebase Console -> Authentication -> Settings -> Authorized domains and add the domain you are using for development (e.g., "localhost").'
+      );
+      throw new Error(
+        'This domain is not authorized for Firebase authentication. Please check the Firebase Console settings.'
+      );
+    }
+    console.error('An error occurred during sign-in:', authError);
+    throw new Error(
+      authError.message || 'An unknown error occurred during sign-in.'
+    );
   }
 }
 
