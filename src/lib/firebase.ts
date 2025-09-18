@@ -15,6 +15,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const db = getFirestore(app);
-const auth = getAuth(app);
+// This file should not export client-side auth. That is handled in auth-service.ts
+// const auth = getAuth(app);
 
-export { app, db, auth };
+export { app, db };

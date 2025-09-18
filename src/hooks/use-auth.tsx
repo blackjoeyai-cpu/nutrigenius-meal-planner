@@ -2,8 +2,11 @@
 
 import { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
-import { signInWithGoogle, signOut as firebaseSignOut } from '@/services/auth-service';
+import {
+  auth,
+  signInWithGoogle,
+  signOut as firebaseSignOut,
+} from '@/services/auth-service';
 import type { User } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 
