@@ -34,11 +34,8 @@ export async function signInWithGoogle() {
   } catch (error) {
     const authError = error as AuthError;
     if (authError.code === 'auth/unauthorized-domain') {
-      console.error(
-        'FIREBASE AUTH ERROR: The domain of this application is not authorized to perform this operation. Please go to your Firebase Console -> Authentication -> Settings -> Authorized domains and add the domain you are using for development (e.g., "localhost").'
-      );
       throw new Error(
-        'This domain is not authorized for Firebase authentication. Please check the Firebase Console settings.'
+        'FIREBASE AUTH ERROR: The domain of this application is not authorized. Please go to your Firebase Console -> Authentication -> Settings -> Authorized domains and add the domain you are using for development (e.g., "localhost").'
       );
     }
     console.error('An error occurred during sign-in:', authError);
