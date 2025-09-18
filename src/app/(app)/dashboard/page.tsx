@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, addDays, startOfWeek, endOfWeek } from 'date-fns';
 import {
   CalendarDays,
   ChefHat,
@@ -53,6 +53,33 @@ export default function DashboardPage() {
 
     fetchPlans();
   }, [user]);
+
+  const plansByDate = useMemo(() => {
+    const map = new Map<string, MealPlan>();
+    plans.forEach(plan => {
+      const planStartDate = new Date(plan.createdAt);
+      plan.days.forEach((_, index) => {
+        const date = addDays(planStartDate, index);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        map.set(dateKey, plan);
+      });
+    });
+    return map;
+  }, [plans]);
+
+  const plannedDaysInWeek = useMemo(() => {
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      const date = addDays(weekStart, i);
+      const dateKey = format(date, 'yyyy-MM-dd');
+      if (plansByDate.has(dateKey)) {
+        count++;
+      }
+    }
+    return count;
+  }, [plansByDate]);
 
   const handleGeneratePlan = () => {
     router.push('/generate');
@@ -146,12 +173,18 @@ export default function DashboardPage() {
 
         <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">Weekly Progress</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">85%</div>
-            <p className="text-xs text-muted-foreground">Weekly goal</p>
+            {isLoaded ? (
+              <div className="text-2xl font-bold">{plannedDaysInWeek}/7</div>
+            ) : (
+              <Skeleton className="h-6 w-12" />
+            )}
+            <p className="text-xs text-muted-foreground">
+              Days planned this week
+            </p>
           </CardContent>
         </Card>
       </div>
