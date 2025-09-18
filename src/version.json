@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.2-24-g4a39dbe-dirty",
-  "commitHash": "4a39dbe",
+  "version": "v0.3.2-26-gdb59a18",
+  "commitHash": "db59a18",
   "branch": "dev",
-  "isDirty": true,
-  "buildTime": "2025-09-18T01:53:58.772Z"
+  "isDirty": false,
+  "buildTime": "2025-09-18T02:04:18.776Z"
 }

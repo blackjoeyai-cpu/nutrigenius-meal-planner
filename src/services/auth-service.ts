@@ -1,3 +1,5 @@
+'use server';
+
 import { auth } from '@/lib/firebase';
 import {
   GoogleAuthProvider,
@@ -24,8 +26,8 @@ export async function signInWithGoogle() {
     const email = error.customData?.email;
     // The AuthCredential type that was used.
     const credential = GoogleAuthProvider.credentialFromError(error);
-    console.error({ errorCode, errorMessage, email, credential });
-    throw new Error(errorMessage);
+    console.error('An error occurred during sign-in:', error);
+    throw new Error(errorMessage || 'An unknown error occurred during sign-in.');
   }
 }
 
