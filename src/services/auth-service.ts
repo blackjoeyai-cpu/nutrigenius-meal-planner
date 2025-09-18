@@ -3,11 +3,11 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import {
   getAuth,
-  GoogleAuthProvider,
-  signInWithRedirect,
-  signOut as firebaseSignOut,
   setPersistence,
   browserLocalPersistence,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
   type AuthError,
 } from 'firebase/auth';
 
@@ -26,23 +26,21 @@ export const auth = getAuth(app);
 // This ensures the user's session is persisted across browser tabs.
 setPersistence(auth, browserLocalPersistence);
 
-const provider = new GoogleAuthProvider();
-
-export async function signInWithGoogle() {
+export async function signInWithEmail(email, password) {
   try {
-    // We are now using signInWithRedirect instead of signInWithPopup
-    await signInWithRedirect(auth, provider);
+    return await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
-    const authError = error as AuthError;
-    if (authError.code === 'auth/unauthorized-domain') {
-      throw new Error(
-        'FIREBASE AUTH ERROR: The domain of this application is not authorized. Please go to your Firebase Console -> Authentication -> Settings -> Authorized domains and add the domain you are using for development (e.g., "localhost").'
-      );
-    }
-    console.error('An error occurred during sign-in initiation:', authError);
-    throw new Error(
-      authError.message || 'An unknown error occurred during sign-in.'
-    );
+    console.error('Error signing in with email and password:', error);
+    throw error;
+  }
+}
+
+export async function signUpWithEmail(email, password) {
+  try {
+    return await createUserWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    console.error('Error signing up with email and password:', error);
+    throw error;
   }
 }
 

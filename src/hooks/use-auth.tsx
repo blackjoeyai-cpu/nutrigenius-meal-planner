@@ -4,7 +4,8 @@ import { createContext, useContext, ReactNode, useEffect } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import {
   auth,
-  signInWithGoogle,
+  signInWithEmail as firebaseSignIn,
+  signUpWithEmail as firebaseSignUp,
   signOut as firebaseSignOut,
 } from '@/services/auth-service';
 import type { User } from 'firebase/auth';
@@ -14,7 +15,8 @@ interface AuthContextType {
   user: User | null | undefined;
   loading: boolean;
   error: Error | undefined;
-  signIn: () => Promise<void>;
+  signInWithEmail: (email, password) => Promise<any>;
+  signUpWithEmail: (email, password) => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -24,13 +26,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
 
-  const signIn = async () => {
-    try {
-      // This will now initiate a redirect, not return a user.
-      await signInWithGoogle();
-    } catch (err) {
-      console.error('Failed to initiate sign-in:', err);
-    }
+  const signInWithEmail = async (email, password) => {
+    return firebaseSignIn(email, password);
+  };
+
+  const signUpWithEmail = async (email, password) => {
+    return firebaseSignUp(email, password);
   };
 
   const signOut = async () => {
@@ -42,8 +43,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // After a redirect, useAuthState will update the user state automatically.
-  // We can still use this effect to redirect logged-in users.
   useEffect(() => {
     if (!loading && user) {
       if (
@@ -57,7 +56,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user, loading, router]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        signInWithEmail,
+        signUpWithEmail,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
