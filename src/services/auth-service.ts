@@ -6,6 +6,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signOut as firebaseSignOut,
+  setPersistence,
+  browserLocalPersistence,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -21,10 +23,15 @@ const firebaseConfig = {
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
 
+// Set persistence to local storage
+setPersistence(auth, browserLocalPersistence);
+
 const provider = new GoogleAuthProvider();
 
 export async function signInWithGoogle() {
   try {
+    // Explicitly set tenantId to null to ensure we are using the project-level auth
+    auth.tenantId = null;
     const result = await signInWithPopup(auth, provider);
     // This gives you a Google Access Token. You can use it to access the Google API.
     const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -40,8 +47,18 @@ export async function signInWithGoogle() {
     const email = error.customData?.email;
     // The AuthCredential type that was used.
     const credential = GoogleAuthProvider.credentialFromError(error);
-    console.error('An error occurred during sign-in:', error);
-    throw new Error(errorMessage || 'An unknown error occurred during sign-in.');
+
+    // More detailed logging
+    console.error('An error occurred during sign-in:', {
+      code: errorCode,
+      message: errorMessage,
+      email: email,
+      fullError: error,
+    });
+
+    throw new Error(
+      errorMessage || 'An unknown error occurred during sign-in.'
+    );
   }
 }
 
