@@ -20,6 +20,8 @@ import { Logo } from '@/components/logo';
 import { useIsMobile } from '@/hooks/use-mobile';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const menuItems = [
   {
@@ -77,6 +79,7 @@ function BottomNavigation() {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isMobile = useIsMobile();
+  const { user, signOut } = useAuth();
 
   const getPageTitle = () => {
     const currentItem = menuItems.find(item => pathname.startsWith(item.href));
@@ -96,6 +99,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <h1 className="flex-1 text-xl font-semibold font-headline">
             {getPageTitle()}
           </h1>
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={user?.photoURL || ''} alt={user?.displayName || ''} />
+            <AvatarFallback>
+              {user?.displayName?.charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
         </div>
         <main className="flex-1 p-4 pb-20">{children}</main>
         <BottomNavigation />
@@ -115,7 +124,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <SidebarMenuItem key={item.href}>
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href}
+                  isActive={pathname.startsWith(item.href)}
                   tooltip={{ children: item.label }}
                   className="transition-colors"
                 >
@@ -133,10 +142,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => {
-                  // Add your logout logic here
-                  console.log('Logout clicked');
-                }}
+                onClick={signOut}
               >
                 <LogOut className="h-4 w-4" />
                 <span>Log out</span>
@@ -154,6 +160,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <h1 className="flex-1 text-xl font-semibold font-headline">
             {getPageTitle()}
           </h1>
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-muted-foreground">
+              {user?.displayName}
+            </span>
+            <Avatar className="h-8 w-8">
+              <AvatarImage
+                src={user?.photoURL || ''}
+                alt={user?.displayName || ''}
+              />
+              <AvatarFallback>
+                {user?.displayName?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          </div>
         </header>
         <main className="flex-1 p-6">{children}</main>
       </SidebarInset>

@@ -18,6 +18,7 @@ import { getMealPlans } from '@/services/meal-plan-service';
 import type { MealPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRecipes } from '@/hooks/use-recipes';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function DashboardPage() {
   const [plans, setPlans] = useState<MealPlan[]>([]);
@@ -25,11 +26,13 @@ export default function DashboardPage() {
   const [todayPlan, setTodayPlan] = useState<MealPlan | null>(null);
   const router = useRouter();
   const { recipes, isLoaded: recipesLoaded } = useRecipes();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchPlans() {
+      if (!user) return;
       try {
-        const fetchedPlans = await getMealPlans();
+        const fetchedPlans = await getMealPlans(user.uid);
         setPlans(fetchedPlans);
 
         // Find today's plan
@@ -49,7 +52,7 @@ export default function DashboardPage() {
     }
 
     fetchPlans();
-  }, []);
+  }, [user]);
 
   const handleGeneratePlan = () => {
     router.push('/generate');
@@ -71,7 +74,7 @@ export default function DashboardPage() {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Welcome back
+            Welcome back, {user?.displayName?.split(' ')[0]}
           </h1>
           <p className="text-muted-foreground">
             {isLoaded

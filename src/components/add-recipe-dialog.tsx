@@ -35,14 +35,11 @@ import type { Recipe } from '@/lib/types';
 import { MultiSelect } from './ui/multi-select';
 import { ScrollArea } from './ui/scroll-area';
 import { useState, useEffect } from 'react';
-import {
-  generateRecipeAction,
-  addRecipeAction,
-  updateRecipeAction,
-} from '@/app/(app)/recipes/actions';
+import { generateRecipeAction } from '@/app/(app)/recipes/actions';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguageStore } from '@/hooks/use-language-store';
+import { useRecipes } from '@/hooks/use-recipes';
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
@@ -67,7 +64,7 @@ type RecipeFormValues = z.infer<typeof recipeFormSchema>;
 type AddRecipeDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onRecipeAdd: (recipe: Omit<Recipe, 'id' | 'imageId'> | Recipe) => void;
+  onRecipeAdd: (recipe: Recipe) => void;
   children: React.ReactNode;
   recipeToEdit?: Recipe;
 };
@@ -83,6 +80,7 @@ export function AddRecipeDialog({
   const [generationPrompt, setGenerationPrompt] = useState('');
   const { language } = useLanguageStore();
   const { toast } = useToast();
+  const { addRecipe, updateRecipe } = useRecipes();
   const isEditMode = !!recipeToEdit;
 
   const form = useForm<RecipeFormValues>({
@@ -185,34 +183,12 @@ export function AddRecipeDialog({
     };
 
     if (isEditMode && recipeToEdit) {
-      try {
-        await updateRecipeAction(recipeToEdit.id, recipeData);
-        toast({
-          title: 'Success',
-          description: 'Recipe updated successfully.',
-        });
-        onRecipeAdd({ ...recipeToEdit, ...recipeData });
-      } catch {
-        toast({
-          title: 'Error',
-          description: 'Failed to update recipe.',
-          variant: 'destructive',
-        });
-      }
+      await updateRecipe(recipeToEdit.id, recipeData);
+      onRecipeAdd({ ...recipeToEdit, ...recipeData });
     } else {
-      try {
-        const newRecipeId = await addRecipeAction(recipeData);
-        toast({
-          title: 'Success',
-          description: 'Recipe added successfully.',
-        });
-        onRecipeAdd({ ...recipeData, id: newRecipeId, imageId: '' }); // Pass full recipe object back
-      } catch {
-        toast({
-          title: 'Error',
-          description: 'Failed to add recipe.',
-          variant: 'destructive',
-        });
+      const newRecipe = await addRecipe(recipeData);
+      if (newRecipe) {
+        onRecipeAdd(newRecipe);
       }
     }
     form.reset();

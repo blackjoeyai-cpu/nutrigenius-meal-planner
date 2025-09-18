@@ -3,7 +3,7 @@
 import { generateSafeMealPlan } from '@/ai/flows/avoid-allergic-recipes';
 import { regenerateSingleMeal } from '@/ai/flows/regenerate-single-meal';
 import { addMealPlan, updateMealPlan } from '@/services/meal-plan-service';
-import { type Recipe, type RecipeDetails, type DailyPlan } from '@/lib/types';
+import type { Recipe, RecipeDetails, DailyPlan } from '@/lib/types';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { generateRecipeDetails } from '@/ai/flows/generate-recipe';
@@ -20,6 +20,7 @@ const MealPlanSchema = z.object({
   recipes: z.string().optional(),
   generationSource: z.enum(['catalog', 'new', 'combined']),
   language: z.string().optional(),
+  userId: z.string(),
 });
 
 export async function createMealPlan(prevState: unknown, formData: FormData) {
@@ -32,6 +33,7 @@ export async function createMealPlan(prevState: unknown, formData: FormData) {
     recipes: formData.get('recipes'),
     generationSource: formData.get('generationSource'),
     language: formData.get('language'),
+    userId: formData.get('userId'),
   });
 
   if (!validatedFields.success) {
@@ -170,6 +172,7 @@ const DailyMealPlanSaveSchema = z.object({
   planId: z.string().optional(),
   date: z.string().optional(),
   language: z.string().optional(),
+  userId: z.string(),
 });
 
 export async function saveDailyPlan(
@@ -185,7 +188,7 @@ export async function saveDailyPlan(
   }
 
   try {
-    const { planId, date, language, ...planData } = validatedFields.data;
+    const { planId, date, language, userId, ...planData } = validatedFields.data;
     const resolvedDays: DailyPlan[] = [];
 
     for (const day of planData.days) {
@@ -203,7 +206,7 @@ export async function saveDailyPlan(
             language: language,
           });
 
-          const newRecipeId = await addRecipe(recipeDetails);
+          const newRecipeId = await addRecipe(recipeDetails, userId);
 
           resolvedDay[mealType] = {
             id: newRecipeId,
@@ -226,9 +229,9 @@ export async function saveDailyPlan(
     };
 
     if (planId) {
-      await updateMealPlan(planId, planToSave);
+      await updateMealPlan(planId, { ...planToSave, userId });
     } else {
-      await addMealPlan(planToSave);
+      await addMealPlan(planToSave, userId);
     }
 
     revalidatePath('/plans');

@@ -9,6 +9,8 @@ import {
   doc,
   getDoc,
   updateDoc,
+  query,
+  where,
 } from 'firebase/firestore';
 
 /**
@@ -17,11 +19,13 @@ import {
  * @returns The ID of the newly created recipe.
  */
 export async function addRecipe(
-  recipe: Omit<Recipe, 'id' | 'imageId'>
+  recipe: Omit<Recipe, 'id' | 'imageId'>,
+  userId: string
 ): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, 'recipes'), {
       ...recipe,
+      userId,
       imageId: `recipe-${Math.floor(Math.random() * 9) + 1}`,
     });
     return docRef.id;
@@ -42,6 +46,7 @@ export async function updateRecipe(
 ): Promise<void> {
   try {
     const recipeRef = doc(db, 'recipes', id);
+    // Ensure the recipe being updated belongs to the user, though Firestore rules should enforce this.
     await updateDoc(recipeRef, recipe);
   } catch (e) {
     console.error('Error updating document: ', e);
@@ -50,11 +55,13 @@ export async function updateRecipe(
 }
 
 /**
- * Retrieves all recipes from the Firestore database.
+ * Retrieves all recipes for a specific user from the Firestore database.
  * @returns A promise that resolves to an array of recipes.
  */
-export async function getRecipes(): Promise<Recipe[]> {
-  const querySnapshot = await getDocs(collection(db, 'recipes'));
+export async function getRecipes(userId: string): Promise<Recipe[]> {
+  if (!userId) return [];
+  const q = query(collection(db, 'recipes'), where('userId', '==', userId));
+  const querySnapshot = await getDocs(q);
   const recipes: Recipe[] = [];
   querySnapshot.forEach(doc => {
     recipes.push({ id: doc.id, ...doc.data() } as Recipe);

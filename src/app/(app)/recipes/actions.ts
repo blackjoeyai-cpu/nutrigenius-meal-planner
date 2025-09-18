@@ -1,7 +1,10 @@
 'use server';
 
 import { generateRecipeDetails } from '@/ai/flows/generate-recipe';
-import { addRecipe, updateRecipe } from '@/services/recipe-service';
+import {
+  addRecipe as addRecipeToDb,
+  updateRecipe as updateRecipeInDb,
+} from '@/services/recipe-service';
 import { z } from 'zod';
 import type { Recipe } from '@/lib/types';
 
@@ -25,13 +28,16 @@ export async function generateRecipeAction(input: {
   return recipeDetails;
 }
 
-export async function addRecipeAction(recipe: Omit<Recipe, 'id' | 'imageId'>) {
-  return await addRecipe(recipe);
+export async function addRecipeAction(
+  recipe: Omit<Recipe, 'id' | 'imageId'>,
+  userId: string
+) {
+  return await addRecipeToDb(recipe, userId);
 }
 
 export async function updateRecipeAction(
   id: string,
   recipe: Omit<Recipe, 'id' | 'imageId'>
 ) {
-  return await updateRecipe(id, recipe);
+  return await updateRecipeInDb(id, recipe);
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, Fragment } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   Card,
@@ -59,6 +59,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 import { useLanguageStore } from '@/hooks/use-language-store';
+import { useAuth } from '@/hooks/use-auth';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -115,13 +116,14 @@ type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
 };
 
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
+  const { user } = useAuth();
   const [state, formAction, isPending] = useActionState(
     generatePlanAction,
     initialState
   );
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients();
-  const { addRecipe } = useRecipes();
+  const { refreshRecipes } = useRecipes();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
@@ -155,9 +157,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
   const handleSave = async () => {
-    if (!generatedPlan) return;
+    if (!generatedPlan || !user) return;
     setIsSaving(true);
-    const result = await saveMealPlan(generatedPlan);
+    const result = await saveMealPlan(generatedPlan, user.uid);
     setIsSaving(false);
 
     if (result.success) {
@@ -347,6 +349,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             // Add recipes and language to form data
             combinedData.append('recipes', JSON.stringify(recipes));
             combinedData.append('language', language);
+            if (user) {
+              combinedData.append('userId', user.uid);
+            }
 
             form.handleSubmit(() => formAction(combinedData))();
           }}
@@ -373,7 +378,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                       open={isAddDialogOpen}
                       onOpenChange={setIsAddDialogOpen}
                       onRecipeAdd={newRecipe => {
-                        addRecipe(newRecipe);
+                        refreshRecipes();
                         setIsAddDialogOpen(false);
                       }}
                     >

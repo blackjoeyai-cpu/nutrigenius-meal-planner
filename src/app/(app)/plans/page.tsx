@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/use-auth';
 
 type PlansByDate = Map<
   string,
@@ -47,15 +48,17 @@ export default function PlansPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchPlans() {
-      const fetchedPlans = await getMealPlans();
+      if (!user) return;
+      const fetchedPlans = await getMealPlans(user.uid);
       setPlans(fetchedPlans);
       setIsLoaded(true);
     }
     fetchPlans();
-  }, []);
+  }, [user]);
 
   const plansByDate = useMemo((): PlansByDate => {
     const map: PlansByDate = new Map();

@@ -23,6 +23,7 @@ const GeneratePlanSchema = z.object({
     .max(30, 'Cannot generate more than 30 days.'),
   generationSource: z.enum(['catalog', 'new', 'combined']),
   language: z.string().optional(),
+  userId: z.string(),
 });
 
 export async function generatePlanAction(
@@ -39,6 +40,7 @@ export async function generatePlanAction(
     numberOfDays: formData.get('numberOfDays'),
     generationSource: formData.get('generationSource'),
     language: formData.get('language'),
+    userId: formData.get('userId'),
   });
 
   if (!validatedFields.success) {
@@ -105,7 +107,8 @@ export async function saveMealPlan(
   plan: Omit<MealPlan, 'id' | 'createdAt'> & {
     generationSource: string;
     language?: string;
-  }
+  },
+  userId: string
 ) {
   const resolvedDays: DailyPlan[] = [];
 
@@ -124,7 +127,7 @@ export async function saveMealPlan(
           language: plan.language,
         });
 
-        const newRecipeId = await addRecipe(recipeDetails);
+        const newRecipeId = await addRecipe(recipeDetails, userId);
 
         resolvedDay[mealType] = {
           id: newRecipeId,
@@ -146,7 +149,7 @@ export async function saveMealPlan(
     cuisine: plan.cuisine,
   };
 
-  await addMealPlan(planToSave);
+  await addMealPlan(planToSave, userId);
   revalidatePath('/plans');
 
   return { success: true, message: 'Plan saved successfully.' };

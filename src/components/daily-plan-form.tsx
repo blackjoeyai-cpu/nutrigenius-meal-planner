@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect } from 'react';
 import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Link from 'next/link';
@@ -50,6 +50,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 import { useLanguageStore } from '@/hooks/use-language-store';
+import { useAuth } from '@/hooks/use-auth';
 
 const initialState = {
   message: '',
@@ -87,12 +88,13 @@ type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
 type MealType = 'breakfast' | 'lunch' | 'dinner';
 
 export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
+  const { user } = useAuth();
   const [state, formAction, isPending] = useActionState(
     createMealPlan,
     initialState
   );
   const { ingredients } = useIngredients();
-  const { addRecipe } = useRecipes();
+  const { refreshRecipes } = useRecipes();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
@@ -140,7 +142,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     : 0;
 
   const handleSave = async () => {
-    if (!generatedPlan) return;
+    if (!generatedPlan || !user) return;
     setIsSaving(true);
 
     const planToSave = {
@@ -148,6 +150,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
       planId: planId || undefined,
       date: date || undefined,
       language: language,
+      userId: user.uid,
     };
 
     const result = await saveDailyPlan(planToSave);
@@ -309,6 +312,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
           />
           <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <input type="hidden" name="language" value={language} />
+          <input type="hidden" name="userId" value={user?.uid} />
           <CardHeader>
             <CardTitle>
               {planId ? 'Regenerate' : 'Create'} Your Daily Meal Plan
@@ -334,7 +338,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                     open={isAddDialogOpen}
                     onOpenChange={setIsAddDialogOpen}
                     onRecipeAdd={newRecipe => {
-                      addRecipe(newRecipe);
+                      refreshRecipes();
                       setIsAddDialogOpen(false);
                     }}
                   >

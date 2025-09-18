@@ -8,12 +8,12 @@ import {
   query,
   doc,
   updateDoc,
+  where,
 } from 'firebase/firestore';
 import type { DailyPlan, MealPlan } from '@/lib/types';
 
-// Note: userId is no longer used but kept for schema consistency in case auth is re-added.
 type MealPlanForDb = {
-  userId?: string;
+  userId: string;
   createdAt: Date;
   days: DailyPlan[];
   dietaryPreferences: string;
@@ -26,12 +26,13 @@ type MealPlanForDb = {
  * Adds a new meal plan to the Firestore database.
  */
 export async function addMealPlan(
-  plan: Omit<MealPlanForDb, 'userId'>
+  plan: Omit<MealPlanForDb, 'userId'>,
+  userId: string
 ): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, 'mealplans'), {
       ...plan,
-      userId: 'anonymous', // Default to anonymous since auth is removed
+      userId,
     });
     return docRef.id;
   } catch (e) {
@@ -54,22 +55,25 @@ export async function updateMealPlan(
 }
 
 /**
- * Retrieves all meal plans from the Firestore database.
+ * Retrieves all meal plans for a specific user from the Firestore database.
  */
-export async function getMealPlans(): Promise<MealPlan[]> {
+export async function getMealPlans(userId: string): Promise<MealPlan[]> {
   try {
-    const q = query(collection(db, 'mealplans'));
+    if (!userId) {
+      console.warn('getMealPlans called without a userId.');
+      return [];
+    }
+    const q = query(collection(db, 'mealplans'), where('userId', '==', userId));
     const querySnapshot = await getDocs(q);
     const plans: MealPlan[] = [];
     querySnapshot.forEach(doc => {
       const data = doc.data();
-      // Ensure createdAt exists and is a timestamp before converting
       const createdAtTimestamp = data.createdAt as
         | import('firebase/firestore').Timestamp
         | undefined;
       const createdAt = createdAtTimestamp
         ? createdAtTimestamp.toDate().toISOString()
-        : new Date(0).toISOString(); // Fallback to epoch if missing
+        : new Date(0).toISOString();
 
       plans.push({
         id: doc.id,
@@ -78,7 +82,6 @@ export async function getMealPlans(): Promise<MealPlan[]> {
       } as MealPlan);
     });
 
-    // Optional: Sort on the client side if needed, but be mindful of missing dates.
     plans.sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();

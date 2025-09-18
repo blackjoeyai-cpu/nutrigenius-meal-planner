@@ -16,9 +16,10 @@ export type Recipe = {
     fat: number;
   };
   imageId: string;
+  userId: string;
 };
 
-export type RecipeDetails = Omit<Recipe, 'id' | 'imageId'>;
+export type RecipeDetails = Omit<Recipe, 'id' | 'imageId' | 'userId'>;
 
 export type UserProfile = {
   name: string;
@@ -41,6 +42,7 @@ export type DailyPlan = {
 
 export type MealPlan = {
   id: string;
+  userId: string;
   createdAt: string; // Changed from Timestamp to string for serialization
   days: DailyPlan[];
   dietaryPreferences: string;
