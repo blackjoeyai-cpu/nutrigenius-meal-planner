@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useActionState, useEffect, useState, useTransition } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   Card,
@@ -30,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CUISINES, DIETARY_PREFERENCES } from '@/lib/constants';
-import type { Recipe, MealPlan } from '@/lib/types';
+import type { Recipe, MealPlan, DailyPlan } from '@/lib/types';
 import {
   AlertTriangle,
   Loader2,
@@ -38,6 +37,7 @@ import {
   Sparkles,
   Save,
   XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { generatePlanAction, saveMealPlan } from '@/app/(app)/plans/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +62,7 @@ import { Skeleton } from './ui/skeleton';
 import { useLanguageStore } from '@/hooks/use-language-store';
 import { useAuth } from '@/hooks/use-auth';
 import React from 'react';
+import { regenerateMealAction } from '@/app/(app)/generate/actions';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -117,6 +118,8 @@ type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
   language?: string;
 };
 
+type MealType = 'breakfast' | 'lunch' | 'dinner';
+
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const { user } = useAuth();
   const [state, formAction, isPending] = useActionState(
@@ -132,6 +135,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const { language } = useLanguageStore();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState<string | null>(null); // e.g., "day-0-breakfast"
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
@@ -188,6 +192,57 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     state.isSuccess = false;
   };
 
+  const handleRegenerateMeal = async (
+    dayIndex: number,
+    mealType: MealType
+  ) => {
+    if (!generatedPlan) return;
+
+    const regenerationKey = `day-${dayIndex}-${mealType}`;
+    setIsRegenerating(regenerationKey);
+
+    const day = generatedPlan.days[dayIndex];
+    const mealToReplace = day[mealType];
+    const currentMeals: Partial<DailyPlan> = { ...day };
+    delete currentMeals[mealType];
+
+    const formValues = form.getValues();
+
+    const input = {
+      dietaryPreferences: formValues.dietaryPreferences,
+      calorieTarget: formValues.calorieTarget,
+      allergies: formValues.allergies || 'none',
+      cuisine: formValues.cuisine,
+      ingredients: formValues.ingredients.join(','),
+      availableRecipes: JSON.stringify(recipes),
+      generationSource: formValues.generationSource,
+      mealToRegenerate: mealType,
+      currentMeals,
+      mealToReplace,
+      language,
+    };
+
+    const result = await regenerateMealAction(input);
+
+    if (result.success && result.meal) {
+      const newPlan = { ...generatedPlan };
+      newPlan.days[dayIndex][mealType] = result.meal;
+      setGeneratedPlan(newPlan as ParsedPlan);
+      toast({
+        title: 'Meal Regenerated!',
+        description: `Your ${mealType} for Day ${dayIndex + 1} has been updated.`,
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: result.message || 'Failed to regenerate meal.',
+        variant: 'destructive',
+      });
+    }
+
+    setIsRegenerating(null);
+  };
+
   useEffect(() => {
     if (state.message && state.errors) {
       const errorValues = Object.values(state.errors).flat();
@@ -242,7 +297,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
           <CardTitle>Review Your Long-Term Plan</CardTitle>
           <CardDescription>
             Here is the {generatedPlan.days.length}-day meal plan generated for
-            you. Review the details below.
+            you. Review the details below, or regenerate individual meals.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -252,50 +307,56 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 <AccordionTrigger>Day {index + 1}</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-2">
-                    {[day.breakfast, day.lunch, day.dinner].map(
-                      (meal, mealIndex) => {
+                    {(['breakfast', 'lunch', 'dinner'] as MealType[]).map(
+                      mealType => {
+                        const meal = day[mealType];
                         const isNewRecipe = meal.id.startsWith('new-recipe-');
+                        const regenerationKey = `day-${index}-${mealType}`;
+
+                        const mealCardContent = (
+                          <Card className="transition-shadow group-hover:shadow-md relative">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
+                              onClick={e => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRegenerateMeal(index, mealType);
+                              }}
+                              disabled={isRegenerating !== null}
+                            >
+                              {isRegenerating === regenerationKey ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <CardHeader>
+                              <CardTitle className="text-lg">
+                                {mealType.charAt(0).toUpperCase() +
+                                  mealType.slice(1)}
+                                : {meal.title}
+                              </CardTitle>
+                              <CardDescription>
+                                {meal.calories} calories
+                              </CardDescription>
+                            </CardHeader>
+                          </Card>
+                        );
 
                         return (
-                          <React.Fragment key={`${index}-${mealIndex}`}>
+                          <React.Fragment key={regenerationKey}>
                             {isNewRecipe ? (
                               <div className="group block">
-                                <Card className="transition-shadow group-hover:shadow-md">
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">
-                                      {
-                                        ['Breakfast', 'Lunch', 'Dinner'][
-                                          mealIndex
-                                        ]
-                                      }
-                                      : {meal.title}
-                                    </CardTitle>
-                                    <CardDescription>
-                                      {meal.calories} calories
-                                    </CardDescription>
-                                  </CardHeader>
-                                </Card>
+                                {mealCardContent}
                               </div>
                             ) : (
                               <Link
                                 href={`/recipes/${meal.id}`}
                                 className="group block"
                               >
-                                <Card className="transition-shadow group-hover:shadow-md">
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">
-                                      {
-                                        ['Breakfast', 'Lunch', 'Dinner'][
-                                          mealIndex
-                                        ]
-                                      }
-                                      : {meal.title}
-                                    </CardTitle>
-                                    <CardDescription>
-                                      {meal.calories} calories
-                                    </CardDescription>
-                                  </CardHeader>
-                                </Card>
+                                {mealCardContent}
                               </Link>
                             )}
                           </React.Fragment>
