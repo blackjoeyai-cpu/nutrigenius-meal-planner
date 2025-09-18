@@ -331,20 +331,11 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
       <Form {...form}>
         <form
+          action={formAction}
           onSubmit={form.handleSubmit(data => {
-            const formData = new FormData();
-            Object.entries(data).forEach(([key, value]) => {
-              if (Array.isArray(value)) {
-                formData.append(key, value.join(','));
-              } else {
-                formData.append(key, String(value));
-              }
-            });
-            formData.append('recipes', JSON.stringify(recipes));
-            formData.append('language', language);
-            if (user) {
-              formData.append('userId', user.uid);
-            }
+            const formData = new FormData(
+              document.getElementById('long-term-plan-form') as HTMLFormElement
+            );
             formAction(formData);
           })}
           id="long-term-plan-form"
@@ -493,7 +484,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                       <FormControl>
                         <SelectTrigger ref={field.ref}>
                           <SelectValue placeholder="Select a cuisine" />
-                        </Trigger>
+                        </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {CUISINES.map(c => (
