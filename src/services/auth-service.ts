@@ -1,7 +1,9 @@
-'use server';
-
 import { auth } from '@/lib/firebase';
-import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+} from 'firebase/auth';
 
 const provider = new GoogleAuthProvider();
 
@@ -31,7 +33,7 @@ export async function signOut() {
   try {
     await firebaseSignOut(auth);
   } catch (error) {
-    console.error("Error signing out: ", error);
-    throw new Error("Failed to sign out");
+    console.error('Error signing out: ', error);
+    throw new Error('Failed to sign out');
   }
 }
