@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState, useEffect, useState } from 'react';
@@ -330,31 +331,26 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
       <Form {...form}>
         <form
-          action={() => {
-            const combinedData = new FormData();
+          action={form.handleSubmit(() => {
+            const formData = new FormData();
             const formValues = form.getValues();
-
-            // Append all fields from the form to the FormData object
             (Object.keys(formValues) as Array<keyof PlanFormValues>).forEach(
               key => {
                 const value = formValues[key];
                 if (key === 'ingredients' && Array.isArray(value)) {
-                  combinedData.append(key, value.join(','));
-                } else if (value !== undefined) {
-                  combinedData.append(key, String(value));
+                  formData.append(key, value.join(','));
+                } else {
+                  formData.append(key, String(value));
                 }
               }
             );
-
-            // Add recipes and language to form data
-            combinedData.append('recipes', JSON.stringify(recipes));
-            combinedData.append('language', language);
+            formData.append('recipes', JSON.stringify(recipes));
+            formData.append('language', language);
             if (user) {
-              combinedData.append('userId', user.uid);
+              formData.append('userId', user.uid);
             }
-
-            form.handleSubmit(() => formAction(combinedData))();
-          }}
+            formAction(formData);
+          })}
         >
           <CardHeader>
             <CardTitle>Generate a New Long-term Plan</CardTitle>
