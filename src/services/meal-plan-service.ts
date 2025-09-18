@@ -10,6 +10,7 @@ import {
   getDoc,
   updateDoc,
   where,
+  type Timestamp,
 } from 'firebase/firestore';
 import type { DailyPlan, MealPlan } from '@/lib/types';
 
@@ -76,12 +77,19 @@ export async function getMealPlans(userId: string): Promise<MealPlan[]> {
     const plans: MealPlan[] = [];
     querySnapshot.forEach(doc => {
       const data = doc.data();
-      const createdAtTimestamp = data.createdAt as
-        | import('firebase/firestore').Timestamp
-        | undefined;
-      const createdAt = createdAtTimestamp
-        ? createdAtTimestamp.toDate()
-        : new Date(0);
+      let createdAt: Date;
+      const createdAtData = data.createdAt;
+
+      if (createdAtData && typeof createdAtData.toDate === 'function') {
+        // It's a Firestore Timestamp
+        createdAt = createdAtData.toDate();
+      } else if (typeof createdAtData === 'string') {
+        // It's an ISO string
+        createdAt = new Date(createdAtData);
+      } else {
+        // Fallback for unexpected format
+        createdAt = new Date(0);
+      }
 
       plans.push({
         id: doc.id,
