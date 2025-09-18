@@ -26,10 +26,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async () => {
     try {
+      // This will now initiate a redirect, not return a user.
       await signInWithGoogle();
-      router.push('/dashboard');
     } catch (err) {
-      console.error(err);
+      console.error('Failed to initiate sign-in:', err);
     }
   };
 
@@ -41,6 +41,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error(err);
     }
   };
+
+  // After a redirect, useAuthState will update the user state automatically.
+  // We can still use this effect to redirect logged-in users.
+  useEffect(() => {
+    if (!loading && user) {
+      if (
+        router.pathname === '/login' ||
+        router.pathname === '/' ||
+        router.pathname === ''
+      ) {
+        router.replace('/dashboard');
+      }
+    }
+  }, [user, loading, router]);
 
   return (
     <AuthContext.Provider value={{ user, loading, error, signIn, signOut }}>
