@@ -125,7 +125,7 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
+type ParsedPlan = Omit<MealPlan, 'id' | 'userId'> & {
   generationSource: string;
   language?: string;
 };
@@ -134,10 +134,7 @@ type MealType = 'breakfast' | 'lunch' | 'dinner';
 
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   const { user } = useAuth();
-  const [state, formAction, isPending] = useActionState(
-    generatePlanAction,
-    initialState
-  );
+  const [state, formAction] = useActionState(generatePlanAction, initialState);
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients();
   const { refreshRecipes } = useRecipes();
@@ -163,14 +160,17 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     },
   });
 
+  const { formState, getValues, watch, control } = form;
+  const { isSubmitting: isPending } = formState;
+
   useEffect(() => {
     if (state.isSuccess && state.mealPlan) {
       setGeneratedPlan(JSON.parse(state.mealPlan));
     }
   }, [state.isSuccess, state.mealPlan]);
 
-  const generationSource = form.watch('generationSource');
-  const numberOfDays = form.watch('numberOfDays');
+  const generationSource = watch('generationSource');
+  const numberOfDays = watch('numberOfDays');
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked =
     generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
@@ -219,7 +219,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     const currentMeals: Partial<DailyPlan> = { ...day };
     delete currentMeals[mealType];
 
-    const formValues = form.getValues();
+    const formValues = getValues();
 
     const input = {
       dietaryPreferences: formValues.dietaryPreferences,
@@ -405,7 +405,13 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   return (
     <Card className="mt-6">
       <Form {...form}>
-        <form action={formAction}>
+        <form
+          action={formData => {
+            const values = getValues();
+            formData.set('startDate', values.startDate.toISOString());
+            formAction(formData);
+          }}
+        >
           <input
             type="hidden"
             name="recipes"
@@ -452,7 +458,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </Alert>
               ) : null}
               <FormField
-                control={form.control}
+                control={control}
                 name="generationSource"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
@@ -497,7 +503,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
-                  control={form.control}
+                  control={control}
                   name="numberOfDays"
                   render={({ field }) => (
                     <FormItem>
@@ -515,7 +521,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={control}
                   name="startDate"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
@@ -556,7 +562,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               </div>
 
               <FormField
-                control={form.control}
+                control={control}
                 name="dietaryPreferences"
                 render={({ field }) => (
                   <FormItem>
@@ -585,7 +591,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="cuisine"
                 render={({ field }) => (
                   <FormItem>
@@ -614,7 +620,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="calorieTarget"
                 render={({ field }) => (
                   <FormItem>
@@ -633,7 +639,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="ingredients"
                 render={({ field }) => (
                   <FormItem>
@@ -660,7 +666,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="allergies"
                 render={({ field }) => (
                   <FormItem>
