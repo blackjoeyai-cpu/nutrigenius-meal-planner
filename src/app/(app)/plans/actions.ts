@@ -6,8 +6,8 @@ import { generateLongTermMealPlan } from '@/ai/flows/generate-long-term-plan';
 import { addMealPlan } from '@/services/meal-plan-service';
 import type { Recipe, MealPlan, RecipeDetails, DailyPlan } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { generateRecipeDetails } from '@/ai/flows/generate-recipe';
 import { addRecipe } from '@/services/recipe-service';
+import { generateMultipleRecipes } from '@/ai/flows/generate-multiple-recipes';
 
 const GeneratePlanSchema = z.object({
   dietaryPreferences: z.string(),
@@ -117,9 +117,54 @@ export async function saveMealPlan(
   },
   userId: string
 ) {
-  const resolvedDays: DailyPlan[] = [];
+  const newRecipePrompts: { id: string; prompt: string }[] = [];
 
+  // 1. Identify all new recipes that need to be generated
   for (const day of plan.days) {
+    for (const mealType of ['breakfast', 'lunch', 'dinner'] as const) {
+      const meal = day[mealType];
+      if (meal.id.startsWith('new-recipe-')) {
+        newRecipePrompts.push({
+          id: meal.id,
+          prompt: `A ${plan.cuisine} ${meal.title} for ${mealType} that is ${plan.dietaryPreferences} and fits a ${plan.calorieTarget} calorie diet.`,
+        });
+      }
+    }
+  }
+
+  const newRecipeDetailsById = new Map<string, RecipeDetails>();
+
+  // 2. Batch generate all new recipes if any
+  if (newRecipePrompts.length > 0) {
+    const { recipes: generatedRecipes } = await generateMultipleRecipes({
+      prompts: newRecipePrompts,
+      language: plan.language,
+    });
+
+    // 3. Save new recipes to DB and map their new IDs
+    for (const details of generatedRecipes) {
+      const recipeData: Omit<Recipe, 'id' | 'imageId' | 'userId'> = {
+        name: details.name,
+        cuisine: details.cuisine,
+        mealTypes: details.mealTypes,
+        dietaryTags: details.dietaryTags,
+        ingredients: details.ingredients,
+        instructions: details.instructions,
+        prepTime: details.prepTime,
+        cookTime: details.cookTime,
+        servings: details.servings,
+        nutrition: details.nutrition,
+      };
+      const newRecipeId = await addRecipe(recipeData, userId);
+      newRecipeDetailsById.set(details.id, {
+        ...recipeData,
+        id: newRecipeId,
+      } as RecipeDetails);
+    }
+  }
+
+  // 4. Create the final plan with real recipe IDs
+  const resolvedDays: DailyPlan[] = plan.days.map(day => {
     const resolvedDay: DailyPlan = {
       breakfast: { ...day.breakfast },
       lunch: { ...day.lunch },
@@ -128,24 +173,18 @@ export async function saveMealPlan(
 
     for (const mealType of ['breakfast', 'lunch', 'dinner'] as const) {
       const meal = day[mealType];
-      if (meal.id.startsWith('new-recipe-')) {
-        const recipeDetails: RecipeDetails = await generateRecipeDetails({
-          prompt: `A ${plan.cuisine} ${meal.title} that is ${plan.dietaryPreferences} and fits a ${plan.calorieTarget} calorie diet.`,
-          language: plan.language,
-        });
-
-        const newRecipeId = await addRecipe(recipeDetails, userId);
-
+      if (newRecipeDetailsById.has(meal.id)) {
+        const newDetails = newRecipeDetailsById.get(meal.id)!;
         resolvedDay[mealType] = {
-          id: newRecipeId,
-          title: recipeDetails.name,
-          description: meal.description,
-          calories: recipeDetails.nutrition.calories,
+          id: newDetails.id,
+          title: newDetails.name,
+          description: meal.description, // Keep original simple description
+          calories: newDetails.nutrition.calories,
         };
       }
     }
-    resolvedDays.push(resolvedDay);
-  }
+    return resolvedDay;
+  });
 
   const planToSave = {
     createdAt: new Date(),

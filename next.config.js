@@ -30,9 +30,6 @@ const nextConfig = {
       },
     ],
   },
-  experimental: {
-    maxDuration: 120, // 2 minutes
-  },
 };
 
 module.exports = nextConfig;
