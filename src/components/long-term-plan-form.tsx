@@ -524,7 +524,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                   control={control}
                   name="startDate"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
+                    <FormItem>
                       <FormLabel>Start Date</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
