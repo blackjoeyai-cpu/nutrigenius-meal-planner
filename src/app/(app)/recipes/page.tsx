@@ -19,7 +19,6 @@ import { useRecipes } from '@/hooks/use-recipes';
 import { CUISINES } from '@/lib/constants';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Recipe } from '@/lib/types';
 
 export default function RecipesPage() {
   const { recipes, isLoaded, refreshRecipes } = useRecipes();
@@ -46,7 +45,7 @@ export default function RecipesPage() {
     });
   }, [searchTerm, cuisineFilter, recipes, isLoaded, activeTab]);
 
-  const handleRecipeAdded = (newRecipe: Recipe) => {
+  const handleRecipeAdded = () => {
     refreshRecipes();
     setIsAddDialogOpen(false);
   };

@@ -348,7 +348,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   <AddRecipeDialog
                     open={isAddDialogOpen}
                     onOpenChange={setIsAddDialogOpen}
-                    onRecipeAdd={newRecipe => {
+                    onRecipeAdd={() => {
                       refreshRecipes();
                       setIsAddDialogOpen(false);
                     }}

@@ -29,7 +29,9 @@ const GenerateMultipleRecipesInputSchema = z.object({
   language: z
     .string()
     .optional()
-    .describe("The language for the recipes to be generated in, e.g., 'Malay'."),
+    .describe(
+      "The language for the recipes to be generated in, e.g., 'Malay'."
+    ),
 });
 export type GenerateMultipleRecipesInput = z.infer<
   typeof GenerateMultipleRecipesInputSchema

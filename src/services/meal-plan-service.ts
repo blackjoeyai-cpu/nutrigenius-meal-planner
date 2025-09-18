@@ -10,7 +10,6 @@ import {
   getDoc,
   updateDoc,
   where,
-  type Timestamp,
 } from 'firebase/firestore';
 import type { DailyPlan, MealPlan } from '@/lib/types';
 

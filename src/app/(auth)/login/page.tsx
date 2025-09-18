@@ -61,10 +61,11 @@ export default function LoginPage() {
         await signInWithEmail(email, password);
         toast({ title: 'Sign in successful!' });
       }
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         title: 'Authentication Error',
-        description: error.message || 'An unknown error occurred.',
+        description: err.message || 'An unknown error occurred.',
         variant: 'destructive',
       });
     }
@@ -74,10 +75,11 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
       // Redirect is handled by the auth hook after Google sign-in completes
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as Error;
       toast({
         title: 'Google Sign-In Error',
-        description: error.message || 'Could not sign in with Google.',
+        description: err.message || 'Could not sign in with Google.',
         variant: 'destructive',
       });
     }

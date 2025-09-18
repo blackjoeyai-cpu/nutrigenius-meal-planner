@@ -205,10 +205,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     state.isSuccess = false;
   };
 
-  const handleRegenerateMeal = async (
-    dayIndex: number,
-    mealType: MealType
-  ) => {
+  const handleRegenerateMeal = async (dayIndex: number, mealType: MealType) => {
     if (!generatedPlan) return;
 
     const regenerationKey = `day-${dayIndex}-${mealType}`;
@@ -412,11 +409,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
             formAction(formData);
           }}
         >
-          <input
-            type="hidden"
-            name="recipes"
-            value={JSON.stringify(recipes)}
-          />
+          <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <input type="hidden" name="language" value={language} />
           {user && <input type="hidden" name="userId" value={user.uid} />}
           <CardHeader>
@@ -440,7 +433,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     <AddRecipeDialog
                       open={isAddDialogOpen}
                       onOpenChange={setIsAddDialogOpen}
-                      onRecipeAdd={newRecipe => {
+                      onRecipeAdd={() => {
                         refreshRecipes();
                         setIsAddDialogOpen(false);
                       }}

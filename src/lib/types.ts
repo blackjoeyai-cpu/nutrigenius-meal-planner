@@ -49,4 +49,5 @@ export type MealPlan = {
   calorieTarget: number;
   allergies: string;
   cuisine: string;
+  language?: string;
 };

@@ -15,15 +15,16 @@ import {
   signOut as firebaseSignOut,
   signInWithGoogle as firebaseSignInWithGoogle,
 } from '@/services/auth-service';
-import type { User } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import type { User, UserCredential } from 'firebase/auth';
+
+// ...
 
 interface AuthContextType {
   user: User | null | undefined;
   loading: boolean;
   error: Error | undefined;
-  signInWithEmail: (email: string, password: string) => Promise<any>;
-  signUpWithEmail: (email: string, password: string) => Promise<any>;
+  signInWithEmail: (email: string, password: string) => Promise<UserCredential>;
+  signUpWithEmail: (email: string, password: string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -40,11 +41,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAppLoading(authLoading);
   }, [authLoading]);
 
-  const signInWithEmail = async (email, password) => {
+  const signInWithEmail = async (email: string, password: string) => {
     return firebaseSignIn(email, password);
   };
 
-  const signUpWithEmail = async (email, password) => {
+  const signUpWithEmail = async (email: string, password: string) => {
     return firebaseSignUp(email, password);
   };
 

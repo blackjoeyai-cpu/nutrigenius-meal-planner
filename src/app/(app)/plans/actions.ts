@@ -1,4 +1,3 @@
-
 'use server';
 
 import { z } from 'zod';
@@ -140,7 +139,7 @@ export async function saveMealPlan(
   if (newRecipePrompts.length > 0) {
     const result = await generateMultipleRecipes({
       prompts: newRecipePrompts,
-      language: (plan as any).language,
+      language: plan.language,
     });
     generatedRecipes = result.recipes as RecipeDetails[];
 
@@ -153,7 +152,7 @@ export async function saveMealPlan(
   // 3. Batch save all new recipes to the DB
   const recipesToSave: Omit<Recipe, 'id' | 'imageId' | 'userId'>[] =
     generatedRecipes.map(details => {
-      const { id, ...recipeData } = details;
+      const { ...recipeData } = details;
       return recipeData;
     });
 

@@ -222,7 +222,7 @@ export async function saveDailyPlan(
     // 3. Batch save all new recipes to the DB
     const recipesToSave: Omit<Recipe, 'id' | 'imageId' | 'userId'>[] =
       generatedRecipes.map(details => {
-        const { id, ...recipeData } = details;
+        const { ...recipeData } = details;
         return recipeData;
       });
     const newRecipeIds =
