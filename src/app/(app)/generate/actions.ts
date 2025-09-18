@@ -188,7 +188,8 @@ export async function saveDailyPlan(
   }
 
   try {
-    const { planId, date, language, userId, ...planData } = validatedFields.data;
+    const { planId, date, language, userId, ...planData } =
+      validatedFields.data;
     const resolvedDays: DailyPlan[] = [];
 
     for (const day of planData.days) {
@@ -229,7 +230,7 @@ export async function saveDailyPlan(
     };
 
     if (planId) {
-      await updateMealPlan(planId, { ...planToSave, userId });
+      await updateMealPlan(planId, planToSave, userId);
     } else {
       await addMealPlan(planToSave, userId);
     }

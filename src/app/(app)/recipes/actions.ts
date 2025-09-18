@@ -37,7 +37,8 @@ export async function addRecipeAction(
 
 export async function updateRecipeAction(
   id: string,
-  recipe: Omit<Recipe, 'id' | 'imageId'>
+  recipe: Omit<Recipe, 'id' | 'imageId' | 'userId'>,
+  userId: string
 ) {
-  return await updateRecipeInDb(id, recipe);
+  return await updateRecipeInDb(id, recipe, userId);
 }

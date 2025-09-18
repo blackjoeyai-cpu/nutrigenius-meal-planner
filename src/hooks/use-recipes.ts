@@ -3,7 +3,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Recipe } from '@/lib/types';
 import { getRecipes as fetchRecipes } from '@/services/recipe-service';
-import { addRecipeAction, updateRecipeAction } from '@/app/(app)/recipes/actions';
+import {
+  addRecipeAction,
+  updateRecipeAction,
+} from '@/app/(app)/recipes/actions';
 import { useAuth } from './use-auth';
 import { useToast } from './use-toast';
 
@@ -35,7 +38,9 @@ export const useRecipes = () => {
   }, [loadRecipes]);
 
   const addRecipe = useCallback(
-    async (newRecipe: Omit<Recipe, 'id' | 'imageId'>): Promise<Recipe | null> => {
+    async (
+      newRecipe: Omit<Recipe, 'id' | 'imageId'>
+    ): Promise<Recipe | null> => {
       if (!user) {
         toast({
           title: 'Not Authenticated',
@@ -46,7 +51,12 @@ export const useRecipes = () => {
       }
       try {
         const newRecipeId = await addRecipeAction(newRecipe, user.uid);
-        const addedRecipe = { ...newRecipe, id: newRecipeId, imageId: '' };
+        const addedRecipe = {
+          ...newRecipe,
+          id: newRecipeId,
+          imageId: '',
+          userId: user.uid,
+        };
         setRecipes(prev => [...prev, addedRecipe]);
         toast({
           title: 'Success!',
@@ -65,10 +75,13 @@ export const useRecipes = () => {
     },
     [user, toast]
   );
-  
+
   const updateRecipe = useCallback(
-    async (id: string, recipeData: Omit<Recipe, 'id' | 'imageId'>) => {
-       if (!user) {
+    async (
+      id: string,
+      recipeData: Omit<Recipe, 'id' | 'imageId' | 'userId'>
+    ) => {
+      if (!user) {
         toast({
           title: 'Not Authenticated',
           description: 'You must be logged in to update a recipe.',
@@ -77,15 +90,16 @@ export const useRecipes = () => {
         return;
       }
       try {
-        await updateRecipeAction(id, recipeData);
-        setRecipes((prev) => prev.map(r => r.id === id ? { ...r, ...recipeData } : r));
+        await updateRecipeAction(id, recipeData, user.uid);
+        setRecipes(prev =>
+          prev.map(r => (r.id === id ? { ...r, ...recipeData } : r))
+        );
         toast({
           title: 'Success!',
           description: 'Recipe updated successfully.',
         });
-        
       } catch (error) {
-         console.error('Error updating recipe:', error);
+        console.error('Error updating recipe:', error);
         toast({
           title: 'Error',
           description: 'Could not update the recipe.',
@@ -96,5 +110,11 @@ export const useRecipes = () => {
     [user, toast]
   );
 
-  return { recipes, addRecipe, updateRecipe, isLoaded, refreshRecipes: loadRecipes };
+  return {
+    recipes,
+    addRecipe,
+    updateRecipe,
+    isLoaded,
+    refreshRecipes: loadRecipes,
+  };
 };

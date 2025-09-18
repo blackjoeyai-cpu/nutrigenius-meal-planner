@@ -7,6 +7,7 @@ import {
   getDocs,
   query,
   doc,
+  getDoc,
   updateDoc,
   where,
 } from 'firebase/firestore';
@@ -43,10 +44,17 @@ export async function addMealPlan(
 
 export async function updateMealPlan(
   planId: string,
-  updatedPlanData: Partial<MealPlanForDb>
+  updatedPlanData: Partial<Omit<MealPlanForDb, 'userId'>>,
+  userId: string
 ): Promise<void> {
   try {
     const planRef = doc(db, 'mealplans', planId);
+    const planSnap = await getDoc(planRef);
+
+    if (!planSnap.exists() || planSnap.data().userId !== userId) {
+      throw new Error('Permission denied or meal plan not found.');
+    }
+
     await updateDoc(planRef, updatedPlanData);
   } catch (e) {
     console.error('Error updating meal plan: ', e);

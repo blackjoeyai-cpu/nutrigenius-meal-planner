@@ -42,11 +42,17 @@ export async function addRecipe(
  */
 export async function updateRecipe(
   id: string,
-  recipe: Omit<Recipe, 'id' | 'imageId'>
+  recipe: Omit<Recipe, 'id' | 'imageId' | 'userId'>,
+  userId: string
 ): Promise<void> {
   try {
     const recipeRef = doc(db, 'recipes', id);
-    // Ensure the recipe being updated belongs to the user, though Firestore rules should enforce this.
+    const docSnap = await getDoc(recipeRef);
+
+    if (!docSnap.exists() || docSnap.data().userId !== userId) {
+      throw new Error('Permission denied or recipe not found.');
+    }
+
     await updateDoc(recipeRef, recipe);
   } catch (e) {
     console.error('Error updating document: ', e);
@@ -72,15 +78,22 @@ export async function getRecipes(userId: string): Promise<Recipe[]> {
 /**
  * Retrieves a single recipe by its ID from the Firestore database.
  * @param id - The ID of the recipe to retrieve.
- * @returns A promise that resolves to the recipe object, or null if not found.
+ * @param userId - The ID of the user requesting the recipe.
+ * @returns A promise that resolves to the recipe object, or null if not found or not owned by the user.
  */
-export async function getRecipeById(id: string): Promise<Recipe | null> {
+export async function getRecipeById(
+  id: string,
+  userId: string
+): Promise<Recipe | null> {
   const docRef = doc(db, 'recipes', id);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as Recipe;
-  } else {
-    return null;
+    const recipe = { id: docSnap.id, ...docSnap.data() } as Recipe;
+    if (recipe.userId === userId) {
+      return recipe;
+    }
   }
+
+  return null;
 }
