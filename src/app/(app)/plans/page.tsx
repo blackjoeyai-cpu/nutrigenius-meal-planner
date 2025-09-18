@@ -65,7 +65,12 @@ export default function PlansPage() {
     if (!isLoaded) return map;
 
     plans.forEach(plan => {
-      const startDate = startOfDay(new Date(plan.createdAt));
+      // Handle both string and Date objects for createdAt
+      const planDate =
+        typeof plan.createdAt === 'string'
+          ? new Date(plan.createdAt)
+          : plan.createdAt;
+      const startDate = startOfDay(planDate);
       plan.days.forEach((day, index) => {
         const date = addDays(startDate, index);
         const dateKey = format(date, 'yyyy-MM-dd');

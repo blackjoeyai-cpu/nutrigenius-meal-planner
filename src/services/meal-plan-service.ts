@@ -80,8 +80,8 @@ export async function getMealPlans(userId: string): Promise<MealPlan[]> {
         | import('firebase/firestore').Timestamp
         | undefined;
       const createdAt = createdAtTimestamp
-        ? createdAtTimestamp.toDate().toISOString()
-        : new Date(0).toISOString();
+        ? createdAtTimestamp.toDate()
+        : new Date(0);
 
       plans.push({
         id: doc.id,

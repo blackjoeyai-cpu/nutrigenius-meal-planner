@@ -43,7 +43,7 @@ export type DailyPlan = {
 export type MealPlan = {
   id: string;
   userId: string;
-  createdAt: string; // Changed from Timestamp to string for serialization
+  createdAt: Date; // Changed from string for consistency
   days: DailyPlan[];
   dietaryPreferences: string;
   calorieTarget: number;
