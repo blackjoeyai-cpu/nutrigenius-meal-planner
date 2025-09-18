@@ -256,7 +256,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         const isNewRecipe = meal.id.startsWith('new-recipe-');
 
                         return (
-                          <>
+                          <React.Fragment key={mealIndex}>
                             {isNewRecipe ? (
                               <div className="group block">
                                 <Card className="transition-shadow group-hover:shadow-md">
@@ -279,7 +279,6 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                               <Link
                                 href={`/recipes/${meal.id}`}
                                 className="group block"
-                                key={mealIndex}
                               >
                                 <Card className="transition-shadow group-hover:shadow-md">
                                   <CardHeader>
@@ -298,7 +297,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                                 </Card>
                               </Link>
                             )}
-                          </>
+                          </React.Fragment>
                         );
                       }
                     )}
@@ -334,10 +333,9 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
         <form action={formAction} id="long-term-plan-form">
           <input
             type="hidden"
-            name="ingredients"
-            value={form.getValues('ingredients').join(',')}
+            name="recipes"
+            value={JSON.stringify(recipes)}
           />
-          <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
           <input type="hidden" name="language" value={language} />
           {user && <input type="hidden" name="userId" value={user.uid} />}
           <CardHeader>
