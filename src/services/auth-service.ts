@@ -49,12 +49,7 @@ export async function signInWithGoogle() {
     const credential = GoogleAuthProvider.credentialFromError(error);
 
     // More detailed logging
-    console.error('An error occurred during sign-in:', {
-      code: errorCode,
-      message: errorMessage,
-      email: email,
-      fullError: error,
-    });
+    console.error('An error occurred during sign-in:', error);
 
     throw new Error(
       errorMessage || 'An unknown error occurred during sign-in.'
