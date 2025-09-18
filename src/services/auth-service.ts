@@ -8,6 +8,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
+  signInWithRedirect,
+  GoogleAuthProvider,
   type AuthError,
 } from 'firebase/auth';
 
@@ -41,6 +43,27 @@ export async function signUpWithEmail(email, password) {
   } catch (error) {
     console.error('Error signing up with email and password:', error);
     throw error;
+  }
+}
+
+export async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  try {
+    // Using redirect is more robust across different environments
+    await signInWithRedirect(auth, provider);
+  } catch (error) {
+    const authError = error as AuthError;
+    if (authError.code === 'auth/unauthorized-domain') {
+      console.error(
+        'FIREBASE AUTH ERROR: The domain of this application is not authorized. Please add it to the Firebase Console > Authentication > Settings > Authorized domains.'
+      );
+      throw new Error(
+        'This domain is not authorized for authentication. Please contact support.'
+      );
+    } else {
+      console.error('An error occurred during Google sign-in:', error);
+      throw new Error('An unknown error occurred during sign-in.');
+    }
   }
 }
 
