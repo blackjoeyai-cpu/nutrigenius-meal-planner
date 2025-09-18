@@ -11,6 +11,7 @@ import {
   updateDoc,
   query,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 
 /**
@@ -32,6 +33,38 @@ export async function addRecipe(
   } catch (e) {
     console.error('Error adding document: ', e);
     throw new Error('Could not add recipe to the database.');
+  }
+}
+
+/**
+ * Adds multiple recipes to the database in a single batch operation.
+ * @param recipes - An array of recipe objects to add.
+ * @param userId - The ID of the user adding the recipes.
+ * @returns An array of the newly created recipe IDs.
+ */
+export async function addRecipesInBatch(
+  recipes: Omit<Recipe, 'id' | 'imageId' | 'userId'>[],
+  userId: string
+): Promise<string[]> {
+  const batch = writeBatch(db);
+  const newRecipeIds: string[] = [];
+
+  recipes.forEach(recipe => {
+    const docRef = doc(collection(db, 'recipes'));
+    batch.set(docRef, {
+      ...recipe,
+      userId,
+      imageId: `recipe-${Math.floor(Math.random() * 9) + 1}`,
+    });
+    newRecipeIds.push(docRef.id);
+  });
+
+  try {
+    await batch.commit();
+    return newRecipeIds;
+  } catch (e) {
+    console.error('Error adding recipes in batch: ', e);
+    throw new Error('Could not add recipes to the database.');
   }
 }
 

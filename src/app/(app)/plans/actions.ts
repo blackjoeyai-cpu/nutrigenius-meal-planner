@@ -6,7 +6,7 @@ import { generateLongTermMealPlan } from '@/ai/flows/generate-long-term-plan';
 import { addMealPlan } from '@/services/meal-plan-service';
 import type { Recipe, MealPlan, RecipeDetails, DailyPlan } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { addRecipe } from '@/services/recipe-service';
+import { addRecipesInBatch } from '@/services/recipe-service';
 import { generateMultipleRecipes } from '@/ai/flows/generate-multiple-recipes';
 
 const GeneratePlanSchema = z.object({
@@ -34,7 +34,7 @@ export async function generatePlanAction(
   const ingredientsValue = formData.get('ingredients');
   const ingredients =
     typeof ingredientsValue === 'string' && ingredientsValue
-      ? ingredientsValue.split(',')
+      ? ingredientsValue.split(',').filter(i => i.trim() !== '')
       : [];
 
   const validatedFields = GeneratePlanSchema.safeParse({
@@ -132,36 +132,40 @@ export async function saveMealPlan(
     }
   }
 
-  const newRecipeDetailsById = new Map<string, RecipeDetails>();
+  const newRecipeDetailsByPlaceholderId = new Map<string, RecipeDetails>();
+  let generatedRecipes: RecipeDetails[] = [];
 
   // 2. Batch generate all new recipes if any
   if (newRecipePrompts.length > 0) {
-    const { recipes: generatedRecipes } = await generateMultipleRecipes({
+    const result = await generateMultipleRecipes({
       prompts: newRecipePrompts,
       language: plan.language,
     });
+    generatedRecipes = result.recipes as RecipeDetails[];
 
-    // 3. Save new recipes to DB and map their new IDs
-    for (const details of generatedRecipes) {
-      const recipeData: Omit<Recipe, 'id' | 'imageId' | 'userId'> = {
-        name: details.name,
-        cuisine: details.cuisine,
-        mealTypes: details.mealTypes,
-        dietaryTags: details.dietaryTags,
-        ingredients: details.ingredients,
-        instructions: details.instructions,
-        prepTime: details.prepTime,
-        cookTime: details.cookTime,
-        servings: details.servings,
-        nutrition: details.nutrition,
-      };
-      const newRecipeId = await addRecipe(recipeData, userId);
-      newRecipeDetailsById.set(details.id, {
-        ...recipeData,
-        id: newRecipeId,
-      } as RecipeDetails);
-    }
+    // Map the results back to their original placeholder IDs
+    generatedRecipes.forEach(details => {
+      newRecipeDetailsByPlaceholderId.set(details.id, details);
+    });
   }
+
+  // 3. Batch save all new recipes to the DB
+  const recipesToSave: Omit<Recipe, 'id' | 'imageId' | 'userId'>[] =
+    generatedRecipes.map(details => {
+      const { id, ...recipeData } = details;
+      return recipeData;
+    });
+
+  const newRecipeIds =
+    recipesToSave.length > 0
+      ? await addRecipesInBatch(recipesToSave, userId)
+      : [];
+
+  // Create a map from placeholder ID to the new final recipe ID
+  const placeholderIdToNewIdMap = new Map<string, string>();
+  generatedRecipes.forEach((details, index) => {
+    placeholderIdToNewIdMap.set(details.id, newRecipeIds[index]);
+  });
 
   // 4. Create the final plan with real recipe IDs
   const resolvedDays: DailyPlan[] = plan.days.map(day => {
@@ -173,13 +177,14 @@ export async function saveMealPlan(
 
     for (const mealType of ['breakfast', 'lunch', 'dinner'] as const) {
       const meal = day[mealType];
-      if (newRecipeDetailsById.has(meal.id)) {
-        const newDetails = newRecipeDetailsById.get(meal.id)!;
+      if (placeholderIdToNewIdMap.has(meal.id)) {
+        const newRecipeId = placeholderIdToNewIdMap.get(meal.id)!;
+        const recipeDetails = newRecipeDetailsByPlaceholderId.get(meal.id)!;
         resolvedDay[mealType] = {
-          id: newDetails.id,
-          title: newDetails.name,
+          id: newRecipeId,
+          title: recipeDetails.name,
           description: meal.description, // Keep original simple description
-          calories: newDetails.nutrition.calories,
+          calories: recipeDetails.nutrition.calories,
         };
       }
     }
