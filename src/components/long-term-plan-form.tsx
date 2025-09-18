@@ -331,11 +331,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   return (
     <Card className="mt-6">
       <Form {...form}>
-        <form
-          action={formAction}
-          onSubmit={form.handleSubmit(() => {})}
-          id="long-term-plan-form"
-        >
+        <form action={formAction} id="long-term-plan-form">
           <input
             type="hidden"
             name="ingredients"
