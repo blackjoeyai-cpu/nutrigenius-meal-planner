@@ -38,6 +38,7 @@ import {
   Save,
   XCircle,
   RefreshCw,
+  CalendarIcon,
 } from 'lucide-react';
 import { generatePlanAction, saveMealPlan } from '@/app/(app)/plans/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -63,6 +64,14 @@ import { useLanguageStore } from '@/hooks/use-language-store';
 import { useAuth } from '@/hooks/use-auth';
 import React from 'react';
 import { regenerateMealAction } from '@/app/(app)/generate/actions';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -79,6 +88,9 @@ const planFormSchema = z.object({
   cuisine: z.string({ required_error: 'Please select a cuisine.' }),
   generationSource: z.enum(['catalog', 'new', 'combined']),
   ingredients: z.array(z.string()),
+  startDate: z.date({
+    required_error: 'A start date is required.',
+  }),
 });
 
 type PlanFormValues = z.infer<typeof planFormSchema>;
@@ -147,6 +159,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       allergies: '',
       generationSource: 'catalog',
       ingredients: [],
+      startDate: new Date(),
     },
   });
 
@@ -392,7 +405,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
   return (
     <Card className="mt-6">
       <Form {...form}>
-        <form action={formAction} id="long-term-plan-form">
+        <form action={formAction}>
           <input
             type="hidden"
             name="recipes"
@@ -482,24 +495,65 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="numberOfDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of Days</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 7"
-                        {...field}
-                        name={field.name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="numberOfDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Days</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 7"
+                          {...field}
+                          name={field.name}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={'outline'}
+                              className={cn(
+                                'w-full pl-3 text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, 'PPP')
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={date => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}

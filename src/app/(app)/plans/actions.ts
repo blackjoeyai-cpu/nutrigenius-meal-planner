@@ -23,6 +23,7 @@ const GeneratePlanSchema = z.object({
     .min(1, 'Number of days must be at least 1.')
     .max(30, 'Cannot generate more than 30 days.'),
   generationSource: z.enum(['catalog', 'new', 'combined']),
+  startDate: z.coerce.date(),
   language: z.string().optional(),
   userId: z.string(),
 });
@@ -46,6 +47,7 @@ export async function generatePlanAction(
     recipes: formData.get('recipes'),
     numberOfDays: formData.get('numberOfDays'),
     generationSource: formData.get('generationSource'),
+    startDate: formData.get('startDate'),
     language: formData.get('language'),
     userId: formData.get('userId'),
   });
@@ -69,6 +71,7 @@ export async function generatePlanAction(
       recipes,
       numberOfDays,
       generationSource,
+      startDate,
       language,
     } = validatedFields.data;
     const availableRecipes: Recipe[] = recipes ? JSON.parse(recipes) : [];
@@ -96,6 +99,7 @@ export async function generatePlanAction(
         allergies,
         cuisine,
         generationSource,
+        createdAt: startDate.toISOString(),
         language,
       }),
     };
@@ -111,10 +115,7 @@ export async function generatePlanAction(
 }
 
 export async function saveMealPlan(
-  plan: Omit<MealPlan, 'id' | 'createdAt'> & {
-    generationSource: string;
-    language?: string;
-  },
+  plan: Omit<MealPlan, 'id' | 'userId'>,
   userId: string
 ) {
   const newRecipePrompts: { id: string; prompt: string }[] = [];
@@ -139,7 +140,7 @@ export async function saveMealPlan(
   if (newRecipePrompts.length > 0) {
     const result = await generateMultipleRecipes({
       prompts: newRecipePrompts,
-      language: plan.language,
+      language: (plan as any).language,
     });
     generatedRecipes = result.recipes as RecipeDetails[];
 
@@ -192,7 +193,7 @@ export async function saveMealPlan(
   });
 
   const planToSave = {
-    createdAt: new Date(),
+    createdAt: new Date(plan.createdAt),
     days: resolvedDays,
     dietaryPreferences: plan.dietaryPreferences,
     calorieTarget: plan.calorieTarget,

@@ -13,6 +13,7 @@ import {
   Save,
   XCircle,
   RefreshCw,
+  CalendarIcon,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -51,6 +52,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 import { useLanguageStore } from '@/hooks/use-language-store';
 import { useAuth } from '@/hooks/use-auth';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const initialState = {
   message: '',
@@ -101,7 +110,6 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const searchParams = useSearchParams();
   const { language } = useLanguageStore();
 
-  // Local state to hold the generated plan
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
 
   // Default values
@@ -123,7 +131,10 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
   const [isRegenerating, setIsRegenerating] = useState<MealType | null>(null);
 
   const planId = searchParams.get('planId');
-  const date = searchParams.get('date');
+  const initialDate = searchParams.get('date');
+  const [date, setDate] = useState<Date | undefined>(
+    initialDate ? new Date(initialDate) : new Date()
+  );
 
   useEffect(() => {
     if (state.mealPlan) {
@@ -148,7 +159,7 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
     const planToSave = {
       ...generatedPlan,
       planId: planId || undefined,
-      date: date || undefined,
+      date: date?.toISOString(),
       language: language,
       userId: user.uid,
     };
@@ -379,55 +390,87 @@ export function DailyPlanForm({ recipes }: { recipes: Recipe[] }) {
                   </div>
                 </RadioGroup>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="dietaryPreferences">Dietary Preferences</Label>
-                <Select
-                  name="dietaryPreferences"
-                  value={dietaryPreferences}
-                  onValueChange={setDietaryPreferences}
-                >
-                  <SelectTrigger id="dietaryPreferences">
-                    <SelectValue placeholder="Select a preference" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DIETARY_PREFERENCES.map(pref => (
-                      <SelectItem key={pref} value={pref}>
-                        {pref}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dietaryPreferences">
+                    Dietary Preferences
+                  </Label>
+                  <Select
+                    name="dietaryPreferences"
+                    value={dietaryPreferences}
+                    onValueChange={setDietaryPreferences}
+                  >
+                    <SelectTrigger id="dietaryPreferences">
+                      <SelectValue placeholder="Select a preference" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DIETARY_PREFERENCES.map(pref => (
+                        <SelectItem key={pref} value={pref}>
+                          {pref}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="cuisine">Cuisine</Label>
+                  <Select
+                    name="cuisine"
+                    value={cuisine}
+                    onValueChange={setCuisine}
+                  >
+                    <SelectTrigger id="cuisine">
+                      <SelectValue placeholder="Select a cuisine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CUISINES.map(c => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="cuisine">Cuisine</Label>
-                <Select
-                  name="cuisine"
-                  value={cuisine}
-                  onValueChange={setCuisine}
-                >
-                  <SelectTrigger id="cuisine">
-                    <SelectValue placeholder="Select a cuisine" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CUISINES.map(c => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="calorieTarget">Daily Calorie Target</Label>
+                  <Input
+                    id="calorieTarget"
+                    name="calorieTarget"
+                    type="number"
+                    placeholder="e.g., 2000"
+                    value={calorieTarget}
+                    onChange={e => setCalorieTarget(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="date">Plan Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={'outline'}
+                        className={cn(
+                          'w-full justify-start text-left font-normal',
+                          !date && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date ? format(date, 'PPP') : <span>Pick a date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={setDate}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="calorieTarget">Daily Calorie Target</Label>
-                <Input
-                  id="calorieTarget"
-                  name="calorieTarget"
-                  type="number"
-                  placeholder="e.g., 2000"
-                  value={calorieTarget}
-                  onChange={e => setCalorieTarget(e.target.value)}
-                />
-              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="ingredients">Ingredients on Hand</Label>
                 <MultiSelect

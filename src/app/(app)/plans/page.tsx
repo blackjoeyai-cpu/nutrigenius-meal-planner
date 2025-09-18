@@ -86,6 +86,13 @@ export default function PlansPage() {
   const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const handleGeneratePlan = () => {
+    const query = new URLSearchParams({
+      date: format(selectedDate, 'yyyy-MM-dd'),
+    }).toString();
+    router.push(`/generate?${query}`);
+  };
+
   const handleRegenerate = () => {
     if (!selectedDayData) return;
     const { details } = selectedDayData;
@@ -131,7 +138,7 @@ export default function PlansPage() {
             Select a date to view your meal plan.
           </p>
         </div>
-        <Button onClick={() => router.push('/generate')} size="sm">
+        <Button onClick={handleGeneratePlan} size="sm">
           <PlusCircle className="mr-2 h-4 w-4" />
           Generate New Plan
         </Button>
