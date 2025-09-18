@@ -180,6 +180,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
   const handleDiscard = () => {
     setGeneratedPlan(null);
+    // Reset state object
     state.mealPlan = null;
     state.message = '';
     state.errors = null;
@@ -332,14 +333,17 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       <Form {...form}>
         <form
           action={formAction}
-          onSubmit={form.handleSubmit(data => {
-            const formData = new FormData(
-              document.getElementById('long-term-plan-form') as HTMLFormElement
-            );
-            formAction(formData);
-          })}
+          onSubmit={form.handleSubmit(() => {})}
           id="long-term-plan-form"
         >
+          <input
+            type="hidden"
+            name="ingredients"
+            value={form.getValues('ingredients').join(',')}
+          />
+          <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
+          <input type="hidden" name="language" value={language} />
+          {user && <input type="hidden" name="userId" value={user.uid} />}
           <CardHeader>
             <CardTitle>Generate a New Long-term Plan</CardTitle>
             <CardDescription>
