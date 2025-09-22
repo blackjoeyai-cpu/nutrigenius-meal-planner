@@ -3,7 +3,8 @@
 import { z } from 'zod';
 import { generateLongTermMealPlan } from '@/ai/flows/generate-long-term-plan';
 import { addMealPlan } from '@/services/meal-plan-service';
-import type { Recipe, MealPlan, RecipeDetails, DailyPlan } from '@/lib/types';
+import type { Recipe, MealPlan, DailyPlan } from '@/lib/types';
+import { GeneratedRecipeDetails } from '@/ai/flows/generate-multiple-recipes';
 import { revalidatePath } from 'next/cache';
 import { addRecipesInBatch } from '@/services/recipe-service';
 import { generateMultipleRecipes } from '@/ai/flows/generate-multiple-recipes';
@@ -132,8 +133,11 @@ export async function saveMealPlan(
     }
   }
 
-  const newRecipeDetailsByPlaceholderId = new Map<string, RecipeDetails>();
-  let generatedRecipes: RecipeDetails[] = [];
+  const newRecipeDetailsByPlaceholderId = new Map<
+    string,
+    GeneratedRecipeDetails
+  >();
+  let generatedRecipes: GeneratedRecipeDetails[] = [];
 
   // 2. Batch generate all new recipes if any
   if (newRecipePrompts.length > 0) {
@@ -141,7 +145,7 @@ export async function saveMealPlan(
       prompts: newRecipePrompts,
       language: plan.language,
     });
-    generatedRecipes = result.recipes as RecipeDetails[];
+    generatedRecipes = result.recipes;
 
     // Map the results back to their original placeholder IDs
     generatedRecipes.forEach(details => {
@@ -151,10 +155,7 @@ export async function saveMealPlan(
 
   // 3. Batch save all new recipes to the DB
   const recipesToSave: Omit<Recipe, 'id' | 'imageId' | 'userId'>[] =
-    generatedRecipes.map(details => {
-      const { ...recipeData } = details;
-      return recipeData;
-    });
+    generatedRecipes.map(({ id: _id, ...recipeData }) => recipeData); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   const newRecipeIds =
     recipesToSave.length > 0

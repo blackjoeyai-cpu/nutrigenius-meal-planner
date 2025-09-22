@@ -28,7 +28,7 @@ export const auth = getAuth(app);
 // This ensures the user's session is persisted across browser tabs.
 setPersistence(auth, browserLocalPersistence);
 
-export async function signInWithEmail(email, password) {
+export async function signInWithEmail(email: string, password: string) {
   try {
     return await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
@@ -37,7 +37,7 @@ export async function signInWithEmail(email, password) {
   }
 }
 
-export async function signUpWithEmail(email, password) {
+export async function signUpWithEmail(email: string, password: string) {
   try {
     return await createUserWithEmailAndPassword(auth, email, password);
   } catch (error) {

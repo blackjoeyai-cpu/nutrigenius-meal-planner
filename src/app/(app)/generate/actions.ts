@@ -3,7 +3,8 @@
 import { generateSafeMealPlan } from '@/ai/flows/avoid-allergic-recipes';
 import { regenerateSingleMeal } from '@/ai/flows/regenerate-single-meal';
 import { addMealPlan, updateMealPlan } from '@/services/meal-plan-service';
-import type { Recipe, RecipeDetails, DailyPlan } from '@/lib/types';
+import type { Recipe, DailyPlan } from '@/lib/types';
+import { GeneratedRecipeDetails } from '@/ai/flows/generate-multiple-recipes';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import { generateMultipleRecipes } from '@/ai/flows/generate-multiple-recipes';
@@ -204,8 +205,11 @@ export async function saveDailyPlan(
       }
     }
 
-    const newRecipeDetailsByPlaceholderId = new Map<string, RecipeDetails>();
-    let generatedRecipes: RecipeDetails[] = [];
+    const newRecipeDetailsByPlaceholderId = new Map<
+      string,
+      GeneratedRecipeDetails
+    >();
+    let generatedRecipes: GeneratedRecipeDetails[] = [];
 
     // 2. Batch generate all new recipes if any
     if (newRecipePrompts.length > 0) {
@@ -213,7 +217,7 @@ export async function saveDailyPlan(
         prompts: newRecipePrompts,
         language: language,
       });
-      generatedRecipes = result.recipes as RecipeDetails[];
+      generatedRecipes = result.recipes;
       generatedRecipes.forEach(details => {
         newRecipeDetailsByPlaceholderId.set(details.id, details);
       });
@@ -221,10 +225,7 @@ export async function saveDailyPlan(
 
     // 3. Batch save all new recipes to the DB
     const recipesToSave: Omit<Recipe, 'id' | 'imageId' | 'userId'>[] =
-      generatedRecipes.map(details => {
-        const { ...recipeData } = details;
-        return recipeData;
-      });
+      generatedRecipes.map(({ id: _id, ...recipeData }) => recipeData); // eslint-disable-line @typescript-eslint/no-unused-vars
     const newRecipeIds =
       recipesToSave.length > 0
         ? await addRecipesInBatch(recipesToSave, userId)

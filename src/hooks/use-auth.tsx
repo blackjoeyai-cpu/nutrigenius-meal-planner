@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   auth,
   signInWithEmail as firebaseSignIn,
@@ -36,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, authLoading, authError] = useAuthState(auth);
   const [appLoading, setAppLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     setAppLoading(authLoading);
@@ -66,15 +68,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (!authLoading && user) {
-      if (
-        router.pathname === '/login' ||
-        router.pathname === '/' ||
-        router.pathname === ''
-      ) {
+      if (pathname === '/login' || pathname === '/' || pathname === '') {
         router.replace('/dashboard');
       }
     }
-  }, [user, authLoading, router]);
+  }, [user, authLoading, pathname, router]);
 
   return (
     <AuthContext.Provider

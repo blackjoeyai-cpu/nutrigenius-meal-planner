@@ -132,6 +132,7 @@ export function AddRecipeDialog({
     try {
       const result = await generateRecipeAction({
         prompt: generationPrompt,
+        userId: 'system', // For now, we'll use 'system' as userId for generated recipes
         language: language,
       });
       if (result) {
@@ -186,7 +187,7 @@ export function AddRecipeDialog({
       await updateRecipe(recipeToEdit.id, recipeData);
       onRecipeAdd({ ...recipeToEdit, ...recipeData });
     } else {
-      const newRecipe = await addRecipe(recipeData);
+      const newRecipe = await addRecipe({ ...recipeData, userId: 'system' });
       if (newRecipe) {
         onRecipeAdd(newRecipe);
       }

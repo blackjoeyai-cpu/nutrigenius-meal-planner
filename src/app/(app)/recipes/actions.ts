@@ -10,11 +10,13 @@ import type { Recipe } from '@/lib/types';
 
 const GenerateRecipeSchema = z.object({
   prompt: z.string(),
+  userId: z.string(),
   language: z.string().optional(),
 });
 
 export async function generateRecipeAction(input: {
   prompt: string;
+  userId: string;
   language?: string;
 }) {
   const validatedFields = GenerateRecipeSchema.safeParse(input);
@@ -23,7 +25,11 @@ export async function generateRecipeAction(input: {
     throw new Error('Invalid input for recipe generation.');
   }
 
-  const recipeDetails = await generateRecipeDetails(validatedFields.data);
+  const recipeInput = {
+    prompt: validatedFields.data.prompt,
+    language: validatedFields.data.language,
+  };
+  const recipeDetails = await generateRecipeDetails(recipeInput);
 
   return recipeDetails;
 }
