@@ -111,6 +111,11 @@ const ChartTooltipContent = React.forwardRef<
       indicator?: 'line' | 'dot' | 'dashed';
       nameKey?: string;
       labelKey?: string;
+    } & {
+      // Explicitly type the props that are causing issues
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      payload?: any[];
+      label?: string;
     }
 >(
   (
@@ -173,7 +178,7 @@ const ChartTooltipContent = React.forwardRef<
       return null;
     }
 
-    const nestLabel = payload.length === 1 && indicator !== 'dot';
+    const nestLabel = payload?.length === 1 && indicator !== 'dot';
 
     return (
       <div
@@ -185,10 +190,12 @@ const ChartTooltipContent = React.forwardRef<
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.map((item, index) => {
+          {payload?.map((item: TooltipPayloadItem, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || 'value'}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color || item.payload.fill || item.color;
+            const indicatorColor =
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              color || (item as any).payload?.fill || item.color;
 
             return (
               <div
@@ -199,7 +206,14 @@ const ChartTooltipContent = React.forwardRef<
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
+                  formatter(
+                    item.value,
+                    item.name,
+                    item,
+                    index,
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (item as any).payload
+                  )
                 ) : (
                   <>
                     {itemConfig?.icon ? (
@@ -260,11 +274,18 @@ const ChartLegend = RechartsPrimitive.Legend;
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<'div'> &
-    Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
-      hideIcon?: boolean;
-      nameKey?: string;
-    }
+  React.ComponentProps<'div'> & {
+    payload?: {
+      dataKey: string;
+      value: string;
+      color: string;
+      name?: string;
+      payload?: Record<string, unknown>;
+    }[];
+    verticalAlign?: 'top' | 'bottom';
+    hideIcon?: boolean;
+    nameKey?: string;
+  }
 >(
   (
     { className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey },
@@ -285,7 +306,7 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map(item => {
+        {payload?.map((item: LegendPayloadItem) => {
           const key = `${nameKey || item.dataKey || 'value'}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
@@ -315,6 +336,26 @@ const ChartLegendContent = React.forwardRef<
   }
 );
 ChartLegendContent.displayName = 'ChartLegend';
+
+// Define types for the payload items
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TooltipPayloadItem = any;
+
+interface LegendPayloadItem {
+  dataKey: string;
+  value: string;
+  color: string;
+  name?: string;
+  payload?: Record<string, unknown>;
+}
+
+interface LegendPayloadItem {
+  dataKey: string;
+  value: string;
+  color: string;
+  name?: string;
+  payload?: Record<string, unknown>;
+}
 
 // Helper to extract item config from a payload.
 function getPayloadConfigFromPayload(

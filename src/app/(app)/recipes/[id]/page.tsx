@@ -21,26 +21,31 @@ import { getRecipeById } from '@/services/recipe-service';
 import type { Recipe } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { AddRecipeDialog } from '@/components/add-recipe-dialog';
+import { useRecipes } from '@/hooks/use-recipes';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function RecipeDetailPage() {
   const params = useParams();
   const id = params.id as string;
+  const { user } = useAuth();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const { refreshRecipes } = useRecipes();
 
   const fetchRecipe = useCallback(async () => {
+    if (!user) return;
     setIsLoaded(false);
-    const fetchedRecipe = await getRecipeById(id);
+    const fetchedRecipe = await getRecipeById(id, user.uid);
     setRecipe(fetchedRecipe);
     setIsLoaded(true);
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
-    if (id) {
+    if (id && user) {
       fetchRecipe();
     }
-  }, [id, fetchRecipe]);
+  }, [id, user, fetchRecipe]);
 
   if (!isLoaded) {
     return (
@@ -80,6 +85,12 @@ export default function RecipeDetailPage() {
     notFound();
   }
 
+  const handleRecipeUpdated = () => {
+    setIsEditDialogOpen(false);
+    fetchRecipe(); // Refetch this specific recipe
+    refreshRecipes(); // Also refresh the main list
+  };
+
   return (
     <div className="mx-auto max-w-4xl space-y-8 animate-in fade-in-0">
       <div className="space-y-4">
@@ -88,10 +99,7 @@ export default function RecipeDetailPage() {
           <AddRecipeDialog
             open={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
-            onRecipeAdd={() => {
-              setIsEditDialogOpen(false);
-              fetchRecipe(); // Refetch recipe to show updated data
-            }}
+            onRecipeAdd={handleRecipeUpdated}
             recipeToEdit={recipe}
           >
             <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>

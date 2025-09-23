@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
+import { format, addDays, startOfWeek } from 'date-fns';
 import {
   CalendarDays,
   ChefHat,
@@ -18,6 +18,7 @@ import { getMealPlans } from '@/services/meal-plan-service';
 import type { MealPlan } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRecipes } from '@/hooks/use-recipes';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function DashboardPage() {
   const [plans, setPlans] = useState<MealPlan[]>([]);
@@ -25,11 +26,13 @@ export default function DashboardPage() {
   const [todayPlan, setTodayPlan] = useState<MealPlan | null>(null);
   const router = useRouter();
   const { recipes, isLoaded: recipesLoaded } = useRecipes();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchPlans() {
+      if (!user) return;
       try {
-        const fetchedPlans = await getMealPlans();
+        const fetchedPlans = await getMealPlans(user.uid);
         setPlans(fetchedPlans);
 
         // Find today's plan
@@ -49,7 +52,34 @@ export default function DashboardPage() {
     }
 
     fetchPlans();
-  }, []);
+  }, [user]);
+
+  const plansByDate = useMemo(() => {
+    const map = new Map<string, MealPlan>();
+    plans.forEach(plan => {
+      const planStartDate = new Date(plan.createdAt);
+      plan.days.forEach((_, index) => {
+        const date = addDays(planStartDate, index);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        map.set(dateKey, plan);
+      });
+    });
+    return map;
+  }, [plans]);
+
+  const plannedDaysInWeek = useMemo(() => {
+    const today = new Date();
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      const date = addDays(weekStart, i);
+      const dateKey = format(date, 'yyyy-MM-dd');
+      if (plansByDate.has(dateKey)) {
+        count++;
+      }
+    }
+    return count;
+  }, [plansByDate]);
 
   const handleGeneratePlan = () => {
     router.push('/generate');
@@ -71,7 +101,7 @@ export default function DashboardPage() {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight font-headline">
-            Welcome back
+            Welcome back, {user?.displayName?.split(' ')[0]}
           </h1>
           <p className="text-muted-foreground">
             {isLoaded
@@ -143,12 +173,20 @@ export default function DashboardPage() {
 
         <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Weekly Progress
+            </CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">85%</div>
-            <p className="text-xs text-muted-foreground">Weekly goal</p>
+            {isLoaded ? (
+              <div className="text-2xl font-bold">{plannedDaysInWeek}/7</div>
+            ) : (
+              <Skeleton className="h-6 w-12" />
+            )}
+            <p className="text-xs text-muted-foreground">
+              Days planned this week
+            </p>
           </CardContent>
         </Card>
       </div>

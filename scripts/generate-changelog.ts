@@ -132,27 +132,29 @@ try {
     .toString()
     .trim();
 
-  if (!commitLog) {
-    console.log('No commits found since last tag');
-    process.exit(0);
-  }
+  // Initialize changelog content
+  let changelog = '# Changelog\n\n';
 
-  // Parse commits
-  const commitLines = commitLog.split('\n');
-  const commits: Commit[] = [];
+  if (commitLog) {
+    // Parse commits
+    const commitLines = commitLog.split('\n');
+    const commits: Commit[] = [];
 
-  for (const line of commitLines) {
-    const commit = parseCommit(line);
-    if (commit) {
-      commits.push(commit);
+    for (const line of commitLines) {
+      const commit = parseCommit(line);
+      if (commit) {
+        commits.push(commit);
+      }
     }
+
+    // Categorize commits
+    const categorizedCommits = categorizeCommits(commits);
+
+    // Format changelog
+    changelog += formatChangelog(categorizedCommits);
+  } else {
+    changelog += 'No changes found since last release.\n';
   }
-
-  // Categorize commits
-  const categorizedCommits = categorizeCommits(commits);
-
-  // Format changelog
-  const changelog = formatChangelog(categorizedCommits);
 
   // Output changelog
   console.log(changelog);
@@ -160,9 +162,18 @@ try {
   // Write changelog to a file for use in the release workflow
   const changelogFilePath = join(rootDir, 'TEMP_CHANGELOG.md');
   writeFileSync(changelogFilePath, changelog);
-
   console.log(`Changelog written to ${changelogFilePath}`);
 } catch (error) {
   console.error('Error generating changelog:', (error as Error).message);
-  process.exit(1);
+
+  // Ensure we always create the file even if there's an error
+  const changelogContent =
+    '# Changelog\n\nError occurred while generating changelog. Please check the CI logs for details.';
+  const changelogFilePath = join(rootDir, 'TEMP_CHANGELOG.md');
+  writeFileSync(changelogFilePath, changelogContent);
+
+  console.log(`Created fallback changelog at ${changelogFilePath}`);
 }
+
+// Always exit successfully to ensure the workflow continues
+process.exit(0);
