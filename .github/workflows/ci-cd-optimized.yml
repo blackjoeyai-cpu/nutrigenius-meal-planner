@@ -422,13 +422,13 @@ jobs:
         if: steps.version_action.outputs.action == 'create_new_version'
         run: |
           npm run changelog
-          
+
           # Ensure TEMP_CHANGELOG.md exists
           if [ ! -f TEMP_CHANGELOG.md ]; then
             echo "TEMP_CHANGELOG.md was not created by npm run changelog, creating default one"
             echo "# Changelog" > TEMP_CHANGELOG.md
           fi
-          
+
           echo "TEMP_CHANGELOG.md content:"
           cat TEMP_CHANGELOG.md
 
@@ -441,13 +441,13 @@ jobs:
             ls -la TEMP_CHANGELOG.md 2>/dev/null || echo "File not found"
             exit 1
           fi
-          
+
           if [ ! -r TEMP_CHANGELOG.md ]; then
             echo "ERROR: TEMP_CHANGELOG.md is not readable"
             ls -la TEMP_CHANGELOG.md
             exit 1
           fi
-          
+
           echo "TEMP_CHANGELOG.md file verified successfully"
           echo "File size: $(wc -c < TEMP_CHANGELOG.md) bytes"
           echo "File permissions: $(ls -l TEMP_CHANGELOG.md | awk '{print $1}')"

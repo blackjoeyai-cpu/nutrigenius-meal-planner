@@ -165,12 +165,13 @@ try {
   console.log(`Changelog written to ${changelogFilePath}`);
 } catch (error) {
   console.error('Error generating changelog:', (error as Error).message);
-  
+
   // Ensure we always create the file even if there's an error
-  const changelogContent = '# Changelog\n\nError occurred while generating changelog. Please check the CI logs for details.';
+  const changelogContent =
+    '# Changelog\n\nError occurred while generating changelog. Please check the CI logs for details.';
   const changelogFilePath = join(rootDir, 'TEMP_CHANGELOG.md');
   writeFileSync(changelogFilePath, changelogContent);
-  
+
   console.log(`Created fallback changelog at ${changelogFilePath}`);
 }
 
