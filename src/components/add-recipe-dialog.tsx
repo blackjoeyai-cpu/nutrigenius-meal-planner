@@ -43,20 +43,20 @@ import { useRecipes } from '@/hooks/use-recipes';
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  cuisine: z.string({ required_error: 'Please select a cuisine.' }),
-  mealTypes: z.array(z.string()).min(1, 'Select at least one meal type.'),
-  dietaryTags: z.array(z.string()).min(1, 'Select at least one dietary tag.'),
-  ingredients: z.string().min(1, 'Please list ingredients.'),
-  instructions: z.string().min(1, 'Please provide instructions.'),
-  prepTime: z.coerce.number().min(0),
-  cookTime: z.coerce.number().min(0),
-  servings: z.coerce.number().min(1),
+  cuisine: z.string().optional(),
+  mealTypes: z.array(z.string()).optional(),
+  dietaryTags: z.array(z.string()).optional(),
+  ingredients: z.string().optional(),
+  instructions: z.string().optional(),
+  prepTime: z.coerce.number().min(0).optional(),
+  cookTime: z.coerce.number().min(0).optional(),
+  servings: z.coerce.number().min(1).optional(),
   nutrition: z.object({
-    calories: z.coerce.number().min(0),
-    protein: z.coerce.number().min(0),
-    carbs: z.coerce.number().min(0),
-    fat: z.coerce.number().min(0),
-  }),
+    calories: z.coerce.number().min(0).optional(),
+    protein: z.coerce.number().min(0).optional(),
+    carbs: z.coerce.number().min(0).optional(),
+    fat: z.coerce.number().min(0).optional(),
+  }).optional(),
 });
 
 type RecipeFormValues = z.infer<typeof recipeFormSchema>;
