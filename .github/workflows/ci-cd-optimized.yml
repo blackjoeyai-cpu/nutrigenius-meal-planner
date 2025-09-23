@@ -19,13 +19,7 @@ on:
       - main
       - release
       - dev
-    types: [opened, synchronize, reopened]
-  pull_request_target:
-    branches:
-      - main
-      - release
-      - dev
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, closed]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -319,9 +313,11 @@ jobs:
   # Release management
   release:
     name: 📦 Release Management
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    if: |
+      github.event.pull_request.merged == true &&
+      (github.base_ref == 'release' || github.base_ref == 'main')
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, validate]
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -368,7 +364,12 @@ jobs:
           CLEAN_VERSION=$(echo "${{ steps.current_version.outputs.current_version }}" | sed 's/-dirty$//' | sed 's/-[0-9]*-g[0-9a-f]*$//')
 
           # Determine version bump based on commit messages
-          COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          # For closed PRs, we need to use the merge commit to get the full history
+          if [[ -n "${{ github.event.pull_request.merge_commit_sha }}" ]]; then
+            COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.merge_commit_sha }})
+          else
+            COMMITS=$(git log --oneline ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
+          fi
 
           if echo "$COMMITS" | grep -qE "(feat|feature)"; then
             NEXT_VERSION=$(npx semver $CLEAN_VERSION -i minor)
