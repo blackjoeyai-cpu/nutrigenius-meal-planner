@@ -9,6 +9,9 @@ import {
   doc,
   getDoc,
   updateDoc,
+  query,
+  where,
+  writeBatch,
 } from 'firebase/firestore';
 
 /**
@@ -17,11 +20,13 @@ import {
  * @returns The ID of the newly created recipe.
  */
 export async function addRecipe(
-  recipe: Omit<Recipe, 'id' | 'imageId'>
+  recipe: Omit<Recipe, 'id' | 'imageId'>,
+  userId: string
 ): Promise<string> {
   try {
     const docRef = await addDoc(collection(db, 'recipes'), {
       ...recipe,
+      userId,
       imageId: `recipe-${Math.floor(Math.random() * 9) + 1}`,
     });
     return docRef.id;
@@ -32,16 +37,55 @@ export async function addRecipe(
 }
 
 /**
+ * Adds multiple recipes to the database in a single batch operation.
+ * @param recipes - An array of recipe objects to add.
+ * @param userId - The ID of the user adding the recipes.
+ * @returns An array of the newly created recipe IDs.
+ */
+export async function addRecipesInBatch(
+  recipes: Omit<Recipe, 'id' | 'imageId' | 'userId'>[],
+  userId: string
+): Promise<string[]> {
+  const batch = writeBatch(db);
+  const newRecipeIds: string[] = [];
+
+  recipes.forEach(recipe => {
+    const docRef = doc(collection(db, 'recipes'));
+    batch.set(docRef, {
+      ...recipe,
+      userId,
+      imageId: `recipe-${Math.floor(Math.random() * 9) + 1}`,
+    });
+    newRecipeIds.push(docRef.id);
+  });
+
+  try {
+    await batch.commit();
+    return newRecipeIds;
+  } catch (e) {
+    console.error('Error adding recipes in batch: ', e);
+    throw new Error('Could not add recipes to the database.');
+  }
+}
+
+/**
  * Updates an existing recipe in the Firestore database.
  * @param id - The ID of the recipe to update.
  * @param recipe - The updated recipe data.
  */
 export async function updateRecipe(
   id: string,
-  recipe: Omit<Recipe, 'id' | 'imageId'>
+  recipe: Omit<Recipe, 'id' | 'imageId' | 'userId'>,
+  userId: string
 ): Promise<void> {
   try {
     const recipeRef = doc(db, 'recipes', id);
+    const docSnap = await getDoc(recipeRef);
+
+    if (!docSnap.exists() || docSnap.data().userId !== userId) {
+      throw new Error('Permission denied or recipe not found.');
+    }
+
     await updateDoc(recipeRef, recipe);
   } catch (e) {
     console.error('Error updating document: ', e);
@@ -50,11 +94,13 @@ export async function updateRecipe(
 }
 
 /**
- * Retrieves all recipes from the Firestore database.
+ * Retrieves all recipes for a specific user from the Firestore database.
  * @returns A promise that resolves to an array of recipes.
  */
-export async function getRecipes(): Promise<Recipe[]> {
-  const querySnapshot = await getDocs(collection(db, 'recipes'));
+export async function getRecipes(userId: string): Promise<Recipe[]> {
+  if (!userId) return [];
+  const q = query(collection(db, 'recipes'), where('userId', '==', userId));
+  const querySnapshot = await getDocs(q);
   const recipes: Recipe[] = [];
   querySnapshot.forEach(doc => {
     recipes.push({ id: doc.id, ...doc.data() } as Recipe);
@@ -65,15 +111,22 @@ export async function getRecipes(): Promise<Recipe[]> {
 /**
  * Retrieves a single recipe by its ID from the Firestore database.
  * @param id - The ID of the recipe to retrieve.
- * @returns A promise that resolves to the recipe object, or null if not found.
+ * @param userId - The ID of the user requesting the recipe.
+ * @returns A promise that resolves to the recipe object, or null if not found or not owned by the user.
  */
-export async function getRecipeById(id: string): Promise<Recipe | null> {
+export async function getRecipeById(
+  id: string,
+  userId: string
+): Promise<Recipe | null> {
   const docRef = doc(db, 'recipes', id);
   const docSnap = await getDoc(docRef);
 
   if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as Recipe;
-  } else {
-    return null;
+    const recipe = { id: docSnap.id, ...docSnap.data() } as Recipe;
+    if (recipe.userId === userId) {
+      return recipe;
+    }
   }
+
+  return null;
 }

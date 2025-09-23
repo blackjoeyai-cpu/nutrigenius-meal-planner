@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RecipesPage() {
-  const { recipes, addRecipe, isLoaded } = useRecipes();
+  const { recipes, isLoaded, refreshRecipes } = useRecipes();
   const [searchTerm, setSearchTerm] = useState('');
   const [cuisineFilter, setCuisineFilter] = useState('Any');
   const [activeTab, setActiveTab] = useState('All');
@@ -45,6 +45,11 @@ export default function RecipesPage() {
     });
   }, [searchTerm, cuisineFilter, recipes, isLoaded, activeTab]);
 
+  const handleRecipeAdded = () => {
+    refreshRecipes();
+    setIsAddDialogOpen(false);
+  };
+
   const mealTypes = ['All', 'Breakfast', 'Lunch', 'Dinner'];
 
   return (
@@ -59,10 +64,7 @@ export default function RecipesPage() {
         <AddRecipeDialog
           open={isAddDialogOpen}
           onOpenChange={setIsAddDialogOpen}
-          onRecipeAdd={newRecipe => {
-            addRecipe(newRecipe);
-            setIsAddDialogOpen(false);
-          }}
+          onRecipeAdd={handleRecipeAdded}
         >
           <Button onClick={() => setIsAddDialogOpen(true)} size="sm">
             <PlusCircle className="mr-2 h-4 w-4" />

@@ -17,6 +17,7 @@ const GenerateRecipeInputSchema = z.object({
   prompt: z
     .string()
     .describe('The user’s idea or prompt for the recipe to be generated.'),
+  userId: z.string().describe('The ID of the user generating the recipe.'),
   language: z
     .string()
     .optional()
@@ -84,7 +85,7 @@ export async function generateRecipe(
  * Internal flow to generate recipe details without saving to the database.
  */
 export async function generateRecipeDetails(
-  input: GenerateRecipeInput
+  input: Omit<GenerateRecipeInput, 'userId'>
 ): Promise<RecipeDetails> {
   return generateRecipeDetailsFlow(input);
 }
@@ -120,14 +121,24 @@ const prompt = ai.definePrompt({
   `,
 });
 
+const GenerateRecipeDetailsInputSchema = z.object({
+  prompt: z
+    .string()
+    .describe('The user’s idea or prompt for the recipe to be generated.'),
+  language: z
+    .string()
+    .optional()
+    .describe("The language for the recipe to be generated in, e.g., 'Malay'."),
+});
+
 const generateRecipeDetailsFlow = ai.defineFlow(
   {
     name: 'generateRecipeDetailsFlow',
-    inputSchema: GenerateRecipeInputSchema,
+    inputSchema: GenerateRecipeDetailsInputSchema,
     outputSchema: AISchema,
   },
   async input => {
-    const { output } = await prompt(input);
+    const { output } = await prompt({ ...input, userId: 'system' }); // Provide a default userId for system-generated recipes
     if (!output) {
       throw new Error('Failed to generate recipe details from AI.');
     }
@@ -142,8 +153,9 @@ const generateRecipeFlow = ai.defineFlow(
     outputSchema: GenerateRecipeOutputSchema,
   },
   async input => {
-    const details = await generateRecipeDetails(input);
-    const recipeId = await addRecipe(details);
+    const { userId, ...recipeDetails } = input;
+    const details = await generateRecipeDetails(recipeDetails);
+    const recipeId = await addRecipe({ ...details, userId }, userId);
     return {
       id: recipeId,
       ...details,

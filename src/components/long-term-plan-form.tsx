@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect, useState, Fragment } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import {
   Card,
@@ -29,7 +29,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { CUISINES, DIETARY_PREFERENCES } from '@/lib/constants';
-import type { Recipe, MealPlan } from '@/lib/types';
+import type { Recipe, MealPlan, DailyPlan } from '@/lib/types';
 import {
   AlertTriangle,
   Loader2,
@@ -37,6 +37,8 @@ import {
   Sparkles,
   Save,
   XCircle,
+  RefreshCw,
+  CalendarIcon,
 } from 'lucide-react';
 import { generatePlanAction, saveMealPlan } from '@/app/(app)/plans/actions';
 import { useToast } from '@/hooks/use-toast';
@@ -59,6 +61,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from './ui/skeleton';
 import { useLanguageStore } from '@/hooks/use-language-store';
+import { useAuth } from '@/hooks/use-auth';
+import React from 'react';
+import { regenerateMealAction } from '@/app/(app)/generate/actions';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const planFormSchema = z.object({
   numberOfDays: z.coerce
@@ -75,6 +88,9 @@ const planFormSchema = z.object({
   cuisine: z.string({ required_error: 'Please select a cuisine.' }),
   generationSource: z.enum(['catalog', 'new', 'combined']),
   ingredients: z.array(z.string()),
+  startDate: z.date({
+    required_error: 'A start date is required.',
+  }),
 });
 
 type PlanFormValues = z.infer<typeof planFormSchema>;
@@ -109,25 +125,26 @@ function SubmitButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-type ParsedPlan = Omit<MealPlan, 'id' | 'userId' | 'createdAt'> & {
+type ParsedPlan = Omit<MealPlan, 'id' | 'userId'> & {
   generationSource: string;
   language?: string;
 };
 
+type MealType = 'breakfast' | 'lunch' | 'dinner';
+
 export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
-  const [state, formAction, isPending] = useActionState(
-    generatePlanAction,
-    initialState
-  );
+  const { user } = useAuth();
+  const [state, formAction] = useActionState(generatePlanAction, initialState);
   const { toast } = useToast();
   const { ingredients: allIngredients } = useIngredients();
-  const { addRecipe } = useRecipes();
+  const { refreshRecipes } = useRecipes();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const router = useRouter();
   const { language } = useLanguageStore();
 
   const [generatedPlan, setGeneratedPlan] = useState<ParsedPlan | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState<string | null>(null); // e.g., "day-0-breakfast"
 
   const form = useForm<PlanFormValues>({
     resolver: zodResolver(planFormSchema),
@@ -139,8 +156,12 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
       allergies: '',
       generationSource: 'catalog',
       ingredients: [],
+      startDate: new Date(),
     },
   });
+
+  const { formState, getValues, watch, control } = form;
+  const { isSubmitting: isPending } = formState;
 
   useEffect(() => {
     if (state.isSuccess && state.mealPlan) {
@@ -148,16 +169,16 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     }
   }, [state.isSuccess, state.mealPlan]);
 
-  const generationSource = form.watch('generationSource');
-  const numberOfDays = form.watch('numberOfDays');
+  const generationSource = watch('generationSource');
+  const numberOfDays = watch('numberOfDays');
   const hasEnoughRecipesForCatalog = recipes.length > 3;
   const isCatalogGenerationBlocked =
     generationSource === 'catalog' && !hasEnoughRecipesForCatalog;
 
   const handleSave = async () => {
-    if (!generatedPlan) return;
+    if (!generatedPlan || !user) return;
     setIsSaving(true);
-    const result = await saveMealPlan(generatedPlan);
+    const result = await saveMealPlan(generatedPlan, user.uid);
     setIsSaving(false);
 
     if (result.success) {
@@ -177,10 +198,59 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
 
   const handleDiscard = () => {
     setGeneratedPlan(null);
+    // Reset state object
     state.mealPlan = null;
     state.message = '';
     state.errors = null;
     state.isSuccess = false;
+  };
+
+  const handleRegenerateMeal = async (dayIndex: number, mealType: MealType) => {
+    if (!generatedPlan) return;
+
+    const regenerationKey = `day-${dayIndex}-${mealType}`;
+    setIsRegenerating(regenerationKey);
+
+    const day = generatedPlan.days[dayIndex];
+    const mealToReplace = day[mealType];
+    const currentMeals: Partial<DailyPlan> = { ...day };
+    delete currentMeals[mealType];
+
+    const formValues = getValues();
+
+    const input = {
+      dietaryPreferences: formValues.dietaryPreferences,
+      calorieTarget: formValues.calorieTarget,
+      allergies: formValues.allergies || 'none',
+      cuisine: formValues.cuisine,
+      ingredients: formValues.ingredients.join(','),
+      availableRecipes: JSON.stringify(recipes),
+      generationSource: formValues.generationSource,
+      mealToRegenerate: mealType,
+      currentMeals,
+      mealToReplace,
+      language,
+    };
+
+    const result = await regenerateMealAction(input);
+
+    if (result.success && result.meal) {
+      const newPlan = { ...generatedPlan };
+      newPlan.days[dayIndex][mealType] = result.meal;
+      setGeneratedPlan(newPlan as ParsedPlan);
+      toast({
+        title: 'Meal Regenerated!',
+        description: `Your ${mealType} for Day ${dayIndex + 1} has been updated.`,
+      });
+    } else {
+      toast({
+        title: 'Error',
+        description: result.message || 'Failed to regenerate meal.',
+        variant: 'destructive',
+      });
+    }
+
+    setIsRegenerating(null);
   };
 
   useEffect(() => {
@@ -237,7 +307,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
           <CardTitle>Review Your Long-Term Plan</CardTitle>
           <CardDescription>
             Here is the {generatedPlan.days.length}-day meal plan generated for
-            you. Review the details below.
+            you. Review the details below, or regenerate individual meals.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -247,54 +317,59 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 <AccordionTrigger>Day {index + 1}</AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-4 pl-2">
-                    {[day.breakfast, day.lunch, day.dinner].map(
-                      (meal, mealIndex) => {
+                    {(['breakfast', 'lunch', 'dinner'] as MealType[]).map(
+                      mealType => {
+                        const meal = day[mealType];
                         const isNewRecipe = meal.id.startsWith('new-recipe-');
+                        const regenerationKey = `day-${index}-${mealType}`;
+
+                        const mealCardContent = (
+                          <Card className="transition-shadow group-hover:shadow-md relative">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:bg-accent"
+                              onClick={e => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRegenerateMeal(index, mealType);
+                              }}
+                              disabled={isRegenerating !== null}
+                            >
+                              {isRegenerating === regenerationKey ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <CardHeader>
+                              <CardTitle className="text-lg">
+                                {mealType.charAt(0).toUpperCase() +
+                                  mealType.slice(1)}
+                                : {meal.title}
+                              </CardTitle>
+                              <CardDescription>
+                                {meal.calories} calories
+                              </CardDescription>
+                            </CardHeader>
+                          </Card>
+                        );
 
                         return (
-                          <>
+                          <React.Fragment key={regenerationKey}>
                             {isNewRecipe ? (
                               <div className="group block">
-                                <Card className="transition-shadow group-hover:shadow-md">
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">
-                                      {
-                                        ['Breakfast', 'Lunch', 'Dinner'][
-                                          mealIndex
-                                        ]
-                                      }
-                                      : {meal.title}
-                                    </CardTitle>
-                                    <CardDescription>
-                                      {meal.calories} calories
-                                    </CardDescription>
-                                  </CardHeader>
-                                </Card>
+                                {mealCardContent}
                               </div>
                             ) : (
                               <Link
                                 href={`/recipes/${meal.id}`}
                                 className="group block"
-                                key={mealIndex}
                               >
-                                <Card className="transition-shadow group-hover:shadow-md">
-                                  <CardHeader>
-                                    <CardTitle className="text-lg">
-                                      {
-                                        ['Breakfast', 'Lunch', 'Dinner'][
-                                          mealIndex
-                                        ]
-                                      }
-                                      : {meal.title}
-                                    </CardTitle>
-                                    <CardDescription>
-                                      {meal.calories} calories
-                                    </CardDescription>
-                                  </CardHeader>
-                                </Card>
+                                {mealCardContent}
                               </Link>
                             )}
-                          </>
+                          </React.Fragment>
                         );
                       }
                     )}
@@ -328,29 +403,15 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
     <Card className="mt-6">
       <Form {...form}>
         <form
-          action={() => {
-            const combinedData = new FormData();
-            const formValues = form.getValues();
-
-            // Append all fields from the form to the FormData object
-            (Object.keys(formValues) as Array<keyof PlanFormValues>).forEach(
-              key => {
-                const value = formValues[key];
-                if (key === 'ingredients' && Array.isArray(value)) {
-                  combinedData.append(key, value.join(','));
-                } else if (value !== undefined) {
-                  combinedData.append(key, String(value));
-                }
-              }
-            );
-
-            // Add recipes and language to form data
-            combinedData.append('recipes', JSON.stringify(recipes));
-            combinedData.append('language', language);
-
-            form.handleSubmit(() => formAction(combinedData))();
+          action={formData => {
+            const values = getValues();
+            formData.set('startDate', values.startDate.toISOString());
+            formAction(formData);
           }}
         >
+          <input type="hidden" name="recipes" value={JSON.stringify(recipes)} />
+          <input type="hidden" name="language" value={language} />
+          {user && <input type="hidden" name="userId" value={user.uid} />}
           <CardHeader>
             <CardTitle>Generate a New Long-term Plan</CardTitle>
             <CardDescription>
@@ -372,8 +433,8 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                     <AddRecipeDialog
                       open={isAddDialogOpen}
                       onOpenChange={setIsAddDialogOpen}
-                      onRecipeAdd={newRecipe => {
-                        addRecipe(newRecipe);
+                      onRecipeAdd={() => {
+                        refreshRecipes();
                         setIsAddDialogOpen(false);
                       }}
                     >
@@ -390,7 +451,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 </Alert>
               ) : null}
               <FormField
-                control={form.control}
+                control={control}
                 name="generationSource"
                 render={({ field }) => (
                   <FormItem className="space-y-3">
@@ -433,27 +494,68 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                 )}
               />
 
-              <FormField
-                control={form.control}
-                name="numberOfDays"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Number of Days</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 7"
-                        {...field}
-                        name={field.name}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={control}
+                  name="numberOfDays"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Days</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="e.g., 7"
+                          {...field}
+                          name={field.name}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={control}
+                  name="startDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Start Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={'outline'}
+                              className={cn(
+                                'w-full pl-3 text-left font-normal',
+                                !field.value && 'text-muted-foreground'
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, 'PPP')
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={date => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
-                control={form.control}
+                control={control}
                 name="dietaryPreferences"
                 render={({ field }) => (
                   <FormItem>
@@ -482,7 +584,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="cuisine"
                 render={({ field }) => (
                   <FormItem>
@@ -511,7 +613,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="calorieTarget"
                 render={({ field }) => (
                   <FormItem>
@@ -530,7 +632,7 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="ingredients"
                 render={({ field }) => (
                   <FormItem>
@@ -546,13 +648,18 @@ export function LongTermPlanForm({ recipes }: LongTermPlanFormProps) {
                         placeholder="Select ingredients you have..."
                       />
                     </FormControl>
+                    <input
+                      type="hidden"
+                      name="ingredients"
+                      value={field.value.join(',')}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <FormField
-                control={form.control}
+                control={control}
                 name="allergies"
                 render={({ field }) => (
                   <FormItem>

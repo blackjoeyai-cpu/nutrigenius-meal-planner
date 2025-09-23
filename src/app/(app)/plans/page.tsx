@@ -35,6 +35,7 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/hooks/use-auth';
 
 type PlansByDate = Map<
   string,
@@ -47,22 +48,29 @@ export default function PlansPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const router = useRouter();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function fetchPlans() {
-      const fetchedPlans = await getMealPlans();
+      if (!user) return;
+      const fetchedPlans = await getMealPlans(user.uid);
       setPlans(fetchedPlans);
       setIsLoaded(true);
     }
     fetchPlans();
-  }, []);
+  }, [user]);
 
   const plansByDate = useMemo((): PlansByDate => {
     const map: PlansByDate = new Map();
     if (!isLoaded) return map;
 
     plans.forEach(plan => {
-      const startDate = startOfDay(new Date(plan.createdAt));
+      // Handle both string and Date objects for createdAt
+      const planDate =
+        typeof plan.createdAt === 'string'
+          ? new Date(plan.createdAt)
+          : plan.createdAt;
+      const startDate = startOfDay(planDate);
       plan.days.forEach((day, index) => {
         const date = addDays(startDate, index);
         const dateKey = format(date, 'yyyy-MM-dd');
@@ -82,6 +90,13 @@ export default function PlansPage() {
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const emptyDays = Array.from({ length: startingDayOfWeek }, (_, i) => i);
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  const handleGeneratePlan = () => {
+    const query = new URLSearchParams({
+      date: format(selectedDate, 'yyyy-MM-dd'),
+    }).toString();
+    router.push(`/generate?${query}`);
+  };
 
   const handleRegenerate = () => {
     if (!selectedDayData) return;
@@ -128,7 +143,7 @@ export default function PlansPage() {
             Select a date to view your meal plan.
           </p>
         </div>
-        <Button onClick={() => router.push('/generate')} size="sm">
+        <Button onClick={handleGeneratePlan} size="sm">
           <PlusCircle className="mr-2 h-4 w-4" />
           Generate New Plan
         </Button>

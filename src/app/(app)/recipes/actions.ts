@@ -1,17 +1,22 @@
 'use server';
 
 import { generateRecipeDetails } from '@/ai/flows/generate-recipe';
-import { addRecipe, updateRecipe } from '@/services/recipe-service';
+import {
+  addRecipe as addRecipeToDb,
+  updateRecipe as updateRecipeInDb,
+} from '@/services/recipe-service';
 import { z } from 'zod';
 import type { Recipe } from '@/lib/types';
 
 const GenerateRecipeSchema = z.object({
   prompt: z.string(),
+  userId: z.string(),
   language: z.string().optional(),
 });
 
 export async function generateRecipeAction(input: {
   prompt: string;
+  userId: string;
   language?: string;
 }) {
   const validatedFields = GenerateRecipeSchema.safeParse(input);
@@ -20,18 +25,26 @@ export async function generateRecipeAction(input: {
     throw new Error('Invalid input for recipe generation.');
   }
 
-  const recipeDetails = await generateRecipeDetails(validatedFields.data);
+  const recipeInput = {
+    prompt: validatedFields.data.prompt,
+    language: validatedFields.data.language,
+  };
+  const recipeDetails = await generateRecipeDetails(recipeInput);
 
   return recipeDetails;
 }
 
-export async function addRecipeAction(recipe: Omit<Recipe, 'id' | 'imageId'>) {
-  return await addRecipe(recipe);
+export async function addRecipeAction(
+  recipe: Omit<Recipe, 'id' | 'imageId'>,
+  userId: string
+) {
+  return await addRecipeToDb(recipe, userId);
 }
 
 export async function updateRecipeAction(
   id: string,
-  recipe: Omit<Recipe, 'id' | 'imageId'>
+  recipe: Omit<Recipe, 'id' | 'imageId' | 'userId'>,
+  userId: string
 ) {
-  return await updateRecipe(id, recipe);
+  return await updateRecipeInDb(id, recipe, userId);
 }
