@@ -414,6 +414,22 @@ jobs:
         run: |
           npm run changelog
 
+      - name: Read Changelog Content
+        if: steps.version_action.outputs.action == 'create_new_version'
+        id: changelog_content
+        run: |
+          echo 'content<<EOF' >> $GITHUB_OUTPUT
+          cat TEMP_CHANGELOG.md >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+      - name: Read Version Content
+        if: steps.version_action.outputs.action == 'create_new_version'
+        id: version_content
+        run: |
+          echo 'content<<EOF' >> $GITHUB_OUTPUT
+          cat src/version.json >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release (dev → release)
         if: steps.version_action.outputs.action == 'create_new_version'
         uses: actions/create-release@v1
@@ -429,11 +445,11 @@ jobs:
 
             ### 📝 Changelog
 
-            $(cat TEMP_CHANGELOG.md)
+            ${{ steps.changelog_content.outputs.content }}
 
             ### 📦 Version Information
             ```json
-            $(cat src/version.json)
+            ${{ steps.version_content.outputs.content }}
             ```
           draft: false
           prerelease: false
