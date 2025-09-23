@@ -1,7 +1,7 @@
 {
-  "version": "v0.3.2-35-g228e6dc",
-  "commitHash": "228e6dc",
-  "branch": "dev",
+  "version": "v0.3.3",
+  "commitHash": "24df44f",
+  "branch": "release",
   "isDirty": false,
-  "buildTime": "2025-09-18T02:20:53.506Z"
+  "buildTime": "2025-09-23T00:00:00.000Z"
 }
