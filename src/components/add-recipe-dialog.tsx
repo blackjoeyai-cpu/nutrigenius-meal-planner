@@ -204,17 +204,15 @@ export function AddRecipeDialog({
       cookTime: data.cookTime ?? 0,
       servings: data.servings ?? 1,
       nutrition: nutritionData,
+      userId: 'system', // This is required by the hook's type definition
     };
 
     if (isEditMode && recipeToEdit) {
-      await updateRecipe(recipeToEdit.id, {
-        ...recipeData,
-        id: recipeToEdit.id,
-        imageId: recipeToEdit.imageId,
-        userId: recipeToEdit.userId,
-      });
+      // Update only the editable recipe data, keeping the original id, imageId, and userId
+      await updateRecipe(recipeToEdit.id, recipeData);
       onRecipeAdd({ ...recipeToEdit, ...recipeData });
     } else {
+      // For new recipes, add the recipe data (the hook will provide the userId)
       const newRecipe = await addRecipe({ ...recipeData, userId: 'system' });
       if (newRecipe) {
         onRecipeAdd(newRecipe);
@@ -338,7 +336,7 @@ export function AddRecipeDialog({
                               value: p,
                               label: p,
                             }))}
-                            selected={field.value}
+                            selected={field.value || []}
                             onChange={field.onChange}
                             placeholder="Select tags..."
                           />
@@ -360,7 +358,7 @@ export function AddRecipeDialog({
                             value: p,
                             label: p,
                           }))}
-                          selected={field.value}
+                          selected={field.value || []}
                           onChange={field.onChange}
                           placeholder="Select meal types..."
                         />
