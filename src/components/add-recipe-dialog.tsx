@@ -43,20 +43,22 @@ import { useRecipes } from '@/hooks/use-recipes';
 
 const recipeFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters.'),
-  cuisine: z.string({ required_error: 'Please select a cuisine.' }),
-  mealTypes: z.array(z.string()).min(1, 'Select at least one meal type.'),
-  dietaryTags: z.array(z.string()).min(1, 'Select at least one dietary tag.'),
-  ingredients: z.string().min(1, 'Please list ingredients.'),
-  instructions: z.string().min(1, 'Please provide instructions.'),
-  prepTime: z.coerce.number().min(0),
-  cookTime: z.coerce.number().min(0),
-  servings: z.coerce.number().min(1),
-  nutrition: z.object({
-    calories: z.coerce.number().min(0),
-    protein: z.coerce.number().min(0),
-    carbs: z.coerce.number().min(0),
-    fat: z.coerce.number().min(0),
-  }),
+  cuisine: z.string().optional(),
+  mealTypes: z.array(z.string()).optional(),
+  dietaryTags: z.array(z.string()).optional(),
+  ingredients: z.string().optional(),
+  instructions: z.string().optional(),
+  prepTime: z.coerce.number().min(0).optional(),
+  cookTime: z.coerce.number().min(0).optional(),
+  servings: z.coerce.number().min(1).optional(),
+  nutrition: z
+    .object({
+      calories: z.coerce.number().min(0).optional(),
+      protein: z.coerce.number().min(0).optional(),
+      carbs: z.coerce.number().min(0).optional(),
+      fat: z.coerce.number().min(0).optional(),
+    })
+    .optional(),
 });
 
 type RecipeFormValues = z.infer<typeof recipeFormSchema>;
@@ -137,22 +139,23 @@ export function AddRecipeDialog({
       });
       if (result) {
         form.reset({
-          name: result.name,
-          cuisine: result.cuisine,
-          mealTypes: result.mealTypes,
-          dietaryTags: result.dietaryTags,
-          ingredients: result.ingredients
-            .map(i => `${i.quantity} ${i.item}`)
-            .join('\n'),
-          instructions: result.instructions.join('\n'),
-          prepTime: result.prepTime,
-          cookTime: result.cookTime,
-          servings: result.servings,
+          name: result.name || '',
+          cuisine: result.cuisine || 'Any',
+          mealTypes: result.mealTypes || [],
+          dietaryTags: result.dietaryTags || [],
+          ingredients:
+            result.ingredients
+              ?.map(i => `${i.quantity} ${i.item}`)
+              .join('\n') || '',
+          instructions: result.instructions?.join('\n') || '',
+          prepTime: result.prepTime ?? 0,
+          cookTime: result.cookTime ?? 0,
+          servings: result.servings ?? 1,
           nutrition: {
-            calories: result.nutrition.calories,
-            protein: result.nutrition.protein,
-            carbs: result.nutrition.carbs,
-            fat: result.nutrition.fat,
+            calories: result.nutrition?.calories ?? 0,
+            protein: result.nutrition?.protein ?? 0,
+            carbs: result.nutrition?.carbs ?? 0,
+            fat: result.nutrition?.fat ?? 0,
           },
         });
       }
@@ -169,7 +172,8 @@ export function AddRecipeDialog({
   }
 
   async function onSubmit(data: RecipeFormValues) {
-    const ingredientsArray = data.ingredients.split('\n').map(line => {
+    // Transform ingredients string to array format
+    const ingredientsArray = (data.ingredients || '').split('\n').map(line => {
       const parts = line.match(/^([^\s]+\s*[^s]*)\s+(.*)$/)?.slice(1) || [
         '',
         line,
@@ -177,16 +181,38 @@ export function AddRecipeDialog({
       return { quantity: parts[0].trim() || '', item: parts[1].trim() };
     });
 
+    // Transform instructions string to array format
+    const instructionsArray = (data.instructions || '').split('\n');
+
+    // Ensure nutrition object has all required properties with default values
+    const nutritionData = {
+      calories: data.nutrition?.calories ?? 0,
+      protein: data.nutrition?.protein ?? 0,
+      carbs: data.nutrition?.carbs ?? 0,
+      fat: data.nutrition?.fat ?? 0,
+    };
+
+    // Prepare recipe data with proper typing
     const recipeData = {
-      ...data,
+      name: data.name || '',
+      cuisine: data.cuisine || 'Any',
+      mealTypes: data.mealTypes || [],
+      dietaryTags: data.dietaryTags || [],
       ingredients: ingredientsArray,
-      instructions: data.instructions.split('\n'),
+      instructions: instructionsArray,
+      prepTime: data.prepTime ?? 0,
+      cookTime: data.cookTime ?? 0,
+      servings: data.servings ?? 1,
+      nutrition: nutritionData,
+      userId: 'system', // This is required by the hook's type definition
     };
 
     if (isEditMode && recipeToEdit) {
+      // Update only the editable recipe data, keeping the original id, imageId, and userId
       await updateRecipe(recipeToEdit.id, recipeData);
       onRecipeAdd({ ...recipeToEdit, ...recipeData });
     } else {
+      // For new recipes, add the recipe data (the hook will provide the userId)
       const newRecipe = await addRecipe({ ...recipeData, userId: 'system' });
       if (newRecipe) {
         onRecipeAdd(newRecipe);
@@ -310,7 +336,7 @@ export function AddRecipeDialog({
                               value: p,
                               label: p,
                             }))}
-                            selected={field.value}
+                            selected={field.value || []}
                             onChange={field.onChange}
                             placeholder="Select tags..."
                           />
@@ -332,7 +358,7 @@ export function AddRecipeDialog({
                             value: p,
                             label: p,
                           }))}
-                          selected={field.value}
+                          selected={field.value || []}
                           onChange={field.onChange}
                           placeholder="Select meal types..."
                         />
